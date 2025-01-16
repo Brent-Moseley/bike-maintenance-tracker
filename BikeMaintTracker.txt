@@ -1,0 +1,73 @@
+Data to track / entities / tables:
+
+User
+    ID
+    Name
+    AuthToken
+
+Bike
+    UserID
+    ID
+    Name
+    Brand
+    Model
+    Spec
+    Notes
+    MonthYearPurchased
+    DateLastServiced
+    MilesLastServiced
+    TotalMiles
+    TrackBy
+
+Order
+    ID
+    Supplier
+    Date
+    Description
+    Quantity
+    ConfNumber
+    DateExpected
+
+MaintLog
+    ID
+    UserID
+    BikeID
+    Date
+    Description
+
+Alerts
+    id
+    userID
+    bikeID
+    date
+    description
+    repeatEvery
+
+
+
+
+
+
+I cannot lose "my job" because it is not my job in the first place. J cannot 
+do me any harm - he cannot take anything away from me.  MY thing is my
+career and business contacts, which I am 100% in control of (under God).
+Retain my calm confidence!!  My professionalism and business sense.
+I have my current contract, my current position.  And I have my network,
+and will keep communicating my way to my next opportunity. 
+I am a software engineer, NOT just a programmer!  Forget the nonsense
+programmer tests.  SHOW how I am a problem solver, an innovater, a solution
+architect, a professional.  BE more, rise above, pull it up higher if they
+try to put me in some nonsense online test or code monkey white board
+session.  Talk them out of it, pull the conversation to where my
+highest value is! 
+
+
+https://www.quora.com/Is-it-true-that-it-s-practically-impossible-to-get-hired-as-a-software-engineer-in-the-current-job-market-Should-I-still-pursue-it-I-m-very-passionate-for-it-but-the-fact-that-people-say-such-things-make-my-thoughts
+
+
+
+Largely, take advantage of them.  Or take advantage of the situation.
+Or the opportunity.  Make 100% my top goal be to gain the new knowledge,
+networking, and experience to get the next better job and higher pay
+package.  I work for God and my career is in his hands.  I work for God
+and work with him.
