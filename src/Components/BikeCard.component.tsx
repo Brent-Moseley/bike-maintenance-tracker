@@ -1,19 +1,51 @@
-import React from 'react';
-import { Card, CardContent, Typography, Grid } from '@mui/material';
-import { Bike } from '../services/BikeService';
-import BikeDropdown from './BikeDropdown.component';
+import React from "react";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Grid,
+  ButtonGroup,
+  Button,
+  Box,
+} from "@mui/material";
+import { Bike } from "../services/BikeService";
 
 interface BikeProps {
   bike: Bike;
+  handleOpenAddMiles: () => void;
+  handleOpenEditBike: (add: boolean) => void;
+  cycleLeft: () => void;
+  cycleRight: () => void;
 }
 
-const BikeCard: React.FC<BikeProps> = ({ bike }) => {
+const BikeCard: React.FC<BikeProps> = ({ bike, handleOpenAddMiles, handleOpenEditBike, cycleLeft, cycleRight }) => {
   return (
     <Card variant="outlined" sx={{ margin: 2 }}>
       <CardContent>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
         <Typography variant="h5" component="div">
           {bike.name}
         </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
+            <ButtonGroup sx={{ width: "100%", justifyContent: "space-around" }}>
+              <Button variant="contained" size="small" sx={{margin: '3px'}} onClick={() => handleOpenEditBike(false)}>
+                Edit Bike
+              </Button>
+              <Button variant="contained" size="small" sx={{margin: '3px'}} onClick={() => handleOpenEditBike(true)}>
+                Add Bike
+              </Button>
+              <Button variant="contained" size="small" sx={{margin: '3px'}} onClick={handleOpenAddMiles}>
+                Add Ride
+              </Button>
+              <Button variant="contained" size="small" sx={{margin: '3px'}} onClick={cycleLeft}>
+              &lt;
+              </Button>
+              <Button variant="contained" size="small" sx={{margin: '3px'}} onClick={cycleRight}>
+              &gt;
+              </Button>
+            </ButtonGroup>
+            </Box>
+        </Box>
         <Typography color="text.secondary">
           {bike.brand} {bike.model}
         </Typography>
@@ -26,22 +58,23 @@ const BikeCard: React.FC<BikeProps> = ({ bike }) => {
               <strong>Notes:</strong> {bike.notes}
             </Typography>
             <Typography variant="body2">
-              <strong>Purchased:</strong> {bike.monthYearPurchased}
+              <strong>Purchased:</strong> {bike.monthYearPurchased.toLocaleDateString()}
             </Typography>
           </Grid>
           <Grid item xs={6}>
             <Typography variant="body2">
-              <strong>Last Serviced:</strong> {bike.dateLastServiced.toLocaleDateString()}
+              <strong>Last Serviced:</strong>
+              {bike.dateLastServiced.toLocaleDateString()}
             </Typography>
             <Typography variant="body2">
               <strong>Miles Last Serviced:</strong> {bike.milesLastServiced}
             </Typography>
             <Typography variant="body2">
-              <strong>Total Miles:</strong> {bike.totalMiles}
+              <strong>Current Miles:</strong> {bike.totalMiles}
             </Typography>
-            <Typography variant="body2">
+            {/* <Typography variant="body2">
               <strong>Track By:</strong> {bike.trackBy}
-            </Typography>
+            </Typography> */}
           </Grid>
         </Grid>
       </CardContent>

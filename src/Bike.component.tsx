@@ -1,25 +1,111 @@
 import { useEffect, useState } from "react";
-import AlertsComponent from "./Alerts.component";
 import BikeCard from "./Components/BikeCard.component";
-import MaintLogComponent from "./MaintLog.component";
-import { Bike, BikeService } from "./services/BikeService";
+import { Bike, BikeService, MaintLog } from "./services/BikeService";
 import BikeDropdown from "./Components/BikeDropdown.component";
+import MaintLogPopup from "./Components/MaintLogPopup";
+import { Button } from "@mui/material";
+import AddMilesPopup from "./Components/AddMiles.component";
+import AddEditBikePopup from "./Components/AddEditBike.component";
 
 const BikeComponent = () => {
-  //const { data, error, isLoading } = useQuery('myData', fetchMyData);
-
-  // if (isLoading) return <div>Loading...</div>;
-  // if (error) return <div>Error loading data</div>;
   const [bikeData, setBikeData] = useState<Bike[]>([]);
   const [selectedBike, setSelectedBike] = useState("");
   const [selectedBikeIndex, setSelectedBikeIndex] = useState(0);
+  const [open, setOpen] = useState<boolean>(false);
+  const [openAddMiles, setOpenAddMiles] = useState<boolean>(false);
+  const [openEditBike, setOpenEditBike] = useState<boolean>(false);
+
+  const [log, setLog] = useState<MaintLog[]>([]);
+
+  const handleOpen = async () => {
+    const log = await BikeService.getMaintLog(
+      "123e4567-e89b-12d3-a456-426614174000",
+      bikeData[selectedBikeIndex].id
+    );
+    setLog(log);
+    setOpen(true);
+  };
+  const handleClose = () => setOpen(false);
+  const handleOpenAddMiles = () => {
+    console.log("Opening");
+    setOpenAddMiles(true);
+  };
+
+  const handleCycleLeft = () => {
+    let next = selectedBikeIndex-1;
+    next = next > -1 ? next : bikeData.length -1;
+    setSelectedBikeIndex(next);
+  }
+
+  const handleCycleRight = () => {
+    let next = selectedBikeIndex+1;
+    next = next === bikeData.length ? 0 : next;
+    setSelectedBikeIndex(next);
+  }
+
+  const emptyBike: Bike = {
+    userID: "",
+    id: "123456",
+    trackBy: "",
+    name: "",
+    brand: "",
+    model: "",
+    spec: "",
+    notes: "",
+    monthYearPurchased: new Date(),
+    dateLastServiced: new Date(),
+    milesLastServiced: 0,
+    totalMiles: 0,
+  };
+
+  const handleOpenEditBike = (add: boolean) => {
+    console.log("Opening");
+    const newIdx = bikeData.length;
+    if (add) {
+      const updatedData = bikeData.map((item, idx) => {
+        return { ...item };
+      });
+      updatedData.push(emptyBike);
+      setBikeData(updatedData);
+      setSelectedBikeIndex(newIdx);      
+    }
+    setOpenEditBike(true);
+  };
+
+  const handleCloseAddMiles = (add: number) => {
+    console.log("Closing...." + add);
+    bikeData[selectedBikeIndex].totalMiles += add;
+    setOpenAddMiles(false);
+  };
+
+  const handleModfyBike = (data: Bike) => {
+    //console.log('Closing....' + add);
+    //bikeData[selectedBikeIndex].totalMiles += add;
+    //debugger;
+    setOpenEditBike(false);
+
+    console.log("Returned from edit:");
+    console.log(data);
+    console.log(data.id);
+    if (data.id.length > 0) {
+      console.log("Updating bike info");
+      // If we are editing a bike, and Submit was hit.
+      const updatedData = bikeData.map((item, idx) => {
+        if (idx === selectedBikeIndex) return { ...data };
+        else return { ...item };
+      });
+      setBikeData(updatedData);
+      console.log("Now updated to: ");
+      console.log(updatedData);
+      debugger;
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       const bikedata = await BikeService.getBikes(
-        "123e4567-e89b-12d3-a456-426614174000"  // user
+        "123e4567-e89b-12d3-a456-426614174000" // user
       );
-      debugger;
       setBikeData(bikedata);
     };
     fetchData();
@@ -28,7 +114,7 @@ const BikeComponent = () => {
   const handleDataFromChild = (data: string) => {
     setSelectedBike(data);
     console.log("Data from child:", data);
-    const idx = bikeData.findIndex(bike => bike.id === data);
+    const idx = bikeData.findIndex((bike) => bike.id === data);
     setSelectedBikeIndex(idx);
   };
 
@@ -36,15 +122,54 @@ const BikeComponent = () => {
     <div>
       {bikeData.length > 0 ? (
         <div>
-          <BikeDropdown bikes={bikeData} onDataFromChild={handleDataFromChild}></BikeDropdown>
-          <BikeCard bike={bikeData[selectedBikeIndex]}></BikeCard>
+          <BikeDropdown
+            bikes={bikeData}
+            onDataFromChild={handleDataFromChild}
+          ></BikeDropdown>
+          <BikeCard
+            bike={bikeData[selectedBikeIndex]}
+            handleOpenAddMiles={handleOpenAddMiles}
+            handleOpenEditBike={handleOpenEditBike}
+            cycleLeft={handleCycleLeft}
+            cycleRight={handleCycleRight}
+          ></BikeCard>
+          <MaintLogPopup
+            bikeName={bikeData[selectedBikeIndex].name}
+            log={log}
+            open={open}
+            handleClose={handleClose}
+          ></MaintLogPopup>
+          <AddMilesPopup
+            miles={bikeData[selectedBikeIndex].totalMiles}
+            open={openAddMiles}
+            handleClose={handleCloseAddMiles}
+          ></AddMilesPopup>
+          <AddEditBikePopup
+            data={bikeData[selectedBikeIndex]}
+            open={openEditBike}
+            handleClose={handleModfyBike}
+          ></AddEditBikePopup>
         </div>
       ) : (
         <p>Loading...</p>
       )}
       <br />
-      <MaintLogComponent></MaintLogComponent>
-      <AlertsComponent></AlertsComponent>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleOpen}
+        sx={{ margin: "3px" }}
+      >
+        Maintenance Log
+      </Button>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={undefined}
+        sx={{ margin: "3px" }}
+      >
+        Alerts (coming soon)
+      </Button>
     </div>
   );
 };

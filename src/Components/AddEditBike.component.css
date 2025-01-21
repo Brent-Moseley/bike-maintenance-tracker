@@ -1,0 +1,23 @@
+.form-column {
+  flex: 1;
+  margin: 0 10px;
+}
+
+.form-container {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.form-group-container {
+  display: flex;
+  margin: 2px;
+}
+.left,
+.right {
+  flex: 1;
+  padding: 0px;
+}

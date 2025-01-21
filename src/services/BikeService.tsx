@@ -10,7 +10,7 @@ export interface Bike {
   model: string;
   spec: string;
   notes: string;
-  monthYearPurchased: string;
+  monthYearPurchased: Date;
   dateLastServiced: Date;
   milesLastServiced: number;
   totalMiles: number;
@@ -24,11 +24,12 @@ interface BikeAll {
 }
 
 export interface MaintLog {
-  id: string;
-  userID: string;
-  bikeID: string;
-  date: Date;
-  description: string;
+  id?: string;
+  userID?: string;
+  bikeID?: string;
+  date?: Date;
+  miles?: number;
+  description?: string;
 }
 
 export interface Alerts {
@@ -50,7 +51,7 @@ const bikeData: BikeAll[] = [
       model: "X-Caliber 8",
       spec: "29er, 12-speed, Hydraulic Disc Brakes",
       notes: "Great for trail riding and cross-country",
-      monthYearPurchased: "June 2021",
+      monthYearPurchased: new Date("June 2021"),
       dateLastServiced: new Date("2023-10-15"),
       milesLastServiced: 1500,
       totalMiles: 1800,
@@ -62,6 +63,7 @@ const bikeData: BikeAll[] = [
         userID: "123e4567-e89b-12d3-a456-426614174000", 
         bikeID: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
         date: new Date("2024-10-15"),
+        miles: 1400,
         description: "installed new chain",
       },
       {
@@ -69,6 +71,7 @@ const bikeData: BikeAll[] = [
         userID: "123e4567-e89b-12d3-a456-426614174000", 
         bikeID: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
         date: new Date("2024-11-18"),
+        miles: 1500,
         description: "Serviced fork, lubricated dropper",
       },
     ],
@@ -100,7 +103,7 @@ const bikeData: BikeAll[] = [
       model: "Defy Advanced 2",
       spec: "Carbon Frame, 11-speed, Hydraulic Disc Brakes",
       notes: "Excellent road performance and endurance",
-      monthYearPurchased: "March 2020",
+      monthYearPurchased: new Date("March 2020"),
       dateLastServiced: new Date("2023-09-10"),
       milesLastServiced: 3000,
       totalMiles: 3400,
@@ -112,6 +115,7 @@ const bikeData: BikeAll[] = [
         userID: "123e4567-e89b-12d3-a456-426614174000", 
         bikeID: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12",
         date: new Date("2024-10-15"),
+        miles: 2090,
         description: "installed new chain with carbon pins",
       },
       {
@@ -119,6 +123,7 @@ const bikeData: BikeAll[] = [
         userID: "123e4567-e89b-12d3-a456-426614174000", 
         bikeID: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12",
         date: new Date("2024-11-18"),
+        miles: 3000,
         description: "Replaced front and rear tires, Continental air Jordans, 4 grams each.",
       },
     ],
@@ -133,7 +138,7 @@ const bikeData: BikeAll[] = [
       model: "Sirrus X 4.0",
       spec: "Hybrid, 10-speed, Mechanical Disc Brakes",
       notes: "Perfect for city commuting and light trails",
-      monthYearPurchased: "August 2019",
+      monthYearPurchased: new Date("August 2019"),
       dateLastServiced: new Date("2023-11-05"),
       milesLastServiced: 500,
       totalMiles: 750,
