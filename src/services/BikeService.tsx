@@ -24,7 +24,7 @@ interface BikeAll {
 }
 
 export interface MaintLog {
-  id?: string;
+  id: string;
   userID?: string;
   bikeID?: string;
   date?: Date;
@@ -158,6 +158,14 @@ export const BikeService = {
   getMaintLog: async function (user: string, bikeId: string): Promise<MaintLog[]> {
     const returnData: MaintLog[] = (bikeData.filter((bike) => {return bike.bike.userID == user && bike.bike.id == bikeId}) ?? [])[0].maintLog;
     return returnData;
+  },
+  setMaintLog: async function (user: string, bikeId: string, updated: MaintLog[]): Promise<boolean> {
+    let bike = bikeData.filter((bike) => {return bike.bike.userID == user && bike.bike.id == bikeId});
+    if (bike.length === 0) return false;
+    bike[0].maintLog = updated;
+    console.log("Service updated with: ");
+    console.log(updated);
+    return true;
   },
   getAlerts:  async function (user: string, bikeId: string): Promise<Alerts[]> {
     const returnData: Alerts[] = (bikeData.filter((bike) => {return bike.bike.userID == user && bike.bike.id == bikeId}) ?? [])[0].alerts;

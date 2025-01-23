@@ -25,23 +25,32 @@ const BikeComponent = () => {
     setLog(log);
     setOpen(true);
   };
-  const handleClose = () => setOpen(false);
+  const handleClose = async (updated: MaintLog[]) => {
+    console.log('Logs are now:');
+    console.log(updated);
+    // save updated long to the BikeService
+    await BikeService.setMaintLog("123e4567-e89b-12d3-a456-426614174000",
+      bikeData[selectedBikeIndex].id, updated);
+
+    setOpen(false);
+  }
+
   const handleOpenAddMiles = () => {
     console.log("Opening");
     setOpenAddMiles(true);
   };
 
   const handleCycleLeft = () => {
-    let next = selectedBikeIndex-1;
-    next = next > -1 ? next : bikeData.length -1;
+    let next = selectedBikeIndex - 1;
+    next = next > -1 ? next : bikeData.length - 1;
     setSelectedBikeIndex(next);
-  }
+  };
 
   const handleCycleRight = () => {
-    let next = selectedBikeIndex+1;
+    let next = selectedBikeIndex + 1;
     next = next === bikeData.length ? 0 : next;
     setSelectedBikeIndex(next);
-  }
+  };
 
   const emptyBike: Bike = {
     userID: "",
@@ -67,7 +76,7 @@ const BikeComponent = () => {
       });
       updatedData.push(emptyBike);
       setBikeData(updatedData);
-      setSelectedBikeIndex(newIdx);      
+      setSelectedBikeIndex(newIdx);
     }
     setOpenEditBike(true);
   };
