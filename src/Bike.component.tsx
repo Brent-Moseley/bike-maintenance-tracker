@@ -6,12 +6,16 @@ import MaintLogPopup from "./Components/MaintLogPopup";
 import { Button } from "@mui/material";
 import AddMilesPopup from "./Components/AddMiles.component";
 import AddEditBikePopup from "./Components/AddEditBike.component";
+import NewBikeDayModal from "./Components/NewBikeDay.component";
+import { v4 as uuidv4 } from "uuid";
 
 const BikeComponent = () => {
   const [bikeData, setBikeData] = useState<Bike[]>([]);
   const [selectedBike, setSelectedBike] = useState("");
   const [selectedBikeIndex, setSelectedBikeIndex] = useState(0);
   const [open, setOpen] = useState<boolean>(false);
+  const [nbdopen, setNBDOpen] = useState<boolean>(false);
+  const [addMode, setAddMode] = useState<boolean>(false);
   const [openAddMiles, setOpenAddMiles] = useState<boolean>(false);
   const [openEditBike, setOpenEditBike] = useState<boolean>(false);
 
@@ -26,14 +30,17 @@ const BikeComponent = () => {
     setOpen(true);
   };
   const handleClose = async (updated: MaintLog[]) => {
-    console.log('Logs are now:');
+    console.log("Logs are now:");
     console.log(updated);
     // save updated long to the BikeService
-    await BikeService.setMaintLog("123e4567-e89b-12d3-a456-426614174000",
-      bikeData[selectedBikeIndex].id, updated);
+    await BikeService.setMaintLog(
+      "123e4567-e89b-12d3-a456-426614174000",
+      bikeData[selectedBikeIndex].id,
+      updated
+    );
 
     setOpen(false);
-  }
+  };
 
   const handleOpenAddMiles = () => {
     console.log("Opening");
@@ -52,8 +59,22 @@ const BikeComponent = () => {
     setSelectedBikeIndex(next);
   };
 
+  const handleNBDOK = () => {
+    handleOpenEditBike(true);
+    setNBDOpen(false);
+  };
+
+  const handleNBDCancel = () => {
+    setNBDOpen(false);
+  };
+
+  const handleAddBike = () => {
+    console.log("Opening add bike");
+    setNBDOpen(true);
+  };
+
   const emptyBike: Bike = {
-    userID: "",
+    userID: "123e4567-e89b-12d3-a456-426614174000",
     id: "123456",
     trackBy: "",
     name: "",
@@ -71,12 +92,17 @@ const BikeComponent = () => {
     console.log("Opening");
     const newIdx = bikeData.length;
     if (add) {
+      // Add a new bike.
       const updatedData = bikeData.map((item, idx) => {
         return { ...item };
       });
+      emptyBike.id = uuidv4();
       updatedData.push(emptyBike);
+      setAddMode(true);
       setBikeData(updatedData);
       setSelectedBikeIndex(newIdx);
+    } else {
+      setAddMode(false);
     }
     setOpenEditBike(true);
   };
@@ -84,6 +110,7 @@ const BikeComponent = () => {
   const handleCloseAddMiles = (add: number) => {
     console.log("Closing...." + add);
     bikeData[selectedBikeIndex].totalMiles += add;
+    BikeService.saveBike(bikeData[selectedBikeIndex], selectedBikeIndex);
     setOpenAddMiles(false);
   };
 
@@ -97,6 +124,7 @@ const BikeComponent = () => {
     console.log(data);
     console.log(data.id);
     if (data.id.length > 0) {
+      // Submit clicked
       console.log("Updating bike info");
       // If we are editing a bike, and Submit was hit.
       const updatedData = bikeData.map((item, idx) => {
@@ -106,7 +134,14 @@ const BikeComponent = () => {
       setBikeData(updatedData);
       console.log("Now updated to: ");
       console.log(updatedData);
-      debugger;
+      BikeService.saveBike(updatedData[selectedBikeIndex], selectedBikeIndex);
+    } else {
+      // Cancel clicked
+      if (addMode) {
+        // Delete the newly added bike
+        setBikeData((prevItems) => prevItems.slice(0, -1));
+        setSelectedBikeIndex(selectedBikeIndex - 1);
+      }
     }
   };
 
@@ -138,12 +173,14 @@ const BikeComponent = () => {
           <BikeCard
             bike={bikeData[selectedBikeIndex]}
             handleOpenAddMiles={handleOpenAddMiles}
+            handleOpenAddBike={handleAddBike}
             handleOpenEditBike={handleOpenEditBike}
             cycleLeft={handleCycleLeft}
             cycleRight={handleCycleRight}
           ></BikeCard>
           <MaintLogPopup
             bikeName={bikeData[selectedBikeIndex].name}
+            bikeId={bikeData[selectedBikeIndex].name}
             log={log}
             open={open}
             handleClose={handleClose}
@@ -158,6 +195,11 @@ const BikeComponent = () => {
             open={openEditBike}
             handleClose={handleModfyBike}
           ></AddEditBikePopup>
+          <NewBikeDayModal
+            open={nbdopen}
+            handleOk={handleNBDOK}
+            handleClose={handleNBDCancel}
+          ></NewBikeDayModal>
         </div>
       ) : (
         <p>Loading...</p>
@@ -184,3 +226,5 @@ const BikeComponent = () => {
 };
 
 export default BikeComponent;
+
+

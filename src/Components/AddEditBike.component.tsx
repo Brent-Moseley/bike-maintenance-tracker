@@ -42,22 +42,12 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
   open,
   handleClose,
 }) => {
-  // const [numberValue, setNumberValue] = React.useState("");
-  // const handleChange = (event: {
-  //   target: { value: React.SetStateAction<string> };
-  // }) => {
-  //   setNumberValue(event.target.value);
-  //   console.log("Updated to: " + event.target.value);
-  // };
   const newData = structuredClone(data);
   console.log("New data:");
   console.log(newData);
   console.log(newData.id);
 
   const handleCloseModal = (submit: boolean) => {
-    //let val = parseFloat(numberValue);
-    //newData.totalMiles = 1;
-    debugger;
     console.log("Submit: " + submit);
     console.log("Sending back:");
     const updated = { ...formData };
@@ -74,8 +64,6 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
     setFormData(newData);
   }, [data]);
 
-  //setFormData(newData);
-  debugger;
   const handleInputChange = (e: { target: { name: any; value: any } }) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -104,9 +92,6 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
         <Typography id="modal-title" variant="h6" component="h2">
           Add / Edit Bike
         </Typography>
-        {/* <Typography id="modal-description" sx={{ mt: 2 }}>
-          Enter bike information:
-        </Typography> */}
         <Box sx={{ width: "100%", maxWidth: 700, margin: "auto" }}>
           <form noValidate autoComplete="off">
             <div className="form-group-container">

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Modal,
   Box,
@@ -6,6 +6,7 @@ import {
   Button,
   Paper,
   TextField,
+  Tooltip,
 } from "@mui/material";
 import { MaintLog } from "../services/BikeService";
 import { styled } from "@mui/material/styles";
@@ -19,9 +20,12 @@ import { v4 as uuidv4 } from "uuid";
 import { DesktopDatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
+import ConfirmModal from "./Confirm.component";
+import { Description, WidthFull } from "@mui/icons-material";
 
 interface PopupModalProps {
   bikeName: string;
+  bikeId: string;
   log: MaintLog[];
   open: boolean;
   handleClose: (logs: MaintLog[]) => void;
@@ -66,16 +70,30 @@ const style = {
   p: 4,
 };
 
+const styleContent = {
+  maxHeight: 400,
+  overflowY: "auto",
+  width: "100%",
+};
+
 const MaintLogPopup: React.FC<PopupModalProps> = ({
   bikeName,
+  bikeId,
   log,
   open,
   handleClose,
 }) => {
   const [logs, setLogs] = useState<MaintLog[]>(log);
   const [editRowId, setEditRowId] = useState<string | null>(null);
+  const [confirmModalOpen, setConfirmModalOpen] = useState<boolean>(false);
+  const [currentId, setCurrentId] = useState<string>("");
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [sortAsc, setSortAsc] = useState<boolean>(false);
+  const [closeLabel, setCloseLabel] = useState<string>("Close");
   const [newRow, setNewRow] = useState<MaintLog>({
     id: uuidv4(),
+    userID: "123e4567-e89b-12d3-a456-426614174000", // set with real user ID
+    bikeID: bikeId,
     date: new Date(),
     miles: 0,
     description: "",
@@ -85,8 +103,42 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
     setLogs(log);
   }, [log]);
 
+  useEffect(() => {
+    if (boxRef.current) {
+      boxRef.current.scrollTop = boxRef.current.scrollHeight;
+    }
+  }, [logs]);
+
+  useEffect(() => {
+    //console.log("Just opened Maint log " + open)
+    if (open) {
+      // Reset form
+      setCloseLabel("Close");
+      setEditRowId("");
+    }
+  }, [open]);
+
+  const handleConfirmOK = () => {
+    const idx = logs.findIndex((log) => log.id === currentId);
+    if (idx > -1) {
+      setLogs([...logs.slice(0, idx), ...logs.slice(idx + 1)]);
+      setCloseLabel("Save");
+    }
+    setConfirmModalOpen(false);
+  };
+
+  const handleConfirmCancel = () => {
+    setConfirmModalOpen(false);
+  };
+
   const handleAddRow = () => {
-    const rowWithId = { ...newRow, id: uuidv4() };
+    const rowWithId = {
+      ...newRow,
+      id: uuidv4(),
+      date: new Date(),
+      miles: 0,
+      description: "",
+    };
     setLogs([...logs, rowWithId]);
     setEditRowId(rowWithId.id);
   };
@@ -99,18 +151,37 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
     setLogs((prevLogs) =>
       prevLogs.map((row) => (row.id === id ? { ...row, [name]: value } : row))
     );
+    setCloseLabel("Save");
   };
 
-  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setNewRow((prevNewRow) => ({ ...prevNewRow, [name]: value }));
+  const dateSort = () => {
+    console.log(" sorting");
+    setSortAsc(!sortAsc);
+    if (sortAsc)
+      setLogs((prev) => {
+        return prev.sort((a: MaintLog, b: MaintLog) => {
+          return a.date === b.date ? 0 : a.date < b.date ? -1 : 1;
+        });
+      });
+    else
+      setLogs((prev) => {
+        return prev.sort((a: MaintLog, b: MaintLog) => {
+          return a.date === b.date ? 0 : a.date < b.date ? 1 : -1;
+        });
+      });
   };
+
+  // const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const { name, value } = e.target;
+  //   setNewRow((prevNewRow) => ({ ...prevNewRow, [name]: value }));
+  // };
 
   const handleCommit = (save: boolean) => {
     console.log("wants to save");
     console.log(logs);
     if (!save) {
       setLogs(logs.slice(0, -1));
+      setCloseLabel("Save");
     }
     setEditRowId("");
   };
@@ -119,124 +190,168 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
     debugger;
     if (newValue)
       setLogs((prevLogs) =>
-        prevLogs.map((row) => (row.id === editRowId ? { ...row, date : newValue.toDate() } : row))
+        prevLogs.map((row) =>
+          row.id === editRowId ? { ...row, date: newValue.toDate() } : row
+        )
       );
+    setCloseLabel("Save");
+  };
+
+  const handleRowDelete = (id: string) => {
+    setCurrentId(id);
+    setConfirmModalOpen(true);
   };
 
   return (
-    <Modal
-      open={open}
-      onClose={() => {
-        handleClose(logs);
-      }}
-      aria-labelledby="modal-title"
-      aria-describedby="modal-description"
-    >
-      <Box sx={style}>
-        <Typography id="modal-title" variant="h6" component="h2">
-          Maintenance Log for {bikeName}
-        </Typography>
-        <Typography id="modal-description" sx={{ mt: 2 }}>
-          {logs && logs.length > 0 ? (
-            <Box sx={{ width: "100%" }}>
-              <TableContainer component={Paper}>
-                <Table sx={{ minWidth: 700 }} aria-label="customized table">
-                  <TableHead>
-                    <TableRow>
-                      <StyledTableCell>Date</StyledTableCell>
-                      <StyledTableCell>Miles</StyledTableCell>
-                      <StyledTableCell align="right">
-                        Description
-                      </StyledTableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {logs.map((row) => (
-                      <StyledTableRow key={row.id}>
-                        <StyledTableCell component="th" scope="row">
-                          {row.id === editRowId ? (
-                            <LocalizationProvider dateAdapter={AdapterDayjs}>
-                              <DesktopDatePicker
-                                label="Date Purchased"
-                                name="monthYearPurchased"
-                                value={dayjs(row.date)}
-                                sx={{maxWidth: '180px;'}}
-                                onChange={handleDateChangeMYPurchased}
-                              />
-                            </LocalizationProvider>
-                          ) : (
-                            row.date?.toLocaleDateString()
-                          )}
+    <>
+      <Modal
+        open={open}
+        onClose={() => {
+          handleClose(logs);
+        }}
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="modal-title" variant="h6" component="h2">
+            Maintenance Log for {bikeName}
+          </Typography>
+          <Typography id="modal-description" sx={{ mt: 2 }}>
+            {logs && logs.length > 0 ? (
+              <Box sx={styleContent} ref={boxRef}>
+                <TableContainer component={Paper}>
+                  <Table sx={{ minWidth: 700 }} aria-label="customized table">
+                    <TableHead>
+                      <TableRow>
+                        <StyledTableCell
+                          style={{ cursor: "pointer" }}
+                          onClick={dateSort}
+                        >
+                          Date
                         </StyledTableCell>
-                        <StyledTableCell align="left">
-                          {row.id === editRowId ? (
-                            <TextField
-                              label="Miles"
-                              name="miles"
-                              size="small"
-                              style={{ width: 100 }}
-                              value={row.miles}
-                              onChange={(e) => handleInputChange(e, row.id)}
-                            />
-                          ) : (
-                            row.miles
-                          )}
-                        </StyledTableCell>
+                        <StyledTableCell>Miles</StyledTableCell>
                         <StyledTableCell align="right">
-                          {row.id === editRowId ? (
-                            <>
+                          Description
+                        </StyledTableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {logs.map((row) => (
+                        <StyledTableRow key={row.id}>
+                          <StyledTableCell component="th" scope="row">
+                            {row.id === editRowId ? (
+                              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                <DesktopDatePicker
+                                  label="Date Purchased"
+                                  name="monthYearPurchased"
+                                  value={dayjs(row.date)}
+                                  sx={{ maxWidth: "180px;" }}
+                                  onChange={handleDateChangeMYPurchased}
+                                />
+                              </LocalizationProvider>
+                            ) : (
+                              row.date?.toLocaleDateString()
+                            )}
+                          </StyledTableCell>
+                          <StyledTableCell align="left">
+                            {row.id === editRowId ? (
                               <TextField
-                                label="Description"
-                                name="description"
+                                label="Miles"
+                                name="miles"
                                 size="small"
-                                style={{ width: 350 }}
-                                value={row.description}
+                                style={{ width: 100 }}
+                                value={row.miles}
                                 onChange={(e) => handleInputChange(e, row.id)}
                               />
-                              <Button
-                                style={{ minWidth: "40px", maxHeight: "30px" }}
-                                onClick={() => {
-                                  handleCommit(true);
-                                }}
-                              >
-                                OK
-                              </Button>
-                              <Button
-                                style={{ minWidth: "30px", maxHeight: "30px" }}
-                                onClick={() => {
-                                  handleCommit(false);
-                                }}
-                              >
-                                X
-                              </Button>
-                            </>
-                          ) : (
-                            row.description
-                          )}
-                        </StyledTableCell>
-                      </StyledTableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Box>
-          ) : (
-            <p></p>
-          )}
-        </Typography>
-        <Button onClick={handleAddRow} sx={{ mt: 2 }}>
-          Add Row
-        </Button>
-        <Button
-          onClick={() => {
-            handleClose(logs);
-          }}
-          sx={{ mt: 2 }}
-        >
-          Close
-        </Button>
-      </Box>
-    </Modal>
+                            ) : (
+                              row.miles
+                            )}
+                          </StyledTableCell>
+                          <StyledTableCell align="right">
+                            {row.id === editRowId ? (
+                              <>
+                                <TextField
+                                  label="Description"
+                                  name="description"
+                                  size="small"
+                                  style={{ width: 350 }}
+                                  value={row.description}
+                                  onChange={(e) => handleInputChange(e, row.id)}
+                                />
+                                <Button
+                                  style={{
+                                    minWidth: "40px",
+                                    maxHeight: "30px",
+                                  }}
+                                  onClick={() => {
+                                    handleCommit(true);
+                                  }}
+                                >
+                                  OK
+                                </Button>
+                                <Tooltip title="Cancel">
+                                  <Button
+                                    style={{
+                                      minWidth: "30px",
+                                      maxHeight: "30px",
+                                    }}
+                                    onClick={() => {
+                                      handleCommit(false);
+                                    }}
+                                  >
+                                    X
+                                  </Button>
+                                </Tooltip>
+                              </>
+                            ) : (
+                              <>
+                                {row.description}
+                                <Tooltip title="Delete Row">
+                                  <Button
+                                    style={{
+                                      minWidth: "30px",
+                                      maxHeight: "30px",
+                                    }}
+                                    onClick={() => {
+                                      handleRowDelete(row.id);
+                                    }}
+                                  >
+                                    X
+                                  </Button>
+                                </Tooltip>
+                              </>
+                            )}
+                          </StyledTableCell>
+                        </StyledTableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            ) : (
+              <p></p>
+            )}
+          </Typography>
+          <Button onClick={handleAddRow} sx={{ mt: 2 }}>
+            Add Row
+          </Button>
+          <Button
+            onClick={() => {
+              handleClose(logs);
+            }}
+            sx={{ mt: 2 }}
+          >
+            {closeLabel}
+          </Button>
+        </Box>
+      </Modal>
+      <ConfirmModal
+        open={confirmModalOpen}
+        message="Delete this row?"
+        handleOk={handleConfirmOK}
+        handleClose={handleConfirmCancel}
+      ></ConfirmModal>
+    </>
   );
 };
 

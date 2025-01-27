@@ -25,9 +25,9 @@ interface BikeAll {
 
 export interface MaintLog {
   id: string;
-  userID?: string;
-  bikeID?: string;
-  date?: Date;
+  userID: string;
+  bikeID: string;
+  date: Date;
   miles?: number;
   description?: string;
 }
@@ -36,12 +36,14 @@ export interface Alerts {
   id: string;
   userID: string;
   bikeID: string;
-  date: Date;
+  date?: Date;
   description: string;
-  repeatEvery: string;
+  miles?: number;
+  repeatMiles?: number;
+  repeatDays?: number;
 }
 
-const bikeData: BikeAll[] = [
+let bikeData: BikeAll[] = [
   {
     bike: {
       userID: "123e4567-e89b-12d3-a456-426614174000",
@@ -60,7 +62,7 @@ const bikeData: BikeAll[] = [
     maintLog: [
       {
         id: "m01",
-        userID: "123e4567-e89b-12d3-a456-426614174000", 
+        userID: "123e4567-e89b-12d3-a456-426614174000",
         bikeID: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
         date: new Date("2024-10-15"),
         miles: 1400,
@@ -68,7 +70,7 @@ const bikeData: BikeAll[] = [
       },
       {
         id: "m02",
-        userID: "123e4567-e89b-12d3-a456-426614174000", 
+        userID: "123e4567-e89b-12d3-a456-426614174000",
         bikeID: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
         date: new Date("2024-11-18"),
         miles: 1500,
@@ -82,7 +84,7 @@ const bikeData: BikeAll[] = [
         bikeID: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
         date: new Date("2025-01-25"),
         description: "Check rear der for wear",
-        repeatEvery: "3 months",
+        miles: 2100,
       },
       {
         id: "a02",
@@ -90,7 +92,7 @@ const bikeData: BikeAll[] = [
         bikeID: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
         date: new Date("2025-03-04"),
         description: "Replace rear tire if worn",
-        repeatEvery: "3 months",
+        repeatDays: 4,
       },
     ],
   },
@@ -112,7 +114,7 @@ const bikeData: BikeAll[] = [
     maintLog: [
       {
         id: "m03",
-        userID: "123e4567-e89b-12d3-a456-426614174000", 
+        userID: "123e4567-e89b-12d3-a456-426614174000",
         bikeID: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12",
         date: new Date("2024-10-15"),
         miles: 2090,
@@ -120,11 +122,12 @@ const bikeData: BikeAll[] = [
       },
       {
         id: "m04",
-        userID: "123e4567-e89b-12d3-a456-426614174000", 
+        userID: "123e4567-e89b-12d3-a456-426614174000",
         bikeID: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12",
         date: new Date("2024-11-18"),
         miles: 3000,
-        description: "Replaced front and rear tires, Continental air Jordans, 4 grams each.",
+        description:
+          "Replaced front and rear tires, Continental air Jordans, 4 grams each.",
       },
     ],
     alerts: [],
@@ -149,27 +152,95 @@ const bikeData: BikeAll[] = [
   },
 ];
 
+function dateReviver(key: string, value: any) {
+  const datePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
+  if (typeof value === "string" && datePattern.test(value)) {
+    return new Date(value);
+  }
+  switch (key) {
+    case "milesLastServiced":
+    case "totalMiles":
+    case "miles":
+    case "repeatMiles":
+    case "repeatDays":
+      return parseInt(value);
+  }
+
+  return value;
+}
+
 export const BikeService = {
   getBikes: async function (user: string): Promise<Bike[]> {
     console.log("start:");
-    const returnData: Bike[] = (bikeData.filter((bike) => {return bike.bike.userID == user}) ?? []).map(bike => bike.bike);
+    const returnData: Bike[] = (
+      bikeData.filter((bike) => {
+        return bike.bike.userID == user;
+      }) ?? []
+    ).map((bike) => bike.bike);
     return returnData;
   },
-  getMaintLog: async function (user: string, bikeId: string): Promise<MaintLog[]> {
-    const returnData: MaintLog[] = (bikeData.filter((bike) => {return bike.bike.userID == user && bike.bike.id == bikeId}) ?? [])[0].maintLog;
-    return returnData;
+  getMaintLog: async function (
+    user: string,
+    bikeId: string
+  ): Promise<MaintLog[]> {
+    const bike = bikeData.filter((bike) => {
+      return bike.bike.userID == user && bike.bike.id == bikeId;
+    });
+    if (bike && bike.length > 0) return bike[0].maintLog;
+    else return [];
+    // const returnData: MaintLog[] = (bikeData.filter((bike) => {
+    //   return bike.bike.userID == user && bike.bike.id == bikeId;
+    // }) ?? [])[0].maintLog;
+    // return returnData;
   },
-  setMaintLog: async function (user: string, bikeId: string, updated: MaintLog[]): Promise<boolean> {
-    let bike = bikeData.filter((bike) => {return bike.bike.userID == user && bike.bike.id == bikeId});
+  setMaintLog: async function (
+    user: string,
+    bikeId: string,
+    updated: MaintLog[]
+  ): Promise<boolean> {
+    let bike = bikeData.filter((bike) => {
+      return bike.bike.userID == user && bike.bike.id == bikeId;
+    });
     if (bike.length === 0) return false;
     bike[0].maintLog = updated;
+    this.saveAll(bikeData);
     console.log("Service updated with: ");
     console.log(updated);
     return true;
   },
-  getAlerts:  async function (user: string, bikeId: string): Promise<Alerts[]> {
-    const returnData: Alerts[] = (bikeData.filter((bike) => {return bike.bike.userID == user && bike.bike.id == bikeId}) ?? [])[0].alerts;
-    return returnData;
+  getAlerts: async function (user: string, bikeId: string): Promise<Alerts[]> {
+    const bike = bikeData.filter((bike) => {
+      return bike.bike.userID == user && bike.bike.id == bikeId;
+    });
+    if (bike && bike.length > 0) return bike[0].alerts;
+    else return [];
+    // const returnData: Alerts[] = (bikeData.filter((bike) => {
+    //   return bike.bike.userID == user && bike.bike.id == bikeId;
+    // }) ?? [])[0].alerts;
+    // return returnData;
+  },
+  saveAll: async function (data: BikeAll[]) {
+    localStorage.setItem("BikeMaintTracker", JSON.stringify(data));
+  },
+  loadAll: async function (): Promise<BikeAll[]> {
+    const data = localStorage.getItem("BikeMaintTracker");
+    if (data) console.log(JSON.parse(data, dateReviver));
+    debugger;
+    if (!data) return [];
+    else return JSON.parse(data, dateReviver);
+  },
+  saveBike: async function (data: Bike, idx: number) {
+    if (idx === bikeData.length) {
+      // New bike
+      const newData: BikeAll = {
+        bike: data,
+        alerts: [],
+        maintLog: []
+      }
+      bikeData.push(newData);
+    }
+    else bikeData[idx].bike = data;
+    this.saveAll(bikeData);
   },
   //   getUserById: async (id: string) => {
   //     const response = await axios.get(`${API_URL}/${id}`);
@@ -180,3 +251,11 @@ export const BikeService = {
   //     return response.data;
   //   }
 };
+
+const attemptLoad = async () => {
+  let savedData: BikeAll[] = await BikeService.loadAll();
+  if (savedData && savedData.length > 0) bikeData = savedData;
+  console.log(`Loaded data of length: ${savedData.length}`);
+};
+
+attemptLoad();

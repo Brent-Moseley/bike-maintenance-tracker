@@ -12,3 +12,6 @@ function App() {
 }
 
 export default App;
+
+
+// https://stackoverflow.com/questions/8537112/when-is-localstorage-cleared

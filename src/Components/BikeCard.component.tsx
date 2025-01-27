@@ -13,12 +13,13 @@ import { Bike } from "../services/BikeService";
 interface BikeProps {
   bike: Bike;
   handleOpenAddMiles: () => void;
+  handleOpenAddBike: () => void;
   handleOpenEditBike: (add: boolean) => void;
   cycleLeft: () => void;
   cycleRight: () => void;
 }
 
-const BikeCard: React.FC<BikeProps> = ({ bike, handleOpenAddMiles, handleOpenEditBike, cycleLeft, cycleRight }) => {
+const BikeCard: React.FC<BikeProps> = ({ bike, handleOpenAddMiles, handleOpenAddBike, handleOpenEditBike, cycleLeft, cycleRight }) => {
   return (
     <Card variant="outlined" sx={{ margin: 2 }}>
       <CardContent>
@@ -31,7 +32,7 @@ const BikeCard: React.FC<BikeProps> = ({ bike, handleOpenAddMiles, handleOpenEdi
               <Button variant="contained" size="small" sx={{margin: '3px'}} onClick={() => handleOpenEditBike(false)}>
                 Edit Bike
               </Button>
-              <Button variant="contained" size="small" sx={{margin: '3px'}} onClick={() => handleOpenEditBike(true)}>
+              <Button variant="contained" size="small" sx={{margin: '3px'}} onClick={handleOpenAddBike}>
                 Add Bike
               </Button>
               <Button variant="contained" size="small" sx={{margin: '3px'}} onClick={handleOpenAddMiles}>
