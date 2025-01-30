@@ -20,7 +20,7 @@ export interface Bike {
 interface BikeAll {
   bike: Bike;
   maintLog: MaintLog[];
-  alerts: Alerts[];
+  alerts: Alert[];
 }
 
 export interface MaintLog {
@@ -32,7 +32,7 @@ export interface MaintLog {
   description?: string;
 }
 
-export interface Alerts {
+export interface Alert {
   id: string;
   userID: string;
   bikeID: string;
@@ -41,6 +41,7 @@ export interface Alerts {
   miles?: number;
   repeatMiles?: number;
   repeatDays?: number;
+  ack: boolean;
 }
 
 let bikeData: BikeAll[] = [
@@ -85,6 +86,7 @@ let bikeData: BikeAll[] = [
         date: new Date("2025-01-25"),
         description: "Check rear der for wear",
         miles: 2100,
+        ack: false,
       },
       {
         id: "a02",
@@ -93,6 +95,7 @@ let bikeData: BikeAll[] = [
         date: new Date("2025-03-04"),
         description: "Replace rear tire if worn",
         repeatDays: 4,
+        ack: false,
       },
     ],
   },
@@ -208,16 +211,52 @@ export const BikeService = {
     console.log(updated);
     return true;
   },
-  getAlerts: async function (user: string, bikeId: string): Promise<Alerts[]> {
+  getAlerts: async function (user: string, bikeId: string): Promise<Alert[]> {
+    if (bikeId.length > 0) {
     const bike = bikeData.filter((bike) => {
       return bike.bike.userID == user && bike.bike.id == bikeId;
     });
     if (bike && bike.length > 0) return bike[0].alerts;
     else return [];
+  }
+  else {
+    const bike = bikeData.filter((bike) => {
+      return bike.bike.userID == user
+    });
+    if (bike.length === 0) return [];
+    var allAlerts: Alert[] = [];
+    // Combine alerts from all bikes.
+    // Keep a separate list of acknowledged alerts.
+    //  This will be a lot easier when I have it all in a table.
+    debugger;
+    for (var value of bike) {
+      allAlerts = allAlerts.concat(value.alerts);
+    }
+    console.log("All alerts:");
+    console.log(allAlerts);
+    return allAlerts;
+  }
     // const returnData: Alerts[] = (bikeData.filter((bike) => {
     //   return bike.bike.userID == user && bike.bike.id == bikeId;
     // }) ?? [])[0].alerts;
     // return returnData;
+  },
+  setAlerts: async function (
+    user: string,
+    bikeId: string,
+    updated: Alert[]
+  ): Promise<boolean> {
+    console.log("looking for bike to save alerts");
+    let bike = bikeData.filter((bike) => {
+      return bike.bike.userID == user && bike.bike.id == bikeId;
+    });
+    if (bike.length === 0) return false;
+    console.log("Bike found");
+    bike[0].alerts = updated;
+    this.saveAll(bikeData);
+    console.log("Service updated with: ");
+    console.log(updated);
+    return true;
   },
   saveAll: async function (data: BikeAll[]) {
     localStorage.setItem("BikeMaintTracker", JSON.stringify(data));

@@ -8,7 +8,7 @@ import {
   TextField,
   Tooltip,
 } from "@mui/material";
-import { MaintLog } from "../services/BikeService";
+import { Alert, MaintLog } from "../services/BikeService";
 import { styled } from "@mui/material/styles";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -21,14 +21,26 @@ import { DesktopDatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import ConfirmModal from "./Confirm.component";
-import { Description, WidthFull } from "@mui/icons-material";
+
+/*  
+Logic:  On this date, or on this many miles, I want to trigger a popup.
+This can be repeated every X miles or Y days.
+on page launch, cycle through all alerts and trigger any that are needed.
+Have an achknowledge button, like alarms.
+Do not repeat alerts that have been acknowledged.
+On repeat every... This will auto update the next miles or the next date.
+If both are specified, this is like an OR
+Have a boolean to set alerts that have been achknowledged.
+Advance the "counter" if there is a repeat every.
+Also run alerts on a bike whenever miles are added, edited, or a new day is detected.
+*/
 
 interface PopupModalProps {
   bikeName: string;
   bikeId: string;
-  log: MaintLog[];
+  alerts: Alert[];
   open: boolean;
-  handleClose: (logs: MaintLog[]) => void;
+  handleClose: (logs: Alert[]) => void;
 }
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -76,41 +88,48 @@ const styleContent = {
   width: "100%",
 };
 
-const MaintLogPopup: React.FC<PopupModalProps> = ({
+const AlertsPopup: React.FC<PopupModalProps> = ({
   bikeName,
   bikeId,
-  log,
+  alerts,
   open,
   handleClose,
 }) => {
-  const [logs, setLogs] = useState<MaintLog[]>(log);
+  const [alertSet, setAlertSet] = useState<Alert[]>(alerts);
   const [editRowId, setEditRowId] = useState<string | null>(null);
   const [confirmModalOpen, setConfirmModalOpen] = useState<boolean>(false);
   const [currentId, setCurrentId] = useState<string>("");
   const boxRef = useRef<HTMLDivElement>(null);
   const [sortAsc, setSortAsc] = useState<boolean>(false);
   const [closeLabel, setCloseLabel] = useState<string>("Close");
-  const [newRow, setNewRow] = useState<MaintLog>({
+
+  const today = dayjs();
+  const tomorrow = today.add(1, "day");
+
+  console.log("  Alerts Popup, bike id: " + bikeId);
+  console.log("  Alerts Popup, bike name: " + bikeName);
+  console.log(" Alert set: " + JSON.stringify(alertSet));
+  const [newRow, setNewRow] = useState<Alert>({
     id: uuidv4(),
     userID: "123e4567-e89b-12d3-a456-426614174000", // set with real user ID
     bikeID: bikeId,
-    date: new Date(),
-    miles: 0,
+    date: tomorrow.toDate(),
+    miles: 0, // 0 miles means not set
     description: "",
+    ack: false,
   });
 
   useEffect(() => {
-    setLogs(log);
-  }, [log]);
+    setAlertSet(alerts);
+  }, [alerts]);
 
   useEffect(() => {
     if (boxRef.current) {
       boxRef.current.scrollTop = boxRef.current.scrollHeight;
     }
-  }, [logs]);
+  }, [alertSet]);
 
   useEffect(() => {
-    //console.log("Just opened Maint log " + open)
     if (open) {
       // Reset form
       setCloseLabel("Close");
@@ -119,9 +138,10 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   }, [open]);
 
   const handleConfirmOK = () => {
-    const idx = logs.findIndex((log) => log.id === currentId);
+    // Delete an alert
+    const idx = alerts.findIndex((alert) => alert.id === currentId);
     if (idx > -1) {
-      setLogs([...logs.slice(0, idx), ...logs.slice(idx + 1)]);
+      setAlertSet([...alerts.slice(0, idx), ...alerts.slice(idx + 1)]);
       setCloseLabel("Save");
     }
     setConfirmModalOpen(false);
@@ -132,16 +152,20 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   };
 
   const handleAddRow = () => {
-    const rowWithId = {
+    let rowWithId = {
       ...newRow,
       id: uuidv4(),
       bikeID: bikeId,
-      date: new Date(),
+      date: tomorrow.toDate(),
       miles: 0,
       description: "",
     };
-    console.log("  Adding new maint log, bike id: " + bikeId);
-    setLogs([...logs, rowWithId]);
+    debugger;
+    console.log("  Adding new alert, bike id: " + bikeId);
+    setAlertSet([...alertSet, rowWithId]);
+    var aa = [...alertSet, rowWithId];
+    console.log("Add Row:" + JSON.stringify(aa));
+    console.log("Row id: " + rowWithId.id);
     setEditRowId(rowWithId.id);
   };
 
@@ -150,7 +174,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
     id: string
   ) => {
     const { name, value } = e.target;
-    setLogs((prevLogs) =>
+    setAlertSet((prevLogs) =>
       prevLogs.map((row) => (row.id === id ? { ...row, [name]: value } : row))
     );
     setCloseLabel("Save");
@@ -160,15 +184,23 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
     console.log(" sorting");
     setSortAsc(!sortAsc);
     if (sortAsc)
-      setLogs((prev) => {
-        return prev.sort((a: MaintLog, b: MaintLog) => {
-          return a.date === b.date ? 0 : a.date < b.date ? -1 : 1;
+      setAlertSet((prev) => {
+        return prev.sort((a: Alert, b: Alert) => {
+          return a.description === b.description
+            ? 0
+            : a.description < b.description
+            ? -1
+            : 1;
         });
       });
     else
-      setLogs((prev) => {
-        return prev.sort((a: MaintLog, b: MaintLog) => {
-          return a.date === b.date ? 0 : a.date < b.date ? 1 : -1;
+      setAlertSet((prev) => {
+        return prev.sort((a: Alert, b: Alert) => {
+          return a.description === b.description
+            ? 0
+            : a.description < b.description
+            ? 1
+            : -1;
         });
       });
   };
@@ -179,20 +211,23 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   // };
 
   const handleCommit = (save: boolean) => {
+    // User is done editing added row, either save it or scrap it.
     console.log("wants to save");
-    console.log(logs);
+    console.log(JSON.stringify(alertSet));
     if (!save) {
-      setLogs(logs.slice(0, -1));
-      setCloseLabel("Save");
+        // If not saving, throw it away.
+        console.log("Throw away");
+      setAlertSet(alertSet.slice(0, -1));
     }
+    else setCloseLabel("Save");
     setEditRowId("");
   };
 
-  const handleDateChangeMYPurchased = (newValue: Dayjs | null) => {
+  const handleDateChangeAlertDate = (newValue: Dayjs | null) => {
     debugger;
     if (newValue)
-      setLogs((prevLogs) =>
-        prevLogs.map((row) =>
+      setAlertSet((prev) =>
+        prev.map((row) =>
           row.id === editRowId ? { ...row, date: newValue.toDate() } : row
         )
       );
@@ -209,17 +244,17 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
       <Modal
         open={open}
         onClose={() => {
-          handleClose(logs);
+          handleClose(alerts);
         }}
         aria-labelledby="modal-title"
         aria-describedby="modal-description"
       >
         <Box sx={style}>
           <Typography id="modal-title" variant="h6" component="h2">
-            Maintenance Log for {bikeName}
+            Alerts for {bikeName}
           </Typography>
           <Typography id="modal-description" sx={{ mt: 2 }}>
-            {logs && logs.length > 0 ? (
+            {alertSet && alertSet.length > 0 ? (
               <Box sx={styleContent} ref={boxRef}>
                 <TableContainer component={Paper}>
                   <Table sx={{ minWidth: 700 }} aria-label="customized table">
@@ -229,26 +264,28 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
                           style={{ cursor: "pointer" }}
                           onClick={dateSort}
                         >
-                          Date
+                          Trigger Date
                         </StyledTableCell>
-                        <StyledTableCell>Miles</StyledTableCell>
+                        <StyledTableCell>Trigger Miles</StyledTableCell>
+                        <StyledTableCell>Repeat Days</StyledTableCell>
+                        <StyledTableCell>Repeat Miles</StyledTableCell>
                         <StyledTableCell align="right">
                           Description
                         </StyledTableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {logs.map((row) => (
+                      {alertSet.map((row) => (
                         <StyledTableRow key={row.id}>
                           <StyledTableCell component="th" scope="row">
                             {row.id === editRowId ? (
                               <LocalizationProvider dateAdapter={AdapterDayjs}>
                                 <DesktopDatePicker
-                                  label="Date Purchased"
-                                  name="monthYearPurchased"
+                                  label="Trigger Date"
+                                  name="date"
                                   value={dayjs(row.date)}
-                                  sx={{ maxWidth: "180px;" }}
-                                  onChange={handleDateChangeMYPurchased}
+                                  sx={{ maxWidth: "170px" }}
+                                  onChange={handleDateChangeAlertDate}
                                 />
                               </LocalizationProvider>
                             ) : (
@@ -257,32 +294,67 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
                           </StyledTableCell>
                           <StyledTableCell align="left">
                             {row.id === editRowId ? (
+                              <Tooltip title="Mile to trigger">
                               <TextField
-                                label="Miles"
+                                label="Trigger Miles"
                                 name="miles"
                                 size="small"
-                                style={{ width: 100 }}
+                                style={{ width: 66 }}
                                 value={row.miles}
                                 onChange={(e) => handleInputChange(e, row.id)}
                               />
+                              </Tooltip>
                             ) : (
                               row.miles
                             )}
                           </StyledTableCell>
+                          <StyledTableCell align="left">
+                            {row.id === editRowId ? (
+                              <Tooltip title="Repeat every X days">
+                              <TextField
+                                label="Next Days"
+                                name="repeatDays"
+                                size="small"
+                                style={{ width: 66 }}
+                                value={row.repeatDays}
+                                onChange={(e) => handleInputChange(e, row.id)}
+                              />
+                              </Tooltip>
+                            ) : (
+                              row.repeatDays
+                            )}
+                          </StyledTableCell>
+                          <StyledTableCell align="left">
+                            {row.id === editRowId ? (
+                                <Tooltip title="Repeat every Y miles">
+                              <TextField
+                                label="Next Miles"
+                                name="repeatMiles"
+                                size="small"
+                                style={{ width: 66 }}
+                                value={row.repeatMiles}
+                                onChange={(e) => handleInputChange(e, row.id)}
+                              />
+                              </Tooltip>
+                            ) : (
+                              row.repeatMiles
+                            )}
+                          </StyledTableCell>
                           <StyledTableCell align="right">
                             {row.id === editRowId ? (
-                              <>
+                              <Box display="flex" alignItems="center">
                                 <TextField
                                   label="Description"
                                   name="description"
                                   size="small"
-                                  style={{ width: 350 }}
+                                  style={{ width: 200 }}
                                   value={row.description}
                                   onChange={(e) => handleInputChange(e, row.id)}
                                 />
                                 <Button
                                   style={{
-                                    minWidth: "40px",
+                                    minWidth: "30px",
+                                    maxWidth: "30px",
                                     maxHeight: "30px",
                                   }}
                                   onClick={() => {
@@ -295,6 +367,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
                                   <Button
                                     style={{
                                       minWidth: "30px",
+                                      maxWidth: "30px",
                                       maxHeight: "30px",
                                     }}
                                     onClick={() => {
@@ -304,7 +377,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
                                     X
                                   </Button>
                                 </Tooltip>
-                              </>
+                              </Box>
                             ) : (
                               <>
                                 {row.description}
@@ -331,7 +404,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
                 </TableContainer>
               </Box>
             ) : (
-              <p></p>
+              <span>You have no alerts on this bike.</span>
             )}
           </Typography>
           <Button onClick={handleAddRow} sx={{ mt: 2 }}>
@@ -339,7 +412,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
           </Button>
           <Button
             onClick={() => {
-              handleClose(logs);
+              handleClose(alertSet);
             }}
             sx={{ mt: 2 }}
           >
@@ -357,4 +430,21 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   );
 };
 
-export default MaintLogPopup;
+export default AlertsPopup;
+
+/*  Research:
+
+https://firebase.google.com/products/data-connect?_gl=1*wf36uy*_up*MQ..&gclid=CjwKCAiA-ty8BhA_EiwAkyoa348tpp1aSYU28bFd-N-zJwFx0uE92L6Veaug4f4MBuAJ2zyK0y5ZmRoCNl0QAvD_BwE&gclsrc=aw.ds
+Copilot:  what is a simple way to deploy a react app to connect to Cloud Firestore?
+
+
+*/
+
+/*
+You have to start from the mindset of believing in the good and believing in the potential
+of what you can do.  You have to start with believing in a bright future.
+Otherwise, your strength and energy gets muted right there.
+
+Mindset is huge!  It is hugely important in success and productivity.
+
+*/

@@ -10,7 +10,7 @@ import Box from "@mui/material/Box";
 import MaintLogComponent from "./MaintLog.component";
 import AlertsComponent from "./Alerts.component";
 import BikeComponent from "./Bike.component";
-import { Alerts, Bike, BikeService, MaintLog } from "./services/BikeService";
+import { Alert, Bike, BikeService, MaintLog } from "./services/BikeService";
 
 interface User {
   id: string;
@@ -23,7 +23,7 @@ const MainPage: React.FC = () => {
   const [bikeName, setBikeName] = useState("Santa Cruz Tallboy");
   const [bikeData, setBikeData] = useState<Bike[]>([]);
   const [maintData, setMaintData] = useState<MaintLog[]>([]);
-  const [alertData, setAlertData] = useState<Alerts[]>([]);
+  const [alertData, setAlertData] = useState<Alert[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {

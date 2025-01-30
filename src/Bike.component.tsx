@@ -1,25 +1,55 @@
 import { useEffect, useState } from "react";
 import BikeCard from "./Components/BikeCard.component";
-import { Bike, BikeService, MaintLog } from "./services/BikeService";
+import { Alert, Bike, BikeService, MaintLog } from "./services/BikeService";
 import BikeDropdown from "./Components/BikeDropdown.component";
 import MaintLogPopup from "./Components/MaintLogPopup";
-import { Button } from "@mui/material";
+import { Button, Card, CardContent, Typography } from "@mui/material";
 import AddMilesPopup from "./Components/AddMiles.component";
 import AddEditBikePopup from "./Components/AddEditBike.component";
 import NewBikeDayModal from "./Components/NewBikeDay.component";
 import { v4 as uuidv4 } from "uuid";
+import AlertsPopup from "./Components/AlertsPopup.component";
 
 const BikeComponent = () => {
   const [bikeData, setBikeData] = useState<Bike[]>([]);
   const [selectedBike, setSelectedBike] = useState("");
   const [selectedBikeIndex, setSelectedBikeIndex] = useState(0);
   const [open, setOpen] = useState<boolean>(false);
+  const [activeAlerts, setActiveAlerts] = useState<Alert[]>([]);
+  const [openAlerts, setOpenAlerts] = useState<boolean>(false);
   const [nbdopen, setNBDOpen] = useState<boolean>(false);
   const [addMode, setAddMode] = useState<boolean>(false);
   const [openAddMiles, setOpenAddMiles] = useState<boolean>(false);
   const [openEditBike, setOpenEditBike] = useState<boolean>(false);
 
   const [log, setLog] = useState<MaintLog[]>([]);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [masterAlerts, setMasterAlerts] = useState<Alert[]>([]);
+
+  const runAlertCycle = async () => {
+    // Check for alerts and handle any that are due.
+    const alerts = await BikeService.getAlerts("123e4567-e89b-12d3-a456-426614174000", "");
+
+  };
+
+  function requestNotificationPermission() {
+    if ("Notification" in window) {
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          console.log("Notification permission granted.");
+        } else {
+          console.log("Notification permission denied.");
+        }
+      });
+    }
+  }
+
+  function showNotification(title: string, options: Object) {
+    if ("Notification" in window && Notification.permission === "granted") {
+      console.log("Showing " + title);
+      new Notification(title, options);
+    }
+  }
 
   const handleOpen = async () => {
     const log = await BikeService.getMaintLog(
@@ -28,6 +58,16 @@ const BikeComponent = () => {
     );
     setLog(log);
     setOpen(true);
+  };
+  const handleOpenAlerts = async () => {
+    const ale = await BikeService.getAlerts(
+      "123e4567-e89b-12d3-a456-426614174000",
+      bikeData[selectedBikeIndex].id
+    );
+    console.log("Here are the alerts:");
+    console.log(ale);
+    setAlerts(ale);
+    setOpenAlerts(true);
   };
   const handleClose = async (updated: MaintLog[]) => {
     console.log("Logs are now:");
@@ -42,6 +82,19 @@ const BikeComponent = () => {
     setOpen(false);
   };
 
+  const handleCloseAlerts = async (updated: Alert[]) => {
+    console.log("Alerts are now:");
+    console.log(updated);
+    // save updated alerts to the BikeService
+    await BikeService.setAlerts(
+      "123e4567-e89b-12d3-a456-426614174000",
+      bikeData[selectedBikeIndex].id,
+      updated
+    );
+
+    setOpenAlerts(false);
+  };
+
   const handleOpenAddMiles = () => {
     console.log("Opening");
     setOpenAddMiles(true);
@@ -51,6 +104,10 @@ const BikeComponent = () => {
     let next = selectedBikeIndex - 1;
     next = next > -1 ? next : bikeData.length - 1;
     setSelectedBikeIndex(next);
+    showNotification("You have new alerts!", {
+      body: "Please check the Alert Center in Bike Maintenance Tracker to see your alerts.",
+      requireInteraction: true,
+    });
   };
 
   const handleCycleRight = () => {
@@ -151,8 +208,11 @@ const BikeComponent = () => {
         "123e4567-e89b-12d3-a456-426614174000" // user
       );
       setBikeData(bikedata);
+      console.log("Running alert cycle");
+      runAlertCycle();
     };
     fetchData();
+    requestNotificationPermission();
   }, []);
 
   const handleDataFromChild = (data: string) => {
@@ -180,11 +240,18 @@ const BikeComponent = () => {
           ></BikeCard>
           <MaintLogPopup
             bikeName={bikeData[selectedBikeIndex].name}
-            bikeId={bikeData[selectedBikeIndex].name}
+            bikeId={bikeData[selectedBikeIndex].id}
             log={log}
             open={open}
             handleClose={handleClose}
           ></MaintLogPopup>
+          <AlertsPopup
+            bikeName={bikeData[selectedBikeIndex].name}
+            bikeId={bikeData[selectedBikeIndex].id}
+            alerts={alerts}
+            open={openAlerts}
+            handleClose={handleCloseAlerts}
+          ></AlertsPopup>
           <AddMilesPopup
             miles={bikeData[selectedBikeIndex].totalMiles}
             open={openAddMiles}
@@ -204,7 +271,17 @@ const BikeComponent = () => {
       ) : (
         <p>Loading...</p>
       )}
-      <br />
+      <Card variant="outlined" sx={{ margin: 2 }}>
+        <CardContent>
+          {activeAlerts.length > 0 ? (
+            <Typography variant="body2">Alerts</Typography>
+          ) : (
+            <Typography variant="body2">
+              There are no active alerts.
+            </Typography>
+          )}
+        </CardContent>
+      </Card>
       <Button
         variant="contained"
         color="primary"
@@ -216,15 +293,13 @@ const BikeComponent = () => {
       <Button
         variant="contained"
         color="primary"
-        onClick={undefined}
+        onClick={handleOpenAlerts}
         sx={{ margin: "3px" }}
       >
-        Alerts (coming soon)
+        Alerts
       </Button>
     </div>
   );
 };
 
 export default BikeComponent;
-
-
