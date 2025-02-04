@@ -7,6 +7,7 @@ import {
   Paper,
   TextField,
   Tooltip,
+  Slider,
 } from "@mui/material";
 import { Alert, MaintLog } from "../services/BikeService";
 import { styled } from "@mui/material/styles";
@@ -51,6 +52,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.body}`]: {
     fontSize: 14,
   },
+  margin: "0 3px",
 }));
 
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
@@ -102,6 +104,8 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const boxRef = useRef<HTMLDivElement>(null);
   const [sortAsc, setSortAsc] = useState<boolean>(false);
   const [closeLabel, setCloseLabel] = useState<string>("Close");
+  const [milesDisabled, setMilesDisabled] = useState(true);
+  const [dateDisabled, setDateDisabled] = useState(false);
 
   const today = dayjs();
   const tomorrow = today.add(1, "day");
@@ -113,14 +117,40 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     id: uuidv4(),
     userID: "123e4567-e89b-12d3-a456-426614174000", // set with real user ID
     bikeID: bikeId,
+    bikeName: bikeName,
     date: tomorrow.toDate(),
     miles: 0, // 0 miles means not set
     description: "",
     ack: false,
   });
 
+  const clearOld = (set: Alert[]) => {
+    console.log("Clearing old, before: " + set.length);
+    const clearedListStr =
+      localStorage.getItem("BikeMaintTrackerCleared") ?? "";
+    let clearedList: string[] =
+      clearedListStr.length > 2 ? JSON.parse(clearedListStr) : [];
+
+    const triggeredListStr =
+      localStorage.getItem("BikeMaintTriggeredAlerts") ?? "";
+    let triggeredList: string[] =
+      triggeredListStr.length > 2 ? JSON.parse(triggeredListStr) : [];
+
+    let newset: Alert[] = [];
+    for (let al of set) {
+      if (
+        clearedList.findIndex((cl) => cl === al.id) === -1 &&
+        triggeredList.findIndex((cl) => cl === al.id) === -1
+      )
+        newset.push(al);
+    }
+    console.log("Clearing old, after: " + newset.length);
+    return newset;
+  };
+
   useEffect(() => {
-    setAlertSet(alerts);
+    // Clear out all alerts that have triggered and been cleared
+    setAlertSet(clearOld(alerts));
   }, [alerts]);
 
   useEffect(() => {
@@ -134,14 +164,18 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       // Reset form
       setCloseLabel("Close");
       setEditRowId("");
+      setMilesDisabled(true);
+      setDateDisabled(false);
     }
   }, [open]);
 
   const handleConfirmOK = () => {
     // Delete an alert
-    const idx = alerts.findIndex((alert) => alert.id === currentId);
+    const idx = alertSet.findIndex((alert) => alert.id === currentId);
+    console.log("  DELETE ALERT, found index at: " + idx);
+    console.log("     alert id: " + currentId);
     if (idx > -1) {
-      setAlertSet([...alerts.slice(0, idx), ...alerts.slice(idx + 1)]);
+      setAlertSet([...alertSet.slice(0, idx), ...alertSet.slice(idx + 1)]);
       setCloseLabel("Save");
     }
     setConfirmModalOpen(false);
@@ -156,27 +190,39 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       ...newRow,
       id: uuidv4(),
       bikeID: bikeId,
+      bikeName: bikeName,
       date: tomorrow.toDate(),
-      miles: 0,
+      miles: undefined,
+      repeatMiles: undefined,
+      repeatDays: undefined,
       description: "",
     };
-    debugger;
     console.log("  Adding new alert, bike id: " + bikeId);
     setAlertSet([...alertSet, rowWithId]);
     var aa = [...alertSet, rowWithId];
     console.log("Add Row:" + JSON.stringify(aa));
     console.log("Row id: " + rowWithId.id);
     setEditRowId(rowWithId.id);
+    setCloseLabel("Save");
   };
 
   const handleInputChange = (
     e: { target: { name: any; value: any } },
     id: string
   ) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    switch (name) {
+      case "miles":
+      case "repeatMiles":
+      case "repeatDays":
+        value = parseInt(value);
+        break;
+    }
     setAlertSet((prevLogs) =>
       prevLogs.map((row) => (row.id === id ? { ...row, [name]: value } : row))
     );
+    console.log(name);
+    console.log(value);
     setCloseLabel("Save");
   };
 
@@ -215,16 +261,33 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     console.log("wants to save");
     console.log(JSON.stringify(alertSet));
     if (!save) {
-        // If not saving, throw it away.
-        console.log("Throw away");
+      // If not saving, throw it away.
+      console.log("Throw away");
       setAlertSet(alertSet.slice(0, -1));
+    } else {
+      setCloseLabel("Save");
+      if (milesDisabled) {
+        setAlertSet((prevLogs) =>
+          prevLogs.map((row) =>
+            row.id === editRowId
+              ? { ...row, miles: undefined, repeatMiles: undefined }
+              : row
+          )
+        );
+      } else {
+        setAlertSet((prevLogs) =>
+          prevLogs.map((row) =>
+            row.id === editRowId
+              ? { ...row, date: undefined, repeatDate: undefined }
+              : row
+          )
+        );
+      }
     }
-    else setCloseLabel("Save");
     setEditRowId("");
   };
 
   const handleDateChangeAlertDate = (newValue: Dayjs | null) => {
-    debugger;
     if (newValue)
       setAlertSet((prev) =>
         prev.map((row) =>
@@ -237,6 +300,32 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const handleRowDelete = (id: string) => {
     setCurrentId(id);
     setConfirmModalOpen(true);
+  };
+
+  const [dateSliderValue, setDateSliderValue] = useState(0);
+
+  const SmallSlider = styled(Slider)({
+    width: "50px", // Adjust the width of the slider
+    height: "4px", // Adjust the height of the slider track
+    "& .MuiSlider-thumb": {
+      width: "12px", // Adjust the size of the slider thumb
+      height: "12px",
+    },
+    "& .MuiSlider-markLabel": {
+      fontSize: "12px", // Adjust the size of the mark labels
+    },
+  });
+
+  const handleSliderChange = (event: any, newValue: number | number[]) => {
+    const value = newValue as number;
+    setDateSliderValue(value);
+    if (value === 0) {
+      setDateDisabled(false);
+      setMilesDisabled(true);
+    } else {
+      setDateDisabled(true);
+      setMilesDisabled(false);
+    }
   };
 
   return (
@@ -253,6 +342,10 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
           <Typography id="modal-title" variant="h6" component="h2">
             Alerts for {bikeName}
           </Typography>
+          <Typography id="modal-instructions">
+            Alerts can be set up to trigger on total miles OR on a certain date,
+            and can be repeating.
+          </Typography>
           <Typography id="modal-description" sx={{ mt: 2 }}>
             {alertSet && alertSet.length > 0 ? (
               <Box sx={styleContent} ref={boxRef}>
@@ -261,15 +354,22 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                     <TableHead>
                       <TableRow>
                         <StyledTableCell
-                          style={{ cursor: "pointer" }}
+                          align="right"
+                          style={{ cursor: "pointer", backgroundColor: '#4682B4' }}
                           onClick={dateSort}
                         >
                           Trigger Date
                         </StyledTableCell>
-                        <StyledTableCell>Trigger Miles</StyledTableCell>
-                        <StyledTableCell>Repeat Days</StyledTableCell>
-                        <StyledTableCell>Repeat Miles</StyledTableCell>
-                        <StyledTableCell align="right">
+                        <StyledTableCell align="center" style={{ backgroundColor: '#4682B4', color: 'white' }}>
+                          Trigger Miles
+                        </StyledTableCell>
+                        <StyledTableCell align="center" style={{ backgroundColor: '#4682B4', color: 'white' }}>
+                          Repeat Days
+                        </StyledTableCell>
+                        <StyledTableCell align="center" style={{ backgroundColor: '#4682B4', color: 'white' }}>
+                          Repeat Miles
+                        </StyledTableCell>
+                        <StyledTableCell align="left" style={{ backgroundColor: '#4682B4', color: 'white' }}>
                           Description
                         </StyledTableCell>
                       </TableRow>
@@ -277,77 +377,104 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                     <TableBody>
                       {alertSet.map((row) => (
                         <StyledTableRow key={row.id}>
-                          <StyledTableCell component="th" scope="row">
+                          <StyledTableCell
+                            component="th"
+                            scope="row"
+                            align="right"
+                          >
                             {row.id === editRowId ? (
-                              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                <DesktopDatePicker
-                                  label="Trigger Date"
-                                  name="date"
-                                  value={dayjs(row.date)}
-                                  sx={{ maxWidth: "170px" }}
-                                  onChange={handleDateChangeAlertDate}
+                              <>
+                                <SmallSlider
+                                  value={dateSliderValue}
+                                  onChange={handleSliderChange}
+                                  aria-labelledby="continuous-slider"
+                                  step={1}
+                                  marks={[
+                                    { value: 0, label: "Date" },
+                                    { value: 1, label: "Miles" },
+                                  ]}
+                                  min={0}
+                                  max={1}
                                 />
-                              </LocalizationProvider>
+                                <LocalizationProvider
+                                  dateAdapter={AdapterDayjs}
+                                >
+                                  <DesktopDatePicker
+                                    label="Trigger Date"
+                                    name="date"
+                                    value={dayjs(row.date)}
+                                    sx={{ maxWidth: "170px" }}
+                                    disabled={dateDisabled}
+                                    onChange={handleDateChangeAlertDate}
+                                  />
+                                </LocalizationProvider>
+                              </>
                             ) : (
                               row.date?.toLocaleDateString()
                             )}
                           </StyledTableCell>
-                          <StyledTableCell align="left">
+                          <StyledTableCell align="center">
                             {row.id === editRowId ? (
                               <Tooltip title="Mile to trigger">
-                              <TextField
-                                label="Trigger Miles"
-                                name="miles"
-                                size="small"
-                                style={{ width: 66 }}
-                                value={row.miles}
-                                onChange={(e) => handleInputChange(e, row.id)}
-                              />
+                                <TextField
+                                  label="Trigger Miles"
+                                  name="miles"
+                                  type="number"
+                                  size="small"
+                                  style={{ width: 80, marginTop: 38 }}
+                                  disabled={milesDisabled}
+                                  value={row.miles}
+                                  onChange={(e) => handleInputChange(e, row.id)}
+                                />
                               </Tooltip>
                             ) : (
-                              row.miles
+                              row.miles?.toLocaleString("en-US")
                             )}
                           </StyledTableCell>
-                          <StyledTableCell align="left">
+                          <StyledTableCell align="center">
                             {row.id === editRowId ? (
                               <Tooltip title="Repeat every X days">
-                              <TextField
-                                label="Next Days"
-                                name="repeatDays"
-                                size="small"
-                                style={{ width: 66 }}
-                                value={row.repeatDays}
-                                onChange={(e) => handleInputChange(e, row.id)}
-                              />
+                                <TextField
+                                  label="Next Days"
+                                  name="repeatDays"
+                                  type="number"
+                                  size="small"
+                                  style={{ width: 80, marginTop: 38 }}
+                                  disabled={dateDisabled}
+                                  value={row.repeatDays}
+                                  onChange={(e) => handleInputChange(e, row.id)}
+                                />
                               </Tooltip>
                             ) : (
                               row.repeatDays
                             )}
                           </StyledTableCell>
-                          <StyledTableCell align="left">
+                          <StyledTableCell align="center">
                             {row.id === editRowId ? (
-                                <Tooltip title="Repeat every Y miles">
-                              <TextField
-                                label="Next Miles"
-                                name="repeatMiles"
-                                size="small"
-                                style={{ width: 66 }}
-                                value={row.repeatMiles}
-                                onChange={(e) => handleInputChange(e, row.id)}
-                              />
+                              <Tooltip title="Repeat every Y miles">
+                                <TextField
+                                  label="Next Miles"
+                                  name="repeatMiles"
+                                  size="small"
+                                  type="number"
+                                  disabled={milesDisabled}
+                                  style={{ width: 80, marginTop: 38 }}
+                                  value={row.repeatMiles}
+                                  onChange={(e) => handleInputChange(e, row.id)}
+                                />
                               </Tooltip>
                             ) : (
                               row.repeatMiles
                             )}
                           </StyledTableCell>
-                          <StyledTableCell align="right">
+                          <StyledTableCell align="left">
                             {row.id === editRowId ? (
                               <Box display="flex" alignItems="center">
                                 <TextField
                                   label="Description"
                                   name="description"
                                   size="small"
-                                  style={{ width: 200 }}
+                                  style={{ width: 200, marginTop: 38 }}
                                   value={row.description}
                                   onChange={(e) => handleInputChange(e, row.id)}
                                 />
@@ -356,6 +483,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                     minWidth: "30px",
                                     maxWidth: "30px",
                                     maxHeight: "30px",
+                                    marginTop: "38px",
                                   }}
                                   onClick={() => {
                                     handleCommit(true);
@@ -369,6 +497,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                       minWidth: "30px",
                                       maxWidth: "30px",
                                       maxHeight: "30px",
+                                      marginTop: "38px",
                                     }}
                                     onClick={() => {
                                       handleCommit(false);

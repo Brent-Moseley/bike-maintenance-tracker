@@ -3,12 +3,79 @@ import BikeCard from "./Components/BikeCard.component";
 import { Alert, Bike, BikeService, MaintLog } from "./services/BikeService";
 import BikeDropdown from "./Components/BikeDropdown.component";
 import MaintLogPopup from "./Components/MaintLogPopup";
-import { Button, Card, CardContent, Typography } from "@mui/material";
+import {
+  Button,
+  Card,
+  CardContent,
+  keyframes,
+  Paper,
+  styled,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from "@mui/material";
 import AddMilesPopup from "./Components/AddMiles.component";
 import AddEditBikePopup from "./Components/AddEditBike.component";
 import NewBikeDayModal from "./Components/NewBikeDay.component";
 import { v4 as uuidv4 } from "uuid";
 import AlertsPopup from "./Components/AlertsPopup.component";
+import dayjs from "dayjs";
+
+const HeaderCell = styled(TableCell)(({ theme }) => ({
+  backgroundColor: "#009900", // Richer green
+  color: "#FFFFFF", // White text for better contrast
+  fontWeight: "bold", // Bold text
+}));
+
+const CustomTableRow = styled(TableRow)(({ theme }) => ({
+  "&:nth-of-type(odd)": {
+    backgroundColor: theme.palette.action.hover, // Default grey for odd rows
+  },
+  "&:nth-of-type(even)": {
+    backgroundColor: "#f9f9f9", // Lighter grey for even rows
+  },
+}));
+
+const CustomTableCell = styled(TableCell)(({ theme }) => ({
+  padding: "8px", // Adjust padding as needed
+}));
+
+const SmallButton = styled(Button)(({ theme }) => ({
+  padding: "2px 8px", // Reduce padding
+  minWidth: "30px", // Set minimum width
+  fontSize: "0.75rem", // Smaller font size
+}));
+
+const OrangeButton = styled(Button)(({ theme }) => ({
+  padding: "2px 8px",
+  minWidth: "30px",
+  fontSize: "0.75rem",
+  backgroundColor: "#FFA500",
+  color: "#FFFFFF",
+  animation: `${fadeInOut} 2s infinite`, // Animation
+  "&:hover": {
+    backgroundColor: "#FF8C00", // Darker orange on hover
+  },
+}));
+
+const fadeInOut = keyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+`;
+
+export interface TriggeredAlert {
+  alertID: string;
+  userID: string;
+  bikeID: string;
+  bikeName: string;
+  reason: string; // Example:  > 1000 miles, date = 12/12/24, etc.
+  description: string;
+  isNew: boolean;
+}
 
 const BikeComponent = () => {
   const [bikeData, setBikeData] = useState<Bike[]>([]);
@@ -24,13 +91,145 @@ const BikeComponent = () => {
 
   const [log, setLog] = useState<MaintLog[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [masterAlerts, setMasterAlerts] = useState<Alert[]>([]);
+  const [masterAlerts, setMasterAlerts] = useState<TriggeredAlert[]>([]);
 
-  const runAlertCycle = async () => {
+  const runAlertCycle = async (bikes: Bike[]) => {
     // Check for alerts and handle any that are due.
-    const alerts = await BikeService.getAlerts("123e4567-e89b-12d3-a456-426614174000", "");
+    const alerts = await BikeService.getAlerts(
+      "123e4567-e89b-12d3-a456-426614174000",
+      ""
+    );
+    console.log(" --------------------- ALERT CYCLE -----------");
+    setMasterAlerts([]);
+    const triggeredListStr = localStorage.getItem("BikeMaintTriggeredAlerts") ?? "";
+    let triggeredList: string[] =
+    triggeredListStr.length > 2 ? JSON.parse(triggeredListStr) : [];
 
+    const clearedListStr =
+      localStorage.getItem("BikeMaintTrackerCleared") ?? "";
+    let clearedList: string[] =
+      clearedListStr.length > 2 ? JSON.parse(clearedListStr) : [];
+
+    const shownListStr = localStorage.getItem("BikeMaintTrackerShown") ?? "";
+    let shownList: string[] =
+      shownListStr.length > 2 ? JSON.parse(shownListStr) : [];
+
+    const repeatGeneratedListStr =
+      localStorage.getItem("BikeMaintTrackerRepeated") ?? "";
+    let repeatedList: string[] =
+      repeatGeneratedListStr.length > 2
+        ? JSON.parse(repeatGeneratedListStr)
+        : [];
+
+    const today: Date = new Date();
+    console.log("   bike array length: " + bikes.length);
+    for (let alert of alerts) {
+      console.log("  Processing alert: " + alert.id);
+      console.log("    bike: " + alert.bikeID);
+      if (clearedList.find((cleared) => cleared === alert.id)) continue; // Skip alerts that have been cleared by user
+
+      console.log("   ----- not cleared already");
+      var idx = bikes.findIndex((bike) => {
+        return bike.id === alert.bikeID;
+      });
+      if (idx > -1) {
+        console.log("     alert miles: " + alert.miles);
+        console.log("      bike miles: " + bikes[idx].totalMiles);
+        console.log("     alert date: " + alert.date?.toLocaleDateString());
+        console.log("      today: " + today.toString());
+        let triggered: boolean = false;
+        let isNew: boolean = false;
+        if (alert.miles && bikes[idx].totalMiles >= alert.miles) {
+          // Trigger on number of miles
+          console.log("        ---- trigger on miles!");
+          let isNew = false;
+          if (!shownList.find((shown) => shown === alert.id)) {
+            isNew = true;
+            triggered = true;
+          }
+          setMasterAlerts((prev) => [
+            ...prev,
+            {
+              alertID: alert.id,
+              userID: "123e4567-e89b-12d3-a456-426614174000",
+              bikeID: alert.bikeID,
+              bikeName: alert.bikeName,
+              reason: "Bike has reached " + alert.miles + " miles",
+              description: alert.description,
+              isNew: isNew,
+            },
+          ]);
+        } else if (alert.date && alert.date <= today) {
+          // Trigger on date
+          console.log("        ---- trigger on date!");
+          isNew = false;
+          triggered = true;
+          if (!shownList.find((shown) => shown === alert.id)) {
+            isNew = true;
+            triggered = true;
+          }
+          setMasterAlerts((prev) => [
+            ...prev,
+            {
+              alertID: alert.id,
+              userID: "123e4567-e89b-12d3-a456-426614174000",
+              bikeID: alert.bikeID,
+              bikeName: alert.bikeName,
+              reason: "Date is on or after " + alert.date?.toLocaleDateString(),
+              description: alert.description,
+              isNew: isNew,
+            },
+          ]);
+        }
+        if (triggered) {
+          // Check alert and if it was repeating, add the next cycle
+          // Clone the alert and push to the next cycle.
+          // BCM *** Need a list called repeatGenerated to track if the repeat alert
+          //   has already been generated for this alert based on ID
+          //  The alert will keep triggering until the user acknowledges.
+          //  But we only want to generate the repeat alert once.
+
+          // Set to triggered list, so that this alert does not appear on the Alerts popup, now.
+          if (isNew) triggeredList.push(alert.id);
+            
+          let save = false;
+          let cloned: Alert = { ...alert, id: uuidv4() }; // clone the alert
+          if (alert.miles && alert.repeatMiles && alert.repeatMiles > 0) {
+            cloned.miles = alert.miles + alert.repeatMiles;
+            save = true;
+          }
+          else if (alert.date && alert.repeatDays && alert.repeatDays > 0) {
+            const current = dayjs(alert.date);
+            cloned.date = current.add(alert.repeatDays, "day").toDate();
+            save = true;
+          }
+          if (repeatedList.find((repeated) => repeated === alert.id))
+            save = false;
+          else {
+            repeatedList.push(alert.id);
+            localStorage.setItem(
+              "BikeMaintTrackerRepeated",
+              JSON.stringify(repeatedList)
+            );
+          }
+          if (save) {
+            // alert was cloned, find the bike for this and add it to the alerts.  Then save.
+            const success = await BikeService.addAlert(cloned);
+            console.log("     Saving this cloned alert, result: " + success);
+          } else console.log("    No need to save this one");
+        }
+      } else console.log("      !!!  This bike not found!!!");
+    }
+    localStorage.setItem("BikeMaintTriggeredAlerts", JSON.stringify(triggeredList));
+    //localStorage.setItem("BikeMaintTrackerShown", JSON.stringify(shownList));
+    console.log("  MASTER ALERTS " + masterAlerts.length);
   };
+
+  // 15 minute timer:
+  // const timer = setInterval(() => {
+  //   console.log(" ******");
+  //   runAlertCycle(bikeData)
+  // }, 900000);
 
   function requestNotificationPermission() {
     if ("Notification" in window) {
@@ -51,7 +250,31 @@ const BikeComponent = () => {
     }
   }
 
-  const handleOpen = async () => {
+  const handleAlertOkClick = (id: string) => {
+    const clearedListStr =
+      localStorage.getItem("BikeMaintTrackerCleared") ?? "";
+    let clearedList: string[] =
+      clearedListStr.length > 2 ? JSON.parse(clearedListStr) : [];
+    clearedList.push(id);
+    localStorage.setItem(
+      "BikeMaintTrackerCleared",
+      JSON.stringify(clearedList)
+    );
+
+    runAlertCycle(bikeData);
+  };
+
+  const handleNewClick = (id: string) => {
+    const shownListStr = localStorage.getItem("BikeMaintTrackerShown") ?? "";
+    let shownList: string[] =
+      shownListStr.length > 2 ? JSON.parse(shownListStr) : [];
+
+    shownList.push(id);
+    localStorage.setItem("BikeMaintTrackerShown", JSON.stringify(shownList));
+    runAlertCycle(bikeData);
+  };
+
+  const handleMaintLogOpen = async () => {
     const log = await BikeService.getMaintLog(
       "123e4567-e89b-12d3-a456-426614174000",
       bikeData[selectedBikeIndex].id
@@ -64,12 +287,19 @@ const BikeComponent = () => {
       "123e4567-e89b-12d3-a456-426614174000",
       bikeData[selectedBikeIndex].id
     );
+    const shownListStr = localStorage.getItem("BikeMaintTrackerShown") ?? "";
+    let shownList: string[] =
+      shownListStr.length > 2 ? JSON.parse(shownListStr) : [];
+
+    const onlyActive = ale.filter((alert) => {
+      return !shownListStr.includes(alert.id);
+    });
     console.log("Here are the alerts:");
     console.log(ale);
     setAlerts(ale);
     setOpenAlerts(true);
   };
-  const handleClose = async (updated: MaintLog[]) => {
+  const handleMaintLogClose = async (updated: MaintLog[]) => {
     console.log("Logs are now:");
     console.log(updated);
     // save updated long to the BikeService
@@ -93,6 +323,7 @@ const BikeComponent = () => {
     );
 
     setOpenAlerts(false);
+    await runAlertCycle(bikeData);
   };
 
   const handleOpenAddMiles = () => {
@@ -104,10 +335,10 @@ const BikeComponent = () => {
     let next = selectedBikeIndex - 1;
     next = next > -1 ? next : bikeData.length - 1;
     setSelectedBikeIndex(next);
-    showNotification("You have new alerts!", {
-      body: "Please check the Alert Center in Bike Maintenance Tracker to see your alerts.",
-      requireInteraction: true,
-    });
+    // showNotification("You have new alerts!", {
+    //   body: "Please check the Alert Center in Bike Maintenance Tracker to see your alerts.",
+    //   requireInteraction: true,
+    // });
   };
 
   const handleCycleRight = () => {
@@ -164,14 +395,15 @@ const BikeComponent = () => {
     setOpenEditBike(true);
   };
 
-  const handleCloseAddMiles = (add: number) => {
+  const handleCloseAddMiles = async (add: number) => {
     console.log("Closing...." + add);
     bikeData[selectedBikeIndex].totalMiles += add;
     BikeService.saveBike(bikeData[selectedBikeIndex], selectedBikeIndex);
     setOpenAddMiles(false);
+    await runAlertCycle(bikeData);
   };
 
-  const handleModfyBike = (data: Bike) => {
+  const handleModfyBike = async (data: Bike) => {
     //console.log('Closing....' + add);
     //bikeData[selectedBikeIndex].totalMiles += add;
     //debugger;
@@ -191,7 +423,11 @@ const BikeComponent = () => {
       setBikeData(updatedData);
       console.log("Now updated to: ");
       console.log(updatedData);
-      BikeService.saveBike(updatedData[selectedBikeIndex], selectedBikeIndex);
+      await BikeService.saveBike(
+        updatedData[selectedBikeIndex],
+        selectedBikeIndex
+      );
+      await runAlertCycle(updatedData);
     } else {
       // Cancel clicked
       if (addMode) {
@@ -209,7 +445,7 @@ const BikeComponent = () => {
       );
       setBikeData(bikedata);
       console.log("Running alert cycle");
-      runAlertCycle();
+      await runAlertCycle(bikedata);
     };
     fetchData();
     requestNotificationPermission();
@@ -243,7 +479,7 @@ const BikeComponent = () => {
             bikeId={bikeData[selectedBikeIndex].id}
             log={log}
             open={open}
-            handleClose={handleClose}
+            handleClose={handleMaintLogClose}
           ></MaintLogPopup>
           <AlertsPopup
             bikeName={bikeData[selectedBikeIndex].name}
@@ -273,19 +509,63 @@ const BikeComponent = () => {
       )}
       <Card variant="outlined" sx={{ margin: 2 }}>
         <CardContent>
-          {activeAlerts.length > 0 ? (
-            <Typography variant="body2">Alerts</Typography>
+          {masterAlerts.length > 0 ? (
+            <>
+              <TableContainer component={Paper}>
+                <Typography variant="h6" component="div" sx={{ padding: 2 }}>
+                  Active Alerts
+                </Typography>
+                <Table sx={{ minWidth: 650 }} aria-label="alerts table">
+                  <TableHead>
+                    <TableRow>
+                      <HeaderCell sx={{ width: 140 }}>Bike</HeaderCell>
+                      <HeaderCell sx={{ width: 280 }}>Description</HeaderCell>
+                      <HeaderCell sx={{ width: 220 }}>Reason</HeaderCell>
+                      <HeaderCell align="right">Actions</HeaderCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {masterAlerts.map((alert) => (
+                      <CustomTableRow key={alert.alertID}>
+                        <CustomTableCell>{alert.bikeName}</CustomTableCell>
+                        <CustomTableCell>{alert.description}</CustomTableCell>
+                        <CustomTableCell>{alert.reason}</CustomTableCell>
+                        <CustomTableCell align="right">
+                          {alert.isNew ? (
+                            <OrangeButton
+                              variant="contained"
+                              size="small" // Make the button small
+                              onClick={() => handleNewClick(alert.alertID)}
+                              sx={{ marginLeft: 1 }} // Add margin to separate buttons
+                            >
+                              New
+                            </OrangeButton>
+                          ) : (
+                            <SmallButton
+                              variant="contained"
+                              color="primary"
+                              size="small" // Make the button small
+                              onClick={() => handleAlertOkClick(alert.alertID)}
+                            >
+                              OK
+                            </SmallButton>
+                          )}
+                        </CustomTableCell>
+                      </CustomTableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </>
           ) : (
-            <Typography variant="body2">
-              There are no active alerts.
-            </Typography>
+            <Typography variant="body2">There are no active alerts.</Typography>
           )}
         </CardContent>
       </Card>
       <Button
         variant="contained"
         color="primary"
-        onClick={handleOpen}
+        onClick={handleMaintLogOpen}
         sx={{ margin: "3px" }}
       >
         Maintenance Log

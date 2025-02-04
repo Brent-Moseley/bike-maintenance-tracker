@@ -36,6 +36,7 @@ export interface Alert {
   id: string;
   userID: string;
   bikeID: string;
+  bikeName: string;
   date?: Date;
   description: string;
   miles?: number;
@@ -83,6 +84,7 @@ let bikeData: BikeAll[] = [
         id: "a01",
         userID: "123e4567-e89b-12d3-a456-426614174000",
         bikeID: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        bikeName: "Mountain Explorer",
         date: new Date("2025-01-25"),
         description: "Check rear der for wear",
         miles: 2100,
@@ -92,6 +94,7 @@ let bikeData: BikeAll[] = [
         id: "a02",
         userID: "123e4567-e89b-12d3-a456-426614174000",
         bikeID: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        bikeName: "Mountain Explorer",
         date: new Date("2025-03-04"),
         description: "Replace rear tire if worn",
         repeatDays: 4,
@@ -228,7 +231,6 @@ export const BikeService = {
     // Combine alerts from all bikes.
     // Keep a separate list of acknowledged alerts.
     //  This will be a lot easier when I have it all in a table.
-    debugger;
     for (var value of bike) {
       allAlerts = allAlerts.concat(value.alerts);
     }
@@ -241,6 +243,19 @@ export const BikeService = {
     // }) ?? [])[0].alerts;
     // return returnData;
   },
+  addAlert: async function (alert: Alert): Promise<boolean> {
+    // console.log("  ^^^^^^ looking for bike to add repeatable alert to...");
+    // let bike = bikeData.filter((bike) => {
+    //   return bike.bike.userID == alert.userID && bike.bike.id == alert.bikeID;
+    // });
+    // if (bike.length === 0) return false;
+    // console.log("Bike found"); 
+    console.log("     Adding a new alert: " + JSON.stringify(alert));
+    let set = await this.getAlerts(alert.userID, alert.bikeID);
+    set.push(alert);
+    const success = await this.setAlerts(alert.userID, alert.bikeID, set);
+    return success;
+  }, 
   setAlerts: async function (
     user: string,
     bikeId: string,

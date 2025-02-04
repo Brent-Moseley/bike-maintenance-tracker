@@ -119,6 +119,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   }, [open]);
 
   const handleConfirmOK = () => {
+    // Delete a log entry
     const idx = logs.findIndex((log) => log.id === currentId);
     if (idx > -1) {
       setLogs([...logs.slice(0, idx), ...logs.slice(idx + 1)]);
@@ -143,6 +144,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
     console.log("  Adding new maint log, bike id: " + bikeId);
     setLogs([...logs, rowWithId]);
     setEditRowId(rowWithId.id);
+    setCloseLabel("Save");
   };
 
   const handleInputChange = (
@@ -331,7 +333,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
                 </TableContainer>
               </Box>
             ) : (
-              <p></p>
+              <span>There are no log entries yet</span>
             )}
           </Typography>
           <Button onClick={handleAddRow} sx={{ mt: 2 }}>
