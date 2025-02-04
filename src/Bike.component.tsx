@@ -93,6 +93,27 @@ const BikeComponent = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [masterAlerts, setMasterAlerts] = useState<TriggeredAlert[]>([]);
 
+
+  // Alert state table:
+  //  id
+  //  status    0 = created
+  //            1 = triggered, show on alert list and NOT in alert popup again, add repeat alert if appropriate
+  //            2 = acknowledged (shown), 'New' clicked by user
+  //            3 = cleared by user ('OK' clicked), remove from alerts list
+
+  /*
+  [
+    {id: 'a01', status: 0},
+    {id: 'a02', status: 0}
+  ]
+
+  BikeMaintTrackerAlertStatus
+
+
+  It is very helpful to have a good software design, to guide the development, to have a plan.
+  Even agile, with rapid prototypes and releasable code every few weeks should have a solid
+  plan and software design.  
+  */
   const runAlertCycle = async (bikes: Bike[]) => {
     // Check for alerts and handle any that are due.
     const alerts = await BikeService.getAlerts(
