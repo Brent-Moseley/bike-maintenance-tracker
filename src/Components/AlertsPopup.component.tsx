@@ -22,6 +22,7 @@ import { DesktopDatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import ConfirmModal from "./Confirm.component";
+import { AlertStatus } from "../Bike.component";
 
 /*  
 Logic:  On this date, or on this many miles, I want to trigger a popup.
@@ -41,7 +42,7 @@ interface PopupModalProps {
   bikeId: string;
   alerts: Alert[];
   open: boolean;
-  handleClose: (logs: Alert[]) => void;
+  handleClose: (added: Alert[], deleted: string[]) => void;
 }
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -64,14 +65,6 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
     border: 0,
   },
 }));
-
-const headerStyle = {
-  backgroundColor: "#f5f5f5",
-  fontWeight: "bold",
-  border: "1px solid #ccc",
-  padding: "8px",
-  textAlign: "center",
-};
 
 const style = {
   position: "absolute" as "absolute",
@@ -98,6 +91,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   handleClose,
 }) => {
   const [alertSet, setAlertSet] = useState<Alert[]>(alerts);
+  const [addedAlerts, setAddedAlerts] = useState<Alert[]>([]);
   const [editRowId, setEditRowId] = useState<string | null>(null);
   const [confirmModalOpen, setConfirmModalOpen] = useState<boolean>(false);
   const [currentId, setCurrentId] = useState<string>("");
@@ -110,9 +104,11 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const today = dayjs();
   const tomorrow = today.add(1, "day");
 
+  const deleted: string[] = [];
+
   console.log("  Alerts Popup, bike id: " + bikeId);
   console.log("  Alerts Popup, bike name: " + bikeName);
-  console.log(" Alert set: " + JSON.stringify(alertSet));
+  //console.log(" Alert set: " + JSON.stringify(alertSet));
   const [newRow, setNewRow] = useState<Alert>({
     id: uuidv4(),
     userID: "123e4567-e89b-12d3-a456-426614174000", // set with real user ID
@@ -125,24 +121,17 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   });
 
   const clearOld = (set: Alert[]) => {
-    console.log("Clearing old, before: " + set.length);
-    const clearedListStr =
-      localStorage.getItem("BikeMaintTrackerCleared") ?? "";
-    let clearedList: string[] =
-      clearedListStr.length > 2 ? JSON.parse(clearedListStr) : [];
-
-    const triggeredListStr =
-      localStorage.getItem("BikeMaintTriggeredAlerts") ?? "";
-    let triggeredList: string[] =
-      triggeredListStr.length > 2 ? JSON.parse(triggeredListStr) : [];
+    // What now needs to happen here is I create an alertSetShow that includes only
+    // 'created' alerts  BCM
+    console.log("Clearing old, length before: " + set.length);
+    const statusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
+    let statusList: AlertStatus[] =
+      statusStr.length > 2 ? JSON.parse(statusStr) : [];
 
     let newset: Alert[] = [];
     for (let al of set) {
-      if (
-        clearedList.findIndex((cl) => cl === al.id) === -1 &&
-        triggeredList.findIndex((cl) => cl === al.id) === -1
-      )
-        newset.push(al);
+      const status = statusList.find((cl) => cl.id === al.id);
+      if (status?.status === "created") newset.push(al);
     }
     console.log("Clearing old, after: " + newset.length);
     return newset;
@@ -150,6 +139,8 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
 
   useEffect(() => {
     // Clear out all alerts that have triggered and been cleared
+    // What now needs to happen here is I create an alertSetShow that includes only
+    // 'created' alerts  BCM
     setAlertSet(clearOld(alerts));
   }, [alerts]);
 
@@ -166,6 +157,9 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       setEditRowId("");
       setMilesDisabled(true);
       setDateDisabled(false);
+      setAddedAlerts([]);
+      deleted.length = 0;
+      console.log("Resetting form");
     }
   }, [open]);
 
@@ -174,6 +168,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     const idx = alertSet.findIndex((alert) => alert.id === currentId);
     console.log("  DELETE ALERT, found index at: " + idx);
     console.log("     alert id: " + currentId);
+    deleted.push(currentId);
     if (idx > -1) {
       setAlertSet([...alertSet.slice(0, idx), ...alertSet.slice(idx + 1)]);
       setCloseLabel("Save");
@@ -267,26 +262,40 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     } else {
       setCloseLabel("Save");
       if (milesDisabled) {
-        setAlertSet((prevLogs) =>
-          prevLogs.map((row) =>
-            row.id === editRowId
-              ? { ...row, miles: undefined, repeatMiles: undefined }
-              : row
-          )
-        );
+        console.log("Adding alert for date");
+        setAlertSet((prev) => {
+          return prev.map((row) => {
+            console.log(row.id);
+
+            if (row.id === editRowId) {
+                console.log("     edit row match date " + row.id);
+
+              setAddedAlerts ((prevData) => [...prevData, 
+                { ...row, miles: undefined, repeatMiles: undefined }]);
+              return { ...row, miles: undefined, repeatMiles: undefined };
+            } else return row;
+          });
+        });
       } else {
-        setAlertSet((prevLogs) =>
-          prevLogs.map((row) =>
-            row.id === editRowId
-              ? { ...row, date: undefined, repeatDate: undefined }
-              : row
-          )
-        );
+        console.log("Adding alert for miles");
+        setAlertSet((prev) => {
+            return prev.map((row) => {
+                console.log(row.id);
+              if (row.id === editRowId) {
+                console.log("     edit row match miles " + row.id);
+
+                setAddedAlerts ((prevData) => [...prevData, 
+                    { ...row, date: undefined, repeatDays: undefined }]);
+                return { ...row, date: undefined, repeatDays: undefined };
+              } else return row;
+            });
+          });
       }
     }
     setEditRowId("");
+    console.log("Added alerts Complete ");
   };
-
+  // date: undefined, repeatDate: undefined
   const handleDateChangeAlertDate = (newValue: Dayjs | null) => {
     if (newValue)
       setAlertSet((prev) =>
@@ -333,7 +342,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       <Modal
         open={open}
         onClose={() => {
-          handleClose(alerts);
+          handleClose(addedAlerts, deleted);
         }}
         aria-labelledby="modal-title"
         aria-describedby="modal-description"
@@ -355,21 +364,36 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                       <TableRow>
                         <StyledTableCell
                           align="right"
-                          style={{ cursor: "pointer", backgroundColor: '#4682B4' }}
+                          style={{
+                            cursor: "pointer",
+                            backgroundColor: "#4682B4",
+                          }}
                           onClick={dateSort}
                         >
                           Trigger Date
                         </StyledTableCell>
-                        <StyledTableCell align="center" style={{ backgroundColor: '#4682B4', color: 'white' }}>
+                        <StyledTableCell
+                          align="center"
+                          style={{ backgroundColor: "#4682B4", color: "white" }}
+                        >
                           Trigger Miles
                         </StyledTableCell>
-                        <StyledTableCell align="center" style={{ backgroundColor: '#4682B4', color: 'white' }}>
+                        <StyledTableCell
+                          align="center"
+                          style={{ backgroundColor: "#4682B4", color: "white" }}
+                        >
                           Repeat Days
                         </StyledTableCell>
-                        <StyledTableCell align="center" style={{ backgroundColor: '#4682B4', color: 'white' }}>
+                        <StyledTableCell
+                          align="center"
+                          style={{ backgroundColor: "#4682B4", color: "white" }}
+                        >
                           Repeat Miles
                         </StyledTableCell>
-                        <StyledTableCell align="left" style={{ backgroundColor: '#4682B4', color: 'white' }}>
+                        <StyledTableCell
+                          align="left"
+                          style={{ backgroundColor: "#4682B4", color: "white" }}
+                        >
                           Description
                         </StyledTableCell>
                       </TableRow>
@@ -541,7 +565,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
           </Button>
           <Button
             onClick={() => {
-              handleClose(alertSet);
+              handleClose(addedAlerts, deleted);
             }}
             sx={{ mt: 2 }}
           >

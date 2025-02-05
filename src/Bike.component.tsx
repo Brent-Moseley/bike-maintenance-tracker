@@ -77,6 +77,11 @@ export interface TriggeredAlert {
   isNew: boolean;
 }
 
+export interface AlertStatus {
+  id: string;
+  status: string;
+}
+
 const BikeComponent = () => {
   const [bikeData, setBikeData] = useState<Bike[]>([]);
   const [selectedBike, setSelectedBike] = useState("");
@@ -96,18 +101,14 @@ const BikeComponent = () => {
 
   // Alert state table:
   //  id
-  //  status    0 = created
-  //            1 = triggered, show on alert list and NOT in alert popup again, add repeat alert if appropriate
-  //            2 = acknowledged (shown), 'New' clicked by user
-  //            3 = cleared by user ('OK' clicked), remove from alerts list
+  //  status    created
+  //            triggered, show on alert list and NOT in alert popup again, add repeat alert if appropriate
+  //            acknowledged (shown), 'New' clicked by user
+  //            cleared by user ('OK' clicked), remove from alerts list
 
   /*
-  [
-    {id: 'a01', status: 0},
-    {id: 'a02', status: 0}
-  ]
 
-  BikeMaintTrackerAlertStatus
+  localStorage.setItem("BikeMaintTrackerAlertStatus", '[{"id": "a01", "status": "created"},{"id": "a02", "status": "created"}]');
 
 
   It is very helpful to have a good software design, to guide the development, to have a plan.
@@ -115,59 +116,92 @@ const BikeComponent = () => {
   plan and software design.  
   */
   const runAlertCycle = async (bikes: Bike[]) => {
-    // Check for alerts and handle any that are due.
+    // Check for alerts and handle any that are ready for a status update
+    console.log(" --------------------- ALERT CYCLE -----------");
+
+    if (bikeData.length === 0) return;
+    // Get all alerts for this user
     const alerts = await BikeService.getAlerts(
       "123e4567-e89b-12d3-a456-426614174000",
       ""
     );
-    console.log(" --------------------- ALERT CYCLE -----------");
     setMasterAlerts([]);
-    const triggeredListStr = localStorage.getItem("BikeMaintTriggeredAlerts") ?? "";
-    let triggeredList: string[] =
-    triggeredListStr.length > 2 ? JSON.parse(triggeredListStr) : [];
+    // const triggeredListStr = localStorage.getItem("BikeMaintTriggeredAlerts") ?? "";
+    // let triggeredList: string[] =
+    // triggeredListStr.length > 2 ? JSON.parse(triggeredListStr) : [];
 
-    const clearedListStr =
-      localStorage.getItem("BikeMaintTrackerCleared") ?? "";
-    let clearedList: string[] =
-      clearedListStr.length > 2 ? JSON.parse(clearedListStr) : [];
+    // const clearedListStr =
+    //   localStorage.getItem("BikeMaintTrackerCleared") ?? "";
+    // let clearedList: string[] =
+    //   clearedListStr.length > 2 ? JSON.parse(clearedListStr) : [];
 
-    const shownListStr = localStorage.getItem("BikeMaintTrackerShown") ?? "";
-    let shownList: string[] =
-      shownListStr.length > 2 ? JSON.parse(shownListStr) : [];
+    // const shownListStr = localStorage.getItem("BikeMaintTrackerShown") ?? "";
+    // let shownList: string[] =
+    //   shownListStr.length > 2 ? JSON.parse(shownListStr) : [];
 
-    const repeatGeneratedListStr =
-      localStorage.getItem("BikeMaintTrackerRepeated") ?? "";
-    let repeatedList: string[] =
-      repeatGeneratedListStr.length > 2
-        ? JSON.parse(repeatGeneratedListStr)
-        : [];
+    // const repeatGeneratedListStr =
+    //   localStorage.getItem("BikeMaintTrackerRepeated") ?? "";
+    // let repeatedList: string[] =
+    //   repeatGeneratedListStr.length > 2
+    //     ? JSON.parse(repeatGeneratedListStr)
+    //     : [];
 
+    // Get current list of alert statuses
+    const alertStatusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
+    let alertStatusSet: AlertStatus[] =
+    alertStatusStr.length > 2 ? JSON.parse(alertStatusStr) : [];
+    debugger;
     const today: Date = new Date();
-    console.log("   bike array length: " + bikes.length);
+
+    // Run through list of current lists for this user, rebuilding the trigger list
     for (let alert of alerts) {
       console.log("  Processing alert: " + alert.id);
       console.log("    bike: " + alert.bikeID);
-      if (clearedList.find((cleared) => cleared === alert.id)) continue; // Skip alerts that have been cleared by user
 
-      console.log("   ----- not cleared already");
+      // Attempt to find status for this alert
+      const currentAlertStatus = alertStatusSet.find((alertStat) => alertStat.id === alert.id);
+      
+      if (!currentAlertStatus) {
+        console.log(" ?????? Error: alert not found in alert status!");
+        continue;
+      }
+      // Skip alerts that have been cleared by user already.
+      if (currentAlertStatus.status === 'cleared') continue; 
+
+      console.log("   ----- checking this alert for triggering");
+
+      // Find the bike referenced by this alert
       var idx = bikes.findIndex((bike) => {
         return bike.id === alert.bikeID;
       });
       if (idx > -1) {
+        // The bike was found
         console.log("     alert miles: " + alert.miles);
         console.log("      bike miles: " + bikes[idx].totalMiles);
         console.log("     alert date: " + alert.date?.toLocaleDateString());
         console.log("      today: " + today.toString());
-        let triggered: boolean = false;
-        let isNew: boolean = false;
+
+        let triggered: boolean = currentAlertStatus.status === 'triggered';
+        let acknowledged: boolean = currentAlertStatus.status === 'acknowledged';
+        let created: boolean = currentAlertStatus.status === 'created';
+        let isNew: boolean = false;   // assume not a new trigger
+
+        // If not already triggered, check to see if we should trigger this alert based on miles.
         if (alert.miles && bikes[idx].totalMiles >= alert.miles) {
           // Trigger on number of miles
           console.log("        ---- trigger on miles!");
-          let isNew = false;
-          if (!shownList.find((shown) => shown === alert.id)) {
+          if (created) {
+            // Change alert from created status to triggered.
+            // update the BikeMaintTrackerAlertStatus JSON
+            currentAlertStatus.status = 'triggered';
+            // save the whole set at the end
             isNew = true;
             triggered = true;
+            console.log("  This is a new alert.");
+            console.log(currentAlertStatus);
           }
+
+          // Set a master alert for this alert, so that it shows up on main page
           setMasterAlerts((prev) => [
             ...prev,
             {
@@ -177,18 +211,23 @@ const BikeComponent = () => {
               bikeName: alert.bikeName,
               reason: "Bike has reached " + alert.miles + " miles",
               description: alert.description,
-              isNew: isNew,
+              isNew: isNew || triggered,
             },
           ]);
         } else if (alert.date && alert.date <= today) {
           // Trigger on date
           console.log("        ---- trigger on date!");
-          isNew = false;
-          triggered = true;
-          if (!shownList.find((shown) => shown === alert.id)) {
+          if (created) {
+            // Change alert from created status to triggered.
+            // update the BikeMaintTrackerAlertStatus JSON
+            currentAlertStatus.status = 'triggered';
+            // save the whole set at the end
             isNew = true;
             triggered = true;
+            console.log("  This is a new alert.");
+            console.log(currentAlertStatus);
           }
+
           setMasterAlerts((prev) => [
             ...prev,
             {
@@ -198,11 +237,11 @@ const BikeComponent = () => {
               bikeName: alert.bikeName,
               reason: "Date is on or after " + alert.date?.toLocaleDateString(),
               description: alert.description,
-              isNew: isNew,
+              isNew: isNew || triggered,
             },
           ]);
         }
-        if (triggered) {
+        if (isNew) {
           // Check alert and if it was repeating, add the next cycle
           // Clone the alert and push to the next cycle.
           // BCM *** Need a list called repeatGenerated to track if the repeat alert
@@ -210,46 +249,40 @@ const BikeComponent = () => {
           //  The alert will keep triggering until the user acknowledges.
           //  But we only want to generate the repeat alert once.
 
-          // Set to triggered list, so that this alert does not appear on the Alerts popup, now.
-          if (isNew) triggeredList.push(alert.id);
-            
+          console.log("newly triggered");
+          // Set to triggered list, so that this alert does not appear on the Alerts popup, now.            
           let save = false;
           let cloned: Alert = { ...alert, id: uuidv4() }; // clone the alert
           if (alert.miles && alert.repeatMiles && alert.repeatMiles > 0) {
+            console.log("    created new alert for repeat miles");
             cloned.miles = alert.miles + alert.repeatMiles;
             save = true;
           }
           else if (alert.date && alert.repeatDays && alert.repeatDays > 0) {
             const current = dayjs(alert.date);
+            console.log("    created new alert for repeat days");
             cloned.date = current.add(alert.repeatDays, "day").toDate();
             save = true;
-          }
-          if (repeatedList.find((repeated) => repeated === alert.id))
-            save = false;
-          else {
-            repeatedList.push(alert.id);
-            localStorage.setItem(
-              "BikeMaintTrackerRepeated",
-              JSON.stringify(repeatedList)
-            );
           }
           if (save) {
             // alert was cloned, find the bike for this and add it to the alerts.  Then save.
             const success = await BikeService.addAlert(cloned);
             console.log("     Saving this cloned alert, result: " + success);
+            alertStatusSet.push({id: cloned.id, status: 'created'});
           } else console.log("    No need to save this one");
         }
       } else console.log("      !!!  This bike not found!!!");
     }
-    localStorage.setItem("BikeMaintTriggeredAlerts", JSON.stringify(triggeredList));
+    localStorage.setItem("BikeMaintTrackerAlertStatus", JSON.stringify(alertStatusSet));
     //localStorage.setItem("BikeMaintTrackerShown", JSON.stringify(shownList));
     console.log("  MASTER ALERTS " + masterAlerts.length);
+    console.log("    ALERT STATUS SET: " + alertStatusSet.length);
   };
 
   // 15 minute timer:
   // const timer = setInterval(() => {
   //   console.log(" ******");
-  //   runAlertCycle(bikeData)
+  //   await runAlertCycle(bikeData)
   // }, 900000);
 
   function requestNotificationPermission() {
@@ -271,7 +304,7 @@ const BikeComponent = () => {
     }
   }
 
-  const handleAlertOkClick = (id: string) => {
+  const handleAlertOkClick = async (id: string) => {
     const clearedListStr =
       localStorage.getItem("BikeMaintTrackerCleared") ?? "";
     let clearedList: string[] =
@@ -282,17 +315,17 @@ const BikeComponent = () => {
       JSON.stringify(clearedList)
     );
 
-    runAlertCycle(bikeData);
+    await runAlertCycle(bikeData);
   };
 
-  const handleNewClick = (id: string) => {
+  const handleNewClick = async (id: string) => {
     const shownListStr = localStorage.getItem("BikeMaintTrackerShown") ?? "";
     let shownList: string[] =
       shownListStr.length > 2 ? JSON.parse(shownListStr) : [];
 
     shownList.push(id);
     localStorage.setItem("BikeMaintTrackerShown", JSON.stringify(shownList));
-    runAlertCycle(bikeData);
+    await runAlertCycle(bikeData);
   };
 
   const handleMaintLogOpen = async () => {
@@ -308,16 +341,19 @@ const BikeComponent = () => {
       "123e4567-e89b-12d3-a456-426614174000",
       bikeData[selectedBikeIndex].id
     );
-    const shownListStr = localStorage.getItem("BikeMaintTrackerShown") ?? "";
-    let shownList: string[] =
-      shownListStr.length > 2 ? JSON.parse(shownListStr) : [];
+    const alertStatusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
+    let alertStatusSet: AlertStatus[] =
+    alertStatusStr.length > 2 ? JSON.parse(alertStatusStr) : [];
 
     const onlyActive = ale.filter((alert) => {
-      return !shownListStr.includes(alert.id);
+      const status = alertStatusSet.find((stat) => {
+        return alert.id === stat.id;
+      });
+      return status?.status === 'created';
     });
-    console.log("Here are the alerts:");
-    console.log(ale);
-    setAlerts(ale);
+    console.log("Here are the created alerts:");
+    console.log(onlyActive);
+    setAlerts(onlyActive);
     setOpenAlerts(true);
   };
   const handleMaintLogClose = async (updated: MaintLog[]) => {
@@ -333,15 +369,22 @@ const BikeComponent = () => {
     setOpen(false);
   };
 
-  const handleCloseAlerts = async (updated: Alert[]) => {
+  const handleCloseAlerts = async (added: Alert[], deletedList: string[]) => {
     console.log("Alerts are now:");
-    console.log(updated);
+    console.log(added);
+    console.log(deletedList);
+    debugger;
+    // The updated list only includes 'created' alerts, and newly added (no status yet).
+    // Status will not have changed.  Some are added, some are deleted.
+    // Need to scan main alerts list, keeping only those found in updated.
+    // Then scan updated, adding those that are new (not found in original).
     // save updated alerts to the BikeService
-    await BikeService.setAlerts(
-      "123e4567-e89b-12d3-a456-426614174000",
-      bikeData[selectedBikeIndex].id,
-      updated
-    );
+    // -- OR --  Just keep updated, and then add in everything
+    // await BikeService.setAlerts(
+    //   "123e4567-e89b-12d3-a456-426614174000",
+    //   bikeData[selectedBikeIndex].id,
+    //   updated
+    // );
 
     setOpenAlerts(false);
     await runAlertCycle(bikeData);
@@ -465,12 +508,16 @@ const BikeComponent = () => {
         "123e4567-e89b-12d3-a456-426614174000" // user
       );
       setBikeData(bikedata);
-      console.log("Running alert cycle");
-      await runAlertCycle(bikedata);
+      //console.log("Running alert cycle after main useEffect");
+      //await runAlertCycle(bikedata);
     };
     fetchData();
     requestNotificationPermission();
   }, []);
+
+  useEffect(() => {
+      runAlertCycle(bikeData);
+  }, [bikeData]);
 
   const handleDataFromChild = (data: string) => {
     setSelectedBike(data);

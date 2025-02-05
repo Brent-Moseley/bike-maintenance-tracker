@@ -45,6 +45,12 @@ export interface Alert {
   ack: boolean;
 }
 
+
+// Manual reset:
+// localStorage.setItem("BikeMaintTrackerAlertStatus", '[{"id": "a01", "status": "created"},{"id": "a02", "status": "created"}]');
+// localStorage.setItem("BikeMaintTracker", "");
+// Get data:
+// localStorage.getItem("BikeMaintTracker");
 let bikeData: BikeAll[] = [
   {
     bike: {
@@ -85,7 +91,7 @@ let bikeData: BikeAll[] = [
         userID: "123e4567-e89b-12d3-a456-426614174000",
         bikeID: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
         bikeName: "Mountain Explorer",
-        date: new Date("2025-01-25"),
+        date: undefined,
         description: "Check rear der for wear",
         miles: 2100,
         ack: false,
@@ -95,7 +101,7 @@ let bikeData: BikeAll[] = [
         userID: "123e4567-e89b-12d3-a456-426614174000",
         bikeID: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
         bikeName: "Mountain Explorer",
-        date: new Date("2025-03-04"),
+        date: new Date("2025-02-04"),
         description: "Replace rear tire if worn",
         repeatDays: 4,
         ack: false,
@@ -313,3 +319,8 @@ const attemptLoad = async () => {
 };
 
 attemptLoad();
+
+
+// I can get this, I can do this, I can handle this!  I can rock this project and rock
+// this career!  I have almost reached 12 years in this return career, and ballpark of
+// 1.6 million dollars in salary.  Code is gold!  It is worth it!  
