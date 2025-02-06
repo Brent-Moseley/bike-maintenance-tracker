@@ -24,18 +24,6 @@ import dayjs, { Dayjs } from "dayjs";
 import ConfirmModal from "./Confirm.component";
 import { AlertStatus } from "../Bike.component";
 
-/*  
-Logic:  On this date, or on this many miles, I want to trigger a popup.
-This can be repeated every X miles or Y days.
-on page launch, cycle through all alerts and trigger any that are needed.
-Have an achknowledge button, like alarms.
-Do not repeat alerts that have been acknowledged.
-On repeat every... This will auto update the next miles or the next date.
-If both are specified, this is like an OR
-Have a boolean to set alerts that have been achknowledged.
-Advance the "counter" if there is a repeat every.
-Also run alerts on a bike whenever miles are added, edited, or a new day is detected.
-*/
 
 interface PopupModalProps {
   bikeName: string;
@@ -44,6 +32,15 @@ interface PopupModalProps {
   open: boolean;
   handleClose: (logs: Alert[]) => void;
 }
+
+const StyledTableCellHeader = styled(TableCell)(({ theme }) => ({
+  [`&.${tableCellClasses.body}`]: {
+    fontSize: 14,
+  },
+  margin: "0 3px",
+  backgroundColor: "#4682B4",
+  color: "white",
+}));
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -371,40 +368,27 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                   <Table sx={{ minWidth: 700 }} aria-label="customized table">
                     <TableHead>
                       <TableRow>
-                        <StyledTableCell
+                        <StyledTableCellHeader
                           align="right"
                           style={{
                             cursor: "pointer",
-                            backgroundColor: "#4682B4",
                           }}
                           onClick={dateSort}
                         >
                           Trigger Date
-                        </StyledTableCell>
-                        <StyledTableCell
-                          align="center"
-                          style={{ backgroundColor: "#4682B4", color: "white" }}
-                        >
+                        </StyledTableCellHeader>
+                        <StyledTableCellHeader align="center">
                           Trigger Miles
-                        </StyledTableCell>
-                        <StyledTableCell
-                          align="center"
-                          style={{ backgroundColor: "#4682B4", color: "white" }}
-                        >
+                        </StyledTableCellHeader>
+                        <StyledTableCellHeader align="center">
                           Repeat Days
-                        </StyledTableCell>
-                        <StyledTableCell
-                          align="center"
-                          style={{ backgroundColor: "#4682B4", color: "white" }}
-                        >
+                        </StyledTableCellHeader>
+                        <StyledTableCellHeader align="center">
                           Repeat Miles
-                        </StyledTableCell>
-                        <StyledTableCell
-                          align="left"
-                          style={{ backgroundColor: "#4682B4", color: "white" }}
-                        >
+                        </StyledTableCellHeader>
+                        <StyledTableCellHeader align="left">
                           Description
-                        </StyledTableCell>
+                        </StyledTableCellHeader>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -551,7 +535,13 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                     </Tooltip>
                                   </Box>
                                 ) : (
-                                  <>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      alignItems: "center",
+                                    }}
+                                  >
                                     {row.description}
                                     <Tooltip title="Delete Row">
                                       <Button
@@ -566,7 +556,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                         X
                                       </Button>
                                     </Tooltip>
-                                  </>
+                                  </div>
                                 )}
                               </StyledTableCell>
                             </StyledTableRow>

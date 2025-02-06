@@ -31,6 +31,15 @@ interface PopupModalProps {
   handleClose: (logs: MaintLog[]) => void;
 }
 
+const StyledTableCellHeader = styled(TableCell)(({ theme }) => ({
+  [`&.${tableCellClasses.body}`]: {
+    fontSize: 14,
+  },
+  margin: "0 3px",
+  backgroundColor: "#4682B4",
+  color: "white",
+}));
+
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.common.black,
@@ -227,22 +236,29 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
                   <Table sx={{ minWidth: 700 }} aria-label="customized table">
                     <TableHead>
                       <TableRow>
-                        <StyledTableCell
+                        <StyledTableCellHeader
                           style={{ cursor: "pointer" }}
                           onClick={dateSort}
+                          align="center"
                         >
                           Date
-                        </StyledTableCell>
-                        <StyledTableCell>Miles</StyledTableCell>
-                        <StyledTableCell align="right">
+                        </StyledTableCellHeader>
+                        <StyledTableCellHeader align="center">
+                          Miles
+                        </StyledTableCellHeader>
+                        <StyledTableCellHeader align="left">
                           Description
-                        </StyledTableCell>
+                        </StyledTableCellHeader>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {logs.map((row) => (
                         <StyledTableRow key={row.id}>
-                          <StyledTableCell component="th" scope="row">
+                          <StyledTableCell
+                            component="th"
+                            scope="row"
+                            align="center"
+                          >
                             {row.id === editRowId ? (
                               <LocalizationProvider dateAdapter={AdapterDayjs}>
                                 <DesktopDatePicker
@@ -257,7 +273,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
                               row.date?.toLocaleDateString()
                             )}
                           </StyledTableCell>
-                          <StyledTableCell align="left">
+                          <StyledTableCell align="center">
                             {row.id === editRowId ? (
                               <TextField
                                 label="Miles"
@@ -271,7 +287,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
                               row.miles
                             )}
                           </StyledTableCell>
-                          <StyledTableCell align="right">
+                          <StyledTableCell align="left">
                             {row.id === editRowId ? (
                               <>
                                 <TextField
@@ -308,7 +324,13 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
                                 </Tooltip>
                               </>
                             ) : (
-                              <>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                }}
+                              >
                                 {row.description}
                                 <Tooltip title="Delete Row">
                                   <Button
@@ -323,7 +345,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
                                     X
                                   </Button>
                                 </Tooltip>
-                              </>
+                              </div>
                             )}
                           </StyledTableCell>
                         </StyledTableRow>

@@ -118,7 +118,7 @@ const BikeComponent = () => {
     // Check for alerts and handle any that are ready for a status update
     console.log(" --------------------- ALERT CYCLE -----------");
 
-    if (bikeData.length === 0) return;
+    if (bikes.length === 0) return;
     // Get all alerts for this user
     const alerts = await BikeService.getAlerts(
       "123e4567-e89b-12d3-a456-426614174000",
@@ -355,6 +355,7 @@ const BikeComponent = () => {
   };
 
   const handleMaintLogOpen = async () => {
+    if (bikeData.length === 0) return;
     const log = await BikeService.getMaintLog(
       "123e4567-e89b-12d3-a456-426614174000",
       bikeData[selectedBikeIndex].id
@@ -364,6 +365,8 @@ const BikeComponent = () => {
   };
 
   const handleOpenAlerts = async () => {
+    if (bikeData.length === 0) return;
+
     const ale = await BikeService.getAlerts(
       "123e4567-e89b-12d3-a456-426614174000",
       bikeData[selectedBikeIndex].id
@@ -599,7 +602,13 @@ const BikeComponent = () => {
           ></NewBikeDayModal>
         </div>
       ) : (
-        <p>Loading...</p>
+        <Button variant="contained" onClick={handleAddBike} style={{
+          backgroundColor: 'green',
+          color: 'white',
+          padding: '10px 20px'
+        }}>
+          Add my first bike!
+        </Button>
       )}
       <Card variant="outlined" sx={{ margin: 2 }}>
         <CardContent>

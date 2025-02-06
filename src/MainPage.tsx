@@ -29,16 +29,13 @@ const MainPage: React.FC = () => {
     const fetchData = async () => {
         const bikedata = await BikeService.getBikes("123e4567-e89b-12d3-a456-426614174000");
         setBikeData(bikedata);
-        debugger;
-        const maintdata = await BikeService.getMaintLog("123e4567-e89b-12d3-a456-426614174000", bikedata[2]?.id);
+        if (bikedata.length === 0) return;
+        const maintdata = await BikeService.getMaintLog("123e4567-e89b-12d3-a456-426614174000", bikedata[0]?.id);
         setMaintData(maintdata);
-        const alertdata = await BikeService.getAlerts("123e4567-e89b-12d3-a456-426614174000", bikedata[2]?.id);
+        const alertdata = await BikeService.getAlerts("123e4567-e89b-12d3-a456-426614174000", bikedata[0]?.id);
         setAlertData(alertdata);
-        debugger;
     };   
     fetchData();
-    //console.log("Here it is!!");
-    //console.log(bikeData);
   }, []);
 
   return (
