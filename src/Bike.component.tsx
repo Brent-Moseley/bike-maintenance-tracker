@@ -98,7 +98,6 @@ const BikeComponent = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [masterAlerts, setMasterAlerts] = useState<TriggeredAlert[]>([]);
 
-
   // Alert state table:
   //  id
   //  status    created
@@ -147,9 +146,10 @@ const BikeComponent = () => {
     //     : [];
 
     // Get current list of alert statuses
-    const alertStatusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
+    const alertStatusStr =
+      localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
     let alertStatusSet: AlertStatus[] =
-    alertStatusStr.length > 2 ? JSON.parse(alertStatusStr) : [];
+      alertStatusStr.length > 2 ? JSON.parse(alertStatusStr) : [];
     debugger;
     const today: Date = new Date();
 
@@ -159,14 +159,16 @@ const BikeComponent = () => {
       console.log("    bike: " + alert.bikeID);
 
       // Attempt to find status for this alert
-      const currentAlertStatus = alertStatusSet.find((alertStat) => alertStat.id === alert.id);
-      
+      const currentAlertStatus = alertStatusSet.find(
+        (alertStat) => alertStat.id === alert.id
+      );
+
       if (!currentAlertStatus) {
         console.log(" ?????? Error: alert not found in alert status!");
         continue;
       }
       // Skip alerts that have been cleared by user already.
-      if (currentAlertStatus.status === 'cleared') continue; 
+      if (currentAlertStatus.status === "cleared") continue;
 
       console.log("   ----- checking this alert for triggering");
 
@@ -181,10 +183,11 @@ const BikeComponent = () => {
         console.log("     alert date: " + alert.date?.toLocaleDateString());
         console.log("      today: " + today.toString());
 
-        let triggered: boolean = currentAlertStatus.status === 'triggered';
-        let acknowledged: boolean = currentAlertStatus.status === 'acknowledged';
-        let created: boolean = currentAlertStatus.status === 'created';
-        let isNew: boolean = false;   // assume not a new trigger
+        let triggered: boolean = currentAlertStatus.status === "triggered";
+        let acknowledged: boolean =
+          currentAlertStatus.status === "acknowledged";
+        let created: boolean = currentAlertStatus.status === "created";
+        let isNew: boolean = false; // assume not a new trigger
 
         // If not already triggered, check to see if we should trigger this alert based on miles.
         if (alert.miles && bikes[idx].totalMiles >= alert.miles) {
@@ -193,7 +196,7 @@ const BikeComponent = () => {
           if (created) {
             // Change alert from created status to triggered.
             // update the BikeMaintTrackerAlertStatus JSON
-            currentAlertStatus.status = 'triggered';
+            currentAlertStatus.status = "triggered";
             // save the whole set at the end
             isNew = true;
             triggered = true;
@@ -220,7 +223,7 @@ const BikeComponent = () => {
           if (created) {
             // Change alert from created status to triggered.
             // update the BikeMaintTrackerAlertStatus JSON
-            currentAlertStatus.status = 'triggered';
+            currentAlertStatus.status = "triggered";
             // save the whole set at the end
             isNew = true;
             triggered = true;
@@ -248,17 +251,20 @@ const BikeComponent = () => {
           //   has already been generated for this alert based on ID
           //  The alert will keep triggering until the user acknowledges.
           //  But we only want to generate the repeat alert once.
+          showNotification("You have new alerts in Bike Maintenance Tracker!", {
+            body: "Please check the Alert Center in Bike Maintenance Tracker to see alerts.",
+            requireInteraction: true,
+          });
 
           console.log("newly triggered");
-          // Set to triggered list, so that this alert does not appear on the Alerts popup, now.            
+          // Set to triggered list, so that this alert does not appear on the Alerts popup, now.
           let save = false;
           let cloned: Alert = { ...alert, id: uuidv4() }; // clone the alert
           if (alert.miles && alert.repeatMiles && alert.repeatMiles > 0) {
             console.log("    created new alert for repeat miles");
             cloned.miles = alert.miles + alert.repeatMiles;
             save = true;
-          }
-          else if (alert.date && alert.repeatDays && alert.repeatDays > 0) {
+          } else if (alert.date && alert.repeatDays && alert.repeatDays > 0) {
             const current = dayjs(alert.date);
             console.log("    created new alert for repeat days");
             cloned.date = current.add(alert.repeatDays, "day").toDate();
@@ -268,22 +274,40 @@ const BikeComponent = () => {
             // alert was cloned, find the bike for this and add it to the alerts.  Then save.
             const success = await BikeService.addAlert(cloned);
             console.log("     Saving this cloned alert, result: " + success);
-            alertStatusSet.push({id: cloned.id, status: 'created'});
+            alertStatusSet.push({ id: cloned.id, status: "created" });
           } else console.log("    No need to save this one");
         }
       } else console.log("      !!!  This bike not found!!!");
     }
-    localStorage.setItem("BikeMaintTrackerAlertStatus", JSON.stringify(alertStatusSet));
+    localStorage.setItem(
+      "BikeMaintTrackerAlertStatus",
+      JSON.stringify(alertStatusSet)
+    );
     //localStorage.setItem("BikeMaintTrackerShown", JSON.stringify(shownList));
     console.log("  MASTER ALERTS " + masterAlerts.length);
     console.log("    ALERT STATUS SET: " + alertStatusSet.length);
   };
 
   // 15 minute timer:
-  // const timer = setInterval(() => {
-  //   console.log(" ******");
-  //   await runAlertCycle(bikeData)
-  // }, 900000);
+  const timer = setInterval(() => {
+    console.log(" ******");
+    runAlertCycle(bikeData);
+  }, 900000);
+
+  function setAlertStatus(id: string, status: string) {
+    const statusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
+    let statusList: AlertStatus[] =
+      statusStr.length > 2 ? JSON.parse(statusStr) : [];
+
+    const alert = statusList.findIndex((item) => item.id === id);
+    if (alert > -1) {
+      statusList[alert].status = status;
+      localStorage.setItem(
+        "BikeMaintTrackerAlertStatus",
+        JSON.stringify(statusList)
+      );
+    }
+  }
 
   function requestNotificationPermission() {
     if ("Notification" in window) {
@@ -305,16 +329,17 @@ const BikeComponent = () => {
   }
 
   const handleAlertOkClick = async (id: string) => {
-    const clearedListStr =
-      localStorage.getItem("BikeMaintTrackerCleared") ?? "";
-    let clearedList: string[] =
-      clearedListStr.length > 2 ? JSON.parse(clearedListStr) : [];
-    clearedList.push(id);
-    localStorage.setItem(
-      "BikeMaintTrackerCleared",
-      JSON.stringify(clearedList)
-    );
+    // const clearedListStr =
+    //   localStorage.getItem("BikeMaintTrackerCleared") ?? "";
+    // let clearedList: string[] =
+    //   clearedListStr.length > 2 ? JSON.parse(clearedListStr) : [];
+    // clearedList.push(id);
+    // localStorage.setItem(
+    //   "BikeMaintTrackerCleared",
+    //   JSON.stringify(clearedList)
+    // );
 
+    setAlertStatus(id, "cleared");
     await runAlertCycle(bikeData);
   };
 
@@ -325,6 +350,7 @@ const BikeComponent = () => {
 
     shownList.push(id);
     localStorage.setItem("BikeMaintTrackerShown", JSON.stringify(shownList));
+    setAlertStatus(id, "acknowledged");
     await runAlertCycle(bikeData);
   };
 
@@ -336,24 +362,25 @@ const BikeComponent = () => {
     setLog(log);
     setOpen(true);
   };
+
   const handleOpenAlerts = async () => {
     const ale = await BikeService.getAlerts(
       "123e4567-e89b-12d3-a456-426614174000",
       bikeData[selectedBikeIndex].id
     );
-    const alertStatusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
-    let alertStatusSet: AlertStatus[] =
-    alertStatusStr.length > 2 ? JSON.parse(alertStatusStr) : [];
+    // const alertStatusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
+    // let alertStatusSet: AlertStatus[] =
+    // alertStatusStr.length > 2 ? JSON.parse(alertStatusStr) : [];
 
-    const onlyActive = ale.filter((alert) => {
-      const status = alertStatusSet.find((stat) => {
-        return alert.id === stat.id;
-      });
-      return status?.status === 'created';
-    });
-    console.log("Here are the created alerts:");
-    console.log(onlyActive);
-    setAlerts(onlyActive);
+    // const onlyActive = ale.filter((alert) => {
+    //   const status = alertStatusSet.find((stat) => {
+    //     return alert.id === stat.id;
+    //   });
+    //   return status?.status === 'created';
+    // });
+    // console.log("Here are the created alerts:");
+    // console.log(onlyActive);
+    setAlerts(ale);
     setOpenAlerts(true);
   };
   const handleMaintLogClose = async (updated: MaintLog[]) => {
@@ -369,22 +396,21 @@ const BikeComponent = () => {
     setOpen(false);
   };
 
-  const handleCloseAlerts = async (added: Alert[], deletedList: string[]) => {
+  const handleCloseAlerts = async (updated: Alert[]) => {
     console.log("Alerts are now:");
-    console.log(added);
-    console.log(deletedList);
+    console.log(updated);
     debugger;
     // The updated list only includes 'created' alerts, and newly added (no status yet).
     // Status will not have changed.  Some are added, some are deleted.
     // Need to scan main alerts list, keeping only those found in updated.
     // Then scan updated, adding those that are new (not found in original).
     // save updated alerts to the BikeService
-    // -- OR --  Just keep updated, and then add in everything
-    // await BikeService.setAlerts(
-    //   "123e4567-e89b-12d3-a456-426614174000",
-    //   bikeData[selectedBikeIndex].id,
-    //   updated
-    // );
+    // -- OR --  Just keep updated, and then add in
+    await BikeService.setAlerts(
+      "123e4567-e89b-12d3-a456-426614174000",
+      bikeData[selectedBikeIndex].id,
+      updated
+    );
 
     setOpenAlerts(false);
     await runAlertCycle(bikeData);
@@ -516,7 +542,7 @@ const BikeComponent = () => {
   }, []);
 
   useEffect(() => {
-      runAlertCycle(bikeData);
+    runAlertCycle(bikeData);
   }, [bikeData]);
 
   const handleDataFromChild = (data: string) => {
@@ -577,12 +603,12 @@ const BikeComponent = () => {
       )}
       <Card variant="outlined" sx={{ margin: 2 }}>
         <CardContent>
-          {masterAlerts.length > 0 ? (
-            <>
-              <TableContainer component={Paper}>
-                <Typography variant="h6" component="div" sx={{ padding: 2 }}>
-                  Active Alerts
-                </Typography>
+          <>
+            <TableContainer component={Paper}>
+              <Typography variant="h6" component="div" sx={{ padding: 2 }}>
+                Alert Center
+              </Typography>
+              {masterAlerts.length > 0 ? (
                 <Table sx={{ minWidth: 650 }} aria-label="alerts table">
                   <TableHead>
                     <TableRow>
@@ -623,11 +649,13 @@ const BikeComponent = () => {
                     ))}
                   </TableBody>
                 </Table>
-              </TableContainer>
-            </>
-          ) : (
-            <Typography variant="body2">There are no active alerts.</Typography>
-          )}
+              ) : (
+                <Typography variant="body2" sx={{padding: 1}}>
+                  There are no active alerts.
+                </Typography>
+              )}
+            </TableContainer>
+          </>
         </CardContent>
       </Card>
       <Button

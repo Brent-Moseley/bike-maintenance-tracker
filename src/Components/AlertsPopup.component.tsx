@@ -42,7 +42,7 @@ interface PopupModalProps {
   bikeId: string;
   alerts: Alert[];
   open: boolean;
-  handleClose: (added: Alert[], deleted: string[]) => void;
+  handleClose: (logs: Alert[]) => void;
 }
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -65,6 +65,14 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
     border: 0,
   },
 }));
+
+const headerStyle = {
+  backgroundColor: "#f5f5f5",
+  fontWeight: "bold",
+  border: "1px solid #ccc",
+  padding: "8px",
+  textAlign: "center",
+};
 
 const style = {
   position: "absolute" as "absolute",
@@ -91,7 +99,6 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   handleClose,
 }) => {
   const [alertSet, setAlertSet] = useState<Alert[]>(alerts);
-  const [addedAlerts, setAddedAlerts] = useState<Alert[]>([]);
   const [editRowId, setEditRowId] = useState<string | null>(null);
   const [confirmModalOpen, setConfirmModalOpen] = useState<boolean>(false);
   const [currentId, setCurrentId] = useState<string>("");
@@ -104,11 +111,9 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const today = dayjs();
   const tomorrow = today.add(1, "day");
 
-  const deleted: string[] = [];
-
   console.log("  Alerts Popup, bike id: " + bikeId);
   console.log("  Alerts Popup, bike name: " + bikeName);
-  //console.log(" Alert set: " + JSON.stringify(alertSet));
+  console.log(" Alert set: " + JSON.stringify(alertSet));
   const [newRow, setNewRow] = useState<Alert>({
     id: uuidv4(),
     userID: "123e4567-e89b-12d3-a456-426614174000", // set with real user ID
@@ -117,13 +122,11 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     date: tomorrow.toDate(),
     miles: 0, // 0 miles means not set
     description: "",
-    ack: false,
+    status: "created",
   });
 
-  const clearOld = (set: Alert[]) => {
-    // What now needs to happen here is I create an alertSetShow that includes only
-    // 'created' alerts  BCM
-    console.log("Clearing old, length before: " + set.length);
+  const setStatuses = (set: Alert[]) => {
+    console.log("Clearing old, before: " + set.length);
     const statusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
     let statusList: AlertStatus[] =
       statusStr.length > 2 ? JSON.parse(statusStr) : [];
@@ -131,7 +134,8 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     let newset: Alert[] = [];
     for (let al of set) {
       const status = statusList.find((cl) => cl.id === al.id);
-      if (status?.status === "created") newset.push(al);
+      al.status = status?.status;
+      newset.push(al);
     }
     console.log("Clearing old, after: " + newset.length);
     return newset;
@@ -141,7 +145,8 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     // Clear out all alerts that have triggered and been cleared
     // What now needs to happen here is I create an alertSetShow that includes only
     // 'created' alerts  BCM
-    setAlertSet(clearOld(alerts));
+    console.log("Incoming alert count: " + alerts.length);
+    setAlertSet(setStatuses(alerts));
   }, [alerts]);
 
   useEffect(() => {
@@ -157,9 +162,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       setEditRowId("");
       setMilesDisabled(true);
       setDateDisabled(false);
-      setAddedAlerts([]);
-      deleted.length = 0;
-      console.log("Resetting form");
+      console.log("Incoming alert count on open: " + alerts.length);
     }
   }, [open]);
 
@@ -168,11 +171,20 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     const idx = alertSet.findIndex((alert) => alert.id === currentId);
     console.log("  DELETE ALERT, found index at: " + idx);
     console.log("     alert id: " + currentId);
-    deleted.push(currentId);
     if (idx > -1) {
       setAlertSet([...alertSet.slice(0, idx), ...alertSet.slice(idx + 1)]);
       setCloseLabel("Save");
     }
+    const statusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
+    let statusList: AlertStatus[] =
+      statusStr.length > 2 ? JSON.parse(statusStr) : [];
+
+    statusList = statusList.filter((item) => item.id !== currentId);
+    localStorage.setItem(
+      "BikeMaintTrackerAlertStatus",
+      JSON.stringify(statusList)
+    );
+
     setConfirmModalOpen(false);
   };
 
@@ -261,41 +273,38 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       setAlertSet(alertSet.slice(0, -1));
     } else {
       setCloseLabel("Save");
+      const statusStr =
+        localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
+      let statusList: AlertStatus[] =
+        statusStr.length > 2 ? JSON.parse(statusStr) : [];
+
+      statusList.push({ id: editRowId ? editRowId : "na", status: "created" });
+      localStorage.setItem(
+        "BikeMaintTrackerAlertStatus",
+        JSON.stringify(statusList)
+      );
+
       if (milesDisabled) {
-        console.log("Adding alert for date");
-        setAlertSet((prev) => {
-          return prev.map((row) => {
-            console.log(row.id);
-
-            if (row.id === editRowId) {
-                console.log("     edit row match date " + row.id);
-
-              setAddedAlerts ((prevData) => [...prevData, 
-                { ...row, miles: undefined, repeatMiles: undefined }]);
-              return { ...row, miles: undefined, repeatMiles: undefined };
-            } else return row;
-          });
-        });
+        setAlertSet((prevLogs) =>
+          prevLogs.map((row) =>
+            row.id === editRowId
+              ? { ...row, miles: undefined, repeatMiles: undefined }
+              : row
+          )
+        );
       } else {
-        console.log("Adding alert for miles");
-        setAlertSet((prev) => {
-            return prev.map((row) => {
-                console.log(row.id);
-              if (row.id === editRowId) {
-                console.log("     edit row match miles " + row.id);
-
-                setAddedAlerts ((prevData) => [...prevData, 
-                    { ...row, date: undefined, repeatDays: undefined }]);
-                return { ...row, date: undefined, repeatDays: undefined };
-              } else return row;
-            });
-          });
+        setAlertSet((prevLogs) =>
+          prevLogs.map((row) =>
+            row.id === editRowId
+              ? { ...row, date: undefined, repeatDate: undefined }
+              : row
+          )
+        );
       }
     }
     setEditRowId("");
-    console.log("Added alerts Complete ");
   };
-  // date: undefined, repeatDate: undefined
+
   const handleDateChangeAlertDate = (newValue: Dayjs | null) => {
     if (newValue)
       setAlertSet((prev) =>
@@ -342,7 +351,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       <Modal
         open={open}
         onClose={() => {
-          handleClose(addedAlerts, deleted);
+          handleClose(alerts);
         }}
         aria-labelledby="modal-title"
         aria-describedby="modal-description"
@@ -399,159 +408,171 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {alertSet.map((row) => (
-                        <StyledTableRow key={row.id}>
-                          <StyledTableCell
-                            component="th"
-                            scope="row"
-                            align="right"
-                          >
-                            {row.id === editRowId ? (
-                              <>
-                                <SmallSlider
-                                  value={dateSliderValue}
-                                  onChange={handleSliderChange}
-                                  aria-labelledby="continuous-slider"
-                                  step={1}
-                                  marks={[
-                                    { value: 0, label: "Date" },
-                                    { value: 1, label: "Miles" },
-                                  ]}
-                                  min={0}
-                                  max={1}
-                                />
-                                <LocalizationProvider
-                                  dateAdapter={AdapterDayjs}
-                                >
-                                  <DesktopDatePicker
-                                    label="Trigger Date"
-                                    name="date"
-                                    value={dayjs(row.date)}
-                                    sx={{ maxWidth: "170px" }}
-                                    disabled={dateDisabled}
-                                    onChange={handleDateChangeAlertDate}
-                                  />
-                                </LocalizationProvider>
-                              </>
-                            ) : (
-                              row.date?.toLocaleDateString()
-                            )}
-                          </StyledTableCell>
-                          <StyledTableCell align="center">
-                            {row.id === editRowId ? (
-                              <Tooltip title="Mile to trigger">
-                                <TextField
-                                  label="Trigger Miles"
-                                  name="miles"
-                                  type="number"
-                                  size="small"
-                                  style={{ width: 80, marginTop: 38 }}
-                                  disabled={milesDisabled}
-                                  value={row.miles}
-                                  onChange={(e) => handleInputChange(e, row.id)}
-                                />
-                              </Tooltip>
-                            ) : (
-                              row.miles?.toLocaleString("en-US")
-                            )}
-                          </StyledTableCell>
-                          <StyledTableCell align="center">
-                            {row.id === editRowId ? (
-                              <Tooltip title="Repeat every X days">
-                                <TextField
-                                  label="Next Days"
-                                  name="repeatDays"
-                                  type="number"
-                                  size="small"
-                                  style={{ width: 80, marginTop: 38 }}
-                                  disabled={dateDisabled}
-                                  value={row.repeatDays}
-                                  onChange={(e) => handleInputChange(e, row.id)}
-                                />
-                              </Tooltip>
-                            ) : (
-                              row.repeatDays
-                            )}
-                          </StyledTableCell>
-                          <StyledTableCell align="center">
-                            {row.id === editRowId ? (
-                              <Tooltip title="Repeat every Y miles">
-                                <TextField
-                                  label="Next Miles"
-                                  name="repeatMiles"
-                                  size="small"
-                                  type="number"
-                                  disabled={milesDisabled}
-                                  style={{ width: 80, marginTop: 38 }}
-                                  value={row.repeatMiles}
-                                  onChange={(e) => handleInputChange(e, row.id)}
-                                />
-                              </Tooltip>
-                            ) : (
-                              row.repeatMiles
-                            )}
-                          </StyledTableCell>
-                          <StyledTableCell align="left">
-                            {row.id === editRowId ? (
-                              <Box display="flex" alignItems="center">
-                                <TextField
-                                  label="Description"
-                                  name="description"
-                                  size="small"
-                                  style={{ width: 200, marginTop: 38 }}
-                                  value={row.description}
-                                  onChange={(e) => handleInputChange(e, row.id)}
-                                />
-                                <Button
-                                  style={{
-                                    minWidth: "30px",
-                                    maxWidth: "30px",
-                                    maxHeight: "30px",
-                                    marginTop: "38px",
-                                  }}
-                                  onClick={() => {
-                                    handleCommit(true);
-                                  }}
-                                >
-                                  OK
-                                </Button>
-                                <Tooltip title="Cancel">
-                                  <Button
-                                    style={{
-                                      minWidth: "30px",
-                                      maxWidth: "30px",
-                                      maxHeight: "30px",
-                                      marginTop: "38px",
-                                    }}
-                                    onClick={() => {
-                                      handleCommit(false);
-                                    }}
-                                  >
-                                    X
-                                  </Button>
-                                </Tooltip>
-                              </Box>
-                            ) : (
-                              <>
-                                {row.description}
-                                <Tooltip title="Delete Row">
-                                  <Button
-                                    style={{
-                                      minWidth: "30px",
-                                      maxHeight: "30px",
-                                    }}
-                                    onClick={() => {
-                                      handleRowDelete(row.id);
-                                    }}
-                                  >
-                                    X
-                                  </Button>
-                                </Tooltip>
-                              </>
-                            )}
-                          </StyledTableCell>
-                        </StyledTableRow>
-                      ))}
+                      {alertSet.map((row) => {
+                        if (row.status === "created") {
+                          return (
+                            <StyledTableRow key={row.id}>
+                              <StyledTableCell
+                                component="th"
+                                scope="row"
+                                align="right"
+                              >
+                                {row.id === editRowId ? (
+                                  <>
+                                    <SmallSlider
+                                      value={dateSliderValue}
+                                      onChange={handleSliderChange}
+                                      aria-labelledby="continuous-slider"
+                                      step={1}
+                                      marks={[
+                                        { value: 0, label: "Date" },
+                                        { value: 1, label: "Miles" },
+                                      ]}
+                                      min={0}
+                                      max={1}
+                                    />
+                                    <LocalizationProvider
+                                      dateAdapter={AdapterDayjs}
+                                    >
+                                      <DesktopDatePicker
+                                        label="Trigger Date"
+                                        name="date"
+                                        value={dayjs(row.date)}
+                                        sx={{ maxWidth: "170px" }}
+                                        disabled={dateDisabled}
+                                        onChange={handleDateChangeAlertDate}
+                                      />
+                                    </LocalizationProvider>
+                                  </>
+                                ) : (
+                                  row.date?.toLocaleDateString()
+                                )}
+                              </StyledTableCell>
+                              <StyledTableCell align="center">
+                                {row.id === editRowId ? (
+                                  <Tooltip title="Mile to trigger">
+                                    <TextField
+                                      label="Trigger Miles"
+                                      name="miles"
+                                      type="number"
+                                      size="small"
+                                      style={{ width: 80, marginTop: 38 }}
+                                      disabled={milesDisabled}
+                                      value={row.miles}
+                                      onChange={(e) =>
+                                        handleInputChange(e, row.id)
+                                      }
+                                    />
+                                  </Tooltip>
+                                ) : (
+                                  row.miles?.toLocaleString("en-US")
+                                )}
+                              </StyledTableCell>
+                              <StyledTableCell align="center">
+                                {row.id === editRowId ? (
+                                  <Tooltip title="Repeat every X days">
+                                    <TextField
+                                      label="Next Days"
+                                      name="repeatDays"
+                                      type="number"
+                                      size="small"
+                                      style={{ width: 80, marginTop: 38 }}
+                                      disabled={dateDisabled}
+                                      value={row.repeatDays}
+                                      onChange={(e) =>
+                                        handleInputChange(e, row.id)
+                                      }
+                                    />
+                                  </Tooltip>
+                                ) : (
+                                  row.repeatDays
+                                )}
+                              </StyledTableCell>
+                              <StyledTableCell align="center">
+                                {row.id === editRowId ? (
+                                  <Tooltip title="Repeat every Y miles">
+                                    <TextField
+                                      label="Next Miles"
+                                      name="repeatMiles"
+                                      size="small"
+                                      type="number"
+                                      disabled={milesDisabled}
+                                      style={{ width: 80, marginTop: 38 }}
+                                      value={row.repeatMiles}
+                                      onChange={(e) =>
+                                        handleInputChange(e, row.id)
+                                      }
+                                    />
+                                  </Tooltip>
+                                ) : (
+                                  row.repeatMiles
+                                )}
+                              </StyledTableCell>
+                              <StyledTableCell align="left">
+                                {row.id === editRowId ? (
+                                  <Box display="flex" alignItems="center">
+                                    <TextField
+                                      label="Description"
+                                      name="description"
+                                      size="small"
+                                      style={{ width: 200, marginTop: 38 }}
+                                      value={row.description}
+                                      onChange={(e) =>
+                                        handleInputChange(e, row.id)
+                                      }
+                                    />
+                                    <Button
+                                      style={{
+                                        minWidth: "30px",
+                                        maxWidth: "30px",
+                                        maxHeight: "30px",
+                                        marginTop: "38px",
+                                      }}
+                                      onClick={() => {
+                                        handleCommit(true);
+                                      }}
+                                    >
+                                      OK
+                                    </Button>
+                                    <Tooltip title="Cancel">
+                                      <Button
+                                        style={{
+                                          minWidth: "30px",
+                                          maxWidth: "30px",
+                                          maxHeight: "30px",
+                                          marginTop: "38px",
+                                        }}
+                                        onClick={() => {
+                                          handleCommit(false);
+                                        }}
+                                      >
+                                        X
+                                      </Button>
+                                    </Tooltip>
+                                  </Box>
+                                ) : (
+                                  <>
+                                    {row.description}
+                                    <Tooltip title="Delete Row">
+                                      <Button
+                                        style={{
+                                          minWidth: "30px",
+                                          maxHeight: "30px",
+                                        }}
+                                        onClick={() => {
+                                          handleRowDelete(row.id);
+                                        }}
+                                      >
+                                        X
+                                      </Button>
+                                    </Tooltip>
+                                  </>
+                                )}
+                              </StyledTableCell>
+                            </StyledTableRow>
+                          );
+                        }
+                      })}
                     </TableBody>
                   </Table>
                 </TableContainer>
@@ -565,7 +586,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
           </Button>
           <Button
             onClick={() => {
-              handleClose(addedAlerts, deleted);
+              handleClose(alertSet);
             }}
             sx={{ mt: 2 }}
           >

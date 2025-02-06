@@ -42,7 +42,7 @@ export interface Alert {
   miles?: number;
   repeatMiles?: number;
   repeatDays?: number;
-  ack: boolean;
+  status?: string;
 }
 
 
@@ -94,7 +94,7 @@ let bikeData: BikeAll[] = [
         date: undefined,
         description: "Check rear der for wear",
         miles: 2100,
-        ack: false,
+        status: "created",
       },
       {
         id: "a02",
@@ -104,7 +104,7 @@ let bikeData: BikeAll[] = [
         date: new Date("2025-02-04"),
         description: "Replace rear tire if worn",
         repeatDays: 4,
-        ack: false,
+        status: "created",
       },
     ],
   },
