@@ -93,6 +93,7 @@ const BikeComponent = () => {
   const [addMode, setAddMode] = useState<boolean>(false);
   const [openAddMiles, setOpenAddMiles] = useState<boolean>(false);
   const [openEditBike, setOpenEditBike] = useState<boolean>(false);
+  const [realData, setRealData] = useState<boolean>(false);
 
   const [log, setLog] = useState<MaintLog[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -441,7 +442,11 @@ const BikeComponent = () => {
   };
 
   const handleNBDOK = () => {
-    handleOpenEditBike(true);
+    console.log(realData);
+    debugger;
+
+    if (realData) handleOpenEditBike(true);
+    else handleOpenEditBike(false);
     setNBDOpen(false);
   };
 
@@ -507,6 +512,10 @@ const BikeComponent = () => {
     console.log(data.id);
     if (data.id.length > 0) {
       // Submit clicked
+      if (data.id === 'a13') {
+        data.id = uuidv4();  // user edited initial dummy data bike
+        setRealData(true);
+      }
       console.log("Updating bike info");
       // If we are editing a bike, and Submit was hit.
       const updatedData = bikeData.map((item, idx) => {
@@ -514,6 +523,7 @@ const BikeComponent = () => {
         else return { ...item };
       });
       setBikeData(updatedData);
+      setRealData(true);
       console.log("Now updated to: ");
       console.log(updatedData);
       await BikeService.saveBike(
@@ -532,11 +542,18 @@ const BikeComponent = () => {
   };
 
   useEffect(() => {
+    console.log("  &&&&& loading");
     const fetchData = async () => {
       const bikedata = await BikeService.getBikes(
         "123e4567-e89b-12d3-a456-426614174000" // user
       );
       setBikeData(bikedata);
+      console.log("   BikeData length: " + bikedata.length);
+      if (bikedata.length > 0) console.log("ID is: " + bikedata[0].id);
+      if (bikedata.length > 0 && bikedata[0].id !== "a13") {
+        console.log("Setting real data true");
+        setRealData(true);
+      }
       //console.log("Running alert cycle after main useEffect");
       //await runAlertCycle(bikedata);
     };
@@ -557,7 +574,34 @@ const BikeComponent = () => {
 
   return (
     <div>
-      {bikeData.length > 0 ? (
+      {bikeData.length > 0 && (
+        <AddEditBikePopup
+          data={bikeData[selectedBikeIndex]}
+          open={openEditBike}
+          handleClose={handleModfyBike}
+        ></AddEditBikePopup>
+      )}
+      <NewBikeDayModal
+        open={nbdopen}
+        handleOk={handleNBDOK}
+        handleClose={handleNBDCancel}
+      ></NewBikeDayModal>
+      {bikeData.length > 0 && !realData && (
+        <>
+          <Button
+            variant="contained"
+            onClick={handleAddBike}
+            style={{
+              backgroundColor: "green",
+              color: "white",
+              padding: "10px 20px",
+            }}
+          >
+            Add my first bike!
+          </Button>
+        </>
+      )}
+      {bikeData.length > 0 && realData ? (
         <div>
           <BikeDropdown
             bikes={bikeData}
@@ -590,25 +634,9 @@ const BikeComponent = () => {
             open={openAddMiles}
             handleClose={handleCloseAddMiles}
           ></AddMilesPopup>
-          <AddEditBikePopup
-            data={bikeData[selectedBikeIndex]}
-            open={openEditBike}
-            handleClose={handleModfyBike}
-          ></AddEditBikePopup>
-          <NewBikeDayModal
-            open={nbdopen}
-            handleOk={handleNBDOK}
-            handleClose={handleNBDCancel}
-          ></NewBikeDayModal>
         </div>
       ) : (
-        <Button variant="contained" onClick={handleAddBike} style={{
-          backgroundColor: 'green',
-          color: 'white',
-          padding: '10px 20px'
-        }}>
-          Add my first bike!
-        </Button>
+        <span></span>
       )}
       <Card variant="outlined" sx={{ margin: 2 }}>
         <CardContent>
@@ -659,7 +687,7 @@ const BikeComponent = () => {
                   </TableBody>
                 </Table>
               ) : (
-                <Typography variant="body2" sx={{padding: 1}}>
+                <Typography variant="body2" sx={{ padding: 1 }}>
                   There are no active alerts.
                 </Typography>
               )}

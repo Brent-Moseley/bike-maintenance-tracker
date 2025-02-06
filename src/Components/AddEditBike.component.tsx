@@ -37,6 +37,7 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
 }) => {
   const newData = structuredClone(data);
   console.log("New data:");
+  debugger;
   console.log(newData);
   console.log(newData.id);
 

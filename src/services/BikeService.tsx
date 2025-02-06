@@ -51,7 +51,26 @@ export interface Alert {
 // localStorage.setItem("BikeMaintTracker", "");
 // Get data:
 // localStorage.getItem("BikeMaintTracker");
-let bikeData: BikeAll[] = [];
+let bikeData: BikeAll[] = [
+  {
+    bike: {
+      userID: "123e4567-e89b-12d3-a456-426614174000",
+      id: "a13",    // Placeholder data
+      name: "",
+      brand: "",
+      model: "",
+      spec: "",
+      notes: "",
+      monthYearPurchased: new Date("2013-03-15"),
+      dateLastServiced: new Date("2013-03-16"),
+      milesLastServiced: 0,
+      totalMiles: 0,
+      trackBy: "miles",
+    },
+    maintLog: [],
+    alerts: [],
+  },
+];
 
 function dateReviver(key: string, value: any) {
   const datePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
@@ -73,7 +92,7 @@ function dateReviver(key: string, value: any) {
 export const BikeService = {
   getBikes: async function (user: string): Promise<Bike[]> {
     console.log("start:");
-    if (bikeData.length === 0) return []; 
+    //if (bikeData.length === 0) return []; 
     const returnData: Bike[] = (
       bikeData.filter((bike) => {
         return bike.bike.userID == user;
@@ -86,7 +105,7 @@ export const BikeService = {
     bikeId: string
   ): Promise<MaintLog[]> {
     const bike = bikeData.filter((bike) => {
-      return bike.bike.userID == user && bike.bike.id == bikeId;
+      return bike.bike.userID === user && bike.bike.id === bikeId;
     });
     if (bike && bike.length > 0) return bike[0].maintLog;
     else return [];
@@ -101,7 +120,7 @@ export const BikeService = {
     updated: MaintLog[]
   ): Promise<boolean> {
     let bike = bikeData.filter((bike) => {
-      return bike.bike.userID == user && bike.bike.id == bikeId;
+      return bike.bike.userID === user && bike.bike.id === bikeId;
     });
     if (bike.length === 0) return false;
     bike[0].maintLog = updated;
@@ -113,7 +132,7 @@ export const BikeService = {
   getAlerts: async function (user: string, bikeId: string): Promise<Alert[]> {
     if (bikeId.length > 0) {
     const bike = bikeData.filter((bike) => {
-      return bike.bike.userID == user && bike.bike.id == bikeId;
+      return bike.bike.userID === user && bike.bike.id === bikeId;
     });
     if (bike && bike.length > 0) return bike[0].alerts;
     else return [];
@@ -159,7 +178,7 @@ export const BikeService = {
   ): Promise<boolean> {
     console.log("looking for bike to save alerts");
     let bike = bikeData.filter((bike) => {
-      return bike.bike.userID == user && bike.bike.id == bikeId;
+      return bike.bike.userID === user && bike.bike.id === bikeId;
     });
     if (bike.length === 0) return false;
     console.log("Bike found");
