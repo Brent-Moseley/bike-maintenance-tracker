@@ -46,6 +46,30 @@ Alerts
 
 
 
+File sizes after gzip:
+
+  200.4 kB  build/static/js/main.ac0e37f3.js
+  616 B     build/static/css/main.58865b32.css
+
+The project was built assuming it is hosted at /.
+You can control this with the homepage field in your package.json.
+
+The build folder is ready to be deployed.
+You may serve it with a static server:
+
+  yarn global add serve
+  serve -s build
+
+Find out more about deployment here:
+
+  https://cra.link/deployment
+
+
+
+npm install -g serve
+serve -s build
+
+
 
 
 I cannot lose "my job" because it is not my job in the first place. J cannot 

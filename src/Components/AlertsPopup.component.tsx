@@ -574,6 +574,9 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
           <Button onClick={handleAddRow} sx={{ mt: 2 }}>
             Add Row
           </Button>
+          <Button onClick={handleAddRow} sx={{ mt: 2 }}>
+            From Today
+          </Button>
           <Button
             onClick={() => {
               handleClose(alertSet);
