@@ -625,6 +625,7 @@ const BikeComponent = () => {
           <AlertsPopup
             bikeName={bikeData[selectedBikeIndex].name}
             bikeId={bikeData[selectedBikeIndex].id}
+            currentMiles={bikeData[selectedBikeIndex].totalMiles}
             alerts={alerts}
             open={openAlerts}
             handleClose={handleCloseAlerts}

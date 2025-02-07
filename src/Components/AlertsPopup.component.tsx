@@ -23,11 +23,12 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import ConfirmModal from "./Confirm.component";
 import { AlertStatus } from "../Bike.component";
-
+import FromTodayModal from "./FromToday.component";
 
 interface PopupModalProps {
   bikeName: string;
   bikeId: string;
+  currentMiles: number;
   alerts: Alert[];
   open: boolean;
   handleClose: (logs: Alert[]) => void;
@@ -63,14 +64,6 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
-const headerStyle = {
-  backgroundColor: "#f5f5f5",
-  fontWeight: "bold",
-  border: "1px solid #ccc",
-  padding: "8px",
-  textAlign: "center",
-};
-
 const style = {
   position: "absolute" as "absolute",
   top: "50%",
@@ -91,6 +84,7 @@ const styleContent = {
 const AlertsPopup: React.FC<PopupModalProps> = ({
   bikeName,
   bikeId,
+  currentMiles,
   alerts,
   open,
   handleClose,
@@ -104,6 +98,9 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const [closeLabel, setCloseLabel] = useState<string>("Close");
   const [milesDisabled, setMilesDisabled] = useState(true);
   const [dateDisabled, setDateDisabled] = useState(false);
+  const [openFromTodayModal, setOpenFromTodayModal] = useState(false);
+  const [fromTodayMessage, setFromTodayMessage] = useState<string>("");
+  const [fromTodayUnits, setFromTodayUnits] = useState<string>("");
 
   const today = dayjs();
   const tomorrow = today.add(1, "day");
@@ -337,14 +334,52 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     if (value === 0) {
       setDateDisabled(false);
       setMilesDisabled(true);
+      setFromTodayMessage("Create alert based on number of days from today:");
+      setFromTodayUnits("days");
     } else {
       setDateDisabled(true);
       setMilesDisabled(false);
+      setFromTodayMessage("Create alert based on number of miles from current:");
+      setFromTodayUnits("miles");
     }
+  };
+
+  const handleFromToday = (dateSlider: number) => {
+    setOpenFromTodayModal(true);
+  };
+
+  const handleFromTodayOK = (value: number) => {
+    console.log("  From Today: " + value);
+    if (!dateDisabled) {
+    setAlertSet((prev) =>
+        prev.map((row) =>
+          row.id === editRowId ? { ...row, date: dayjs().add(value, "day").toDate() } : row
+        )
+      );
+    }
+    else {
+        setAlertSet((prev) =>
+            prev.map((row) =>
+              row.id === editRowId ? { ...row, miles: value + currentMiles} : row
+            )
+          );
+    }
+    setOpenFromTodayModal(false);
+  };
+
+  const handleFromTodayCancel = () => {
+    setOpenFromTodayModal(false);
   };
 
   return (
     <>
+      <FromTodayModal
+        message={fromTodayMessage}
+        units={fromTodayUnits}
+        open={openFromTodayModal}
+        handleClose={handleFromTodayCancel}
+        handleOk={handleFromTodayOK}
+      ></FromTodayModal>
       <Modal
         open={open}
         onClose={() => {
@@ -403,18 +438,41 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                               >
                                 {row.id === editRowId ? (
                                   <>
-                                    <SmallSlider
-                                      value={dateSliderValue}
-                                      onChange={handleSliderChange}
-                                      aria-labelledby="continuous-slider"
-                                      step={1}
-                                      marks={[
-                                        { value: 0, label: "Date" },
-                                        { value: 1, label: "Miles" },
-                                      ]}
-                                      min={0}
-                                      max={1}
-                                    />
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <Button
+                                        onClick={() =>
+                                          handleFromToday(dateSliderValue)
+                                        }
+                                        sx={{ fontSize: 11, margin: 3, height: 40, width: 30, maxWidth: 30 }}
+                                        size="small"
+                                        variant="outlined"
+                                      >
+                                        From
+                                        <br />
+                                        Today
+                                      </Button>
+                                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginLeft: 8 }}>
+                                      <Typography variant="body2" sx={{ paddingBottom: 0, fontSize: 13 }}>Type:</Typography>
+                                      <SmallSlider
+                                        value={dateSliderValue}
+                                        onChange={handleSliderChange}
+                                        aria-labelledby="continuous-slider"
+                                        step={1}
+                                        marks={[
+                                          { value: 0, label: "Date" },
+                                          { value: 1, label: "Miles" },
+                                        ]}
+                                        min={0}
+                                        max={1}
+                                        sx={{padding: 1}}
+                                      />
+                                      </div>
+                                    </div>
                                     <LocalizationProvider
                                       dateAdapter={AdapterDayjs}
                                     >
@@ -440,7 +498,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                       name="miles"
                                       type="number"
                                       size="small"
-                                      style={{ width: 80, marginTop: 38 }}
+                                      style={{ width: 80, marginTop: 80 }}
                                       disabled={milesDisabled}
                                       value={row.miles}
                                       onChange={(e) =>
@@ -460,7 +518,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                       name="repeatDays"
                                       type="number"
                                       size="small"
-                                      style={{ width: 80, marginTop: 38 }}
+                                      style={{ width: 70, marginTop: 80 }}
                                       disabled={dateDisabled}
                                       value={row.repeatDays}
                                       onChange={(e) =>
@@ -481,7 +539,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                       size="small"
                                       type="number"
                                       disabled={milesDisabled}
-                                      style={{ width: 80, marginTop: 38 }}
+                                      style={{ width: 75, marginTop: 80 }}
                                       value={row.repeatMiles}
                                       onChange={(e) =>
                                         handleInputChange(e, row.id)
@@ -499,7 +557,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                       label="Description"
                                       name="description"
                                       size="small"
-                                      style={{ width: 200, marginTop: 38 }}
+                                      style={{ width: 190, marginTop: 80, marginLeft: 0 }}
                                       value={row.description}
                                       onChange={(e) =>
                                         handleInputChange(e, row.id)
@@ -510,7 +568,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                         minWidth: "30px",
                                         maxWidth: "30px",
                                         maxHeight: "30px",
-                                        marginTop: "38px",
+                                        marginTop: "80px",
                                       }}
                                       onClick={() => {
                                         handleCommit(true);
@@ -524,7 +582,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                           minWidth: "30px",
                                           maxWidth: "30px",
                                           maxHeight: "30px",
-                                          marginTop: "38px",
+                                          marginTop: "80px",
                                         }}
                                         onClick={() => {
                                           handleCommit(false);
@@ -573,9 +631,6 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
           </Typography>
           <Button onClick={handleAddRow} sx={{ mt: 2 }}>
             Add Row
-          </Button>
-          <Button onClick={handleAddRow} sx={{ mt: 2 }}>
-            From Today
           </Button>
           <Button
             onClick={() => {
