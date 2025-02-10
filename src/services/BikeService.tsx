@@ -45,7 +45,6 @@ export interface Alert {
   status?: string;
 }
 
-
 // Manual reset:
 // localStorage.setItem("BikeMaintTrackerAlertStatus", '[{"id": "a01", "status": "created"},{"id": "a02", "status": "created"}]');
 // localStorage.setItem("BikeMaintTracker", "");
@@ -55,7 +54,7 @@ let bikeData: BikeAll[] = [
   {
     bike: {
       userID: "123e4567-e89b-12d3-a456-426614174000",
-      id: "a13",    // Placeholder data
+      id: "a13", // Placeholder data
       name: "",
       brand: "",
       model: "",
@@ -91,11 +90,9 @@ function dateReviver(key: string, value: any) {
 
 export const BikeService = {
   getBikes: async function (user: string): Promise<Bike[]> {
-    console.log("start:");
-    //if (bikeData.length === 0) return []; 
     const returnData: Bike[] = (
       bikeData.filter((bike) => {
-        return bike.bike.userID == user;
+        return bike.bike.userID === user;
       }) ?? []
     ).map((bike) => bike.bike);
     return returnData;
@@ -109,10 +106,6 @@ export const BikeService = {
     });
     if (bike && bike.length > 0) return bike[0].maintLog;
     else return [];
-    // const returnData: MaintLog[] = (bikeData.filter((bike) => {
-    //   return bike.bike.userID == user && bike.bike.id == bikeId;
-    // }) ?? [])[0].maintLog;
-    // return returnData;
   },
   setMaintLog: async function (
     user: string,
@@ -125,67 +118,45 @@ export const BikeService = {
     if (bike.length === 0) return false;
     bike[0].maintLog = updated;
     this.saveAll(bikeData);
-    console.log("Service updated with: ");
-    console.log(updated);
     return true;
   },
   getAlerts: async function (user: string, bikeId: string): Promise<Alert[]> {
     if (bikeId.length > 0) {
-    const bike = bikeData.filter((bike) => {
-      return bike.bike.userID === user && bike.bike.id === bikeId;
-    });
-    if (bike && bike.length > 0) return bike[0].alerts;
-    else return [];
-  }
-  else {
-    const bike = bikeData.filter((bike) => {
-      return bike.bike.userID == user
-    });
-    if (bike.length === 0) return [];
-    var allAlerts: Alert[] = [];
-    // Combine alerts from all bikes.
-    // Keep a separate list of acknowledged alerts.
-    //  This will be a lot easier when I have it all in a table.
-    for (var value of bike) {
-      allAlerts = allAlerts.concat(value.alerts);
+      const bike = bikeData.filter((bike) => {
+        return bike.bike.userID === user && bike.bike.id === bikeId;
+      });
+      if (bike && bike.length > 0) return bike[0].alerts;
+      else return [];
+    } else {
+      const bike = bikeData.filter((bike) => {
+        return bike.bike.userID == user;
+      });
+      if (bike.length === 0) return [];
+      var allAlerts: Alert[] = [];
+      // Combine alerts from all bikes.
+      for (var value of bike) {
+        allAlerts = allAlerts.concat(value.alerts);
+      }
+      return allAlerts;
     }
-    console.log("All alerts:");
-    console.log(allAlerts);
-    return allAlerts;
-  }
-    // const returnData: Alerts[] = (bikeData.filter((bike) => {
-    //   return bike.bike.userID == user && bike.bike.id == bikeId;
-    // }) ?? [])[0].alerts;
-    // return returnData;
   },
   addAlert: async function (alert: Alert): Promise<boolean> {
-    // console.log("  ^^^^^^ looking for bike to add repeatable alert to...");
-    // let bike = bikeData.filter((bike) => {
-    //   return bike.bike.userID == alert.userID && bike.bike.id == alert.bikeID;
-    // });
-    // if (bike.length === 0) return false;
-    // console.log("Bike found"); 
-    console.log("     Adding a new alert: " + JSON.stringify(alert));
     let set = await this.getAlerts(alert.userID, alert.bikeID);
     set.push(alert);
     const success = await this.setAlerts(alert.userID, alert.bikeID, set);
     return success;
-  }, 
+  },
   setAlerts: async function (
     user: string,
     bikeId: string,
     updated: Alert[]
   ): Promise<boolean> {
-    console.log("looking for bike to save alerts");
     let bike = bikeData.filter((bike) => {
       return bike.bike.userID === user && bike.bike.id === bikeId;
     });
     if (bike.length === 0) return false;
-    console.log("Bike found");
     bike[0].alerts = updated;
     this.saveAll(bikeData);
-    console.log("Service updated with: ");
-    console.log(updated);
     return true;
   },
   saveAll: async function (data: BikeAll[]) {
@@ -202,21 +173,12 @@ export const BikeService = {
       const newData: BikeAll = {
         bike: data,
         alerts: [],
-        maintLog: []
-      }
+        maintLog: [],
+      };
       bikeData.push(newData);
-    }
-    else bikeData[idx].bike = data;
+    } else bikeData[idx].bike = data;
     this.saveAll(bikeData);
   },
-  //   getUserById: async (id: string) => {
-  //     const response = await axios.get(`${API_URL}/${id}`);
-  //     return response.data;
-  //   },
-  //   getAllUsers: async () => {
-  //     const response = await axios.get(API_URL);
-  //     return response.data;
-  //   }
 };
 
 const attemptLoad = async () => {
@@ -227,7 +189,6 @@ const attemptLoad = async () => {
 
 attemptLoad();
 
-
 // I can get this, I can do this, I can handle this!  I can rock this project and rock
 // this career!  I have almost reached 12 years in this return career, and ballpark of
-// 1.6 million dollars in salary.  Code is gold!  It is worth it!  
+// 1.6 million dollars in salary.  Code is gold!  It is worth it!

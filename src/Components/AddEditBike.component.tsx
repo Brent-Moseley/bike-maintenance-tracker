@@ -64,12 +64,10 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
   };
 
   const handleDateChangeMYPurchased = (newValue: Dayjs | null) => {
-    debugger;
     if (newValue) setFormData({ ...formData, monthYearPurchased: newValue.toDate() });
   };
 
   const handleDateChangeLastServiced = (newValue: Dayjs | null) => {
-    debugger;
     if (newValue) setFormData({ ...formData, dateLastServiced: newValue.toDate() });
   };
 
@@ -147,8 +145,6 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
                 onChange={handleDateChangeMYPurchased}
                 sx={{ mb: 2 }}
               />
-              {/* </LocalizationProvider>
-                <LocalizationProvider dateAdapter={AdapterDayjs}> */}
               <DesktopDatePicker
                 label="Date Last Serviced"
                 name="dateLastServiced"

@@ -45,9 +45,6 @@ const FromTodayModal: React.FC<FromTodayModalProps> = ({
         <Typography id="modal-title">
             {message}
         </Typography>
-        {/* <Typography id="modal-description" sx={{ mt: 2 }}>
-          {message}
-        </Typography> */}
         <div
           style={{
             display: "flex",
@@ -66,7 +63,7 @@ const FromTodayModal: React.FC<FromTodayModalProps> = ({
               width: 85,
               margin: 3,
               "& .MuiInputBase-root": {
-                height: 40, // Set the height here
+                height: 40,
               },
             }}
           />

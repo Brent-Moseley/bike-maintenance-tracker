@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from "react";
 import Paper from "@mui/material/Paper";
-import TextField from "@mui/material/TextField";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import IconButton from "@mui/material/IconButton";
 import Box from "@mui/material/Box";
-import MaintLogComponent from "./MaintLog.component";
-import AlertsComponent from "./Alerts.component";
 import BikeComponent from "./Bike.component";
 import { Alert, Bike, BikeService, MaintLog } from "./services/BikeService";
 
@@ -64,13 +61,6 @@ const MainPage: React.FC = () => {
         style={{ padding: "20px", width: "80%", margin: "20px auto" }}
       >
         <BikeComponent></BikeComponent>
-        {/* <h2>{bikeName}</h2>
-        <TextField
-          label="Bike Name"
-          variant="outlined"
-          fullWidth
-          margin="normal"
-        /> */}
       </Paper>
     </>
   );

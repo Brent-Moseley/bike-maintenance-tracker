@@ -9,7 +9,7 @@ import {
   Tooltip,
   Slider,
 } from "@mui/material";
-import { Alert, MaintLog } from "../services/BikeService";
+import { Alert } from "../services/BikeService";
 import { styled } from "@mui/material/styles";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -99,29 +99,27 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const [milesDisabled, setMilesDisabled] = useState(true);
   const [dateDisabled, setDateDisabled] = useState(false);
   const [openFromTodayModal, setOpenFromTodayModal] = useState(false);
-  const [fromTodayMessage, setFromTodayMessage] = useState<string>("Create alert based on number of days from today:");
+  const [fromTodayMessage, setFromTodayMessage] = useState<string>(
+    "Create alert based on number of days from today:"
+  );
   const [fromTodayUnits, setFromTodayUnits] = useState<string>("days");
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const today = dayjs();
   const tomorrow = today.add(1, "day");
 
-  console.log("  Alerts Popup, bike id: " + bikeId);
-  console.log("  Alerts Popup, bike name: " + bikeName);
-  //console.log(" Alert set: " + JSON.stringify(alertSet));
   const [newRow, setNewRow] = useState<Alert>({
     id: uuidv4(),
-    userID: "123e4567-e89b-12d3-a456-426614174000", // set with real user ID
+    userID: "123e4567-e89b-12d3-a456-426614174000", // set with user ID when enabling multi-user
     bikeID: bikeId,
     bikeName: bikeName,
     date: tomorrow.toDate(),
-    miles: 0, // 0 miles means not set
+    miles: 0,
     description: "",
     status: "created",
   });
 
   const setStatuses = (set: Alert[]) => {
-    console.log("Clearing old, before: " + set.length);
     const statusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
     let statusList: AlertStatus[] =
       statusStr.length > 2 ? JSON.parse(statusStr) : [];
@@ -132,15 +130,10 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       al.status = status?.status;
       newset.push(al);
     }
-    console.log("Clearing old, after: " + newset.length);
     return newset;
   };
 
   useEffect(() => {
-    // Clear out all alerts that have triggered and been cleared
-    // What now needs to happen here is I create an alertSetShow that includes only
-    // 'created' alerts  BCM
-    console.log("Incoming alert count: " + alerts.length);
     setAlertSet(setStatuses(alerts));
   }, [alerts]);
 
@@ -157,15 +150,12 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       setEditRowId("");
       setMilesDisabled(true);
       setDateDisabled(false);
-      console.log("Incoming alert count on open: " + alerts.length);
     }
   }, [open]);
 
   const handleConfirmOK = () => {
     // Delete an alert
     const idx = alertSet.findIndex((alert) => alert.id === currentId);
-    console.log("  DELETE ALERT, found index at: " + idx);
-    console.log("     alert id: " + currentId);
     if (idx > -1) {
       setAlertSet([...alertSet.slice(0, idx), ...alertSet.slice(idx + 1)]);
       setCloseLabel("Save");
@@ -194,17 +184,13 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       bikeID: bikeId,
       bikeName: bikeName,
       date: tomorrow.toDate(),
-      miles: undefined,     // 0 BCM
+      miles: undefined,
       repeatMiles: undefined,
       repeatDays: undefined,
       description: "",
     };
     setIsEditing(true);
-    console.log("  Adding new alert, bike id: " + bikeId);
     setAlertSet([...alertSet, rowWithId]);
-    var aa = [...alertSet, rowWithId];
-    console.log("Add Row:" + JSON.stringify(aa));
-    console.log("Row id: " + rowWithId.id);
     setEditRowId(rowWithId.id);
     setCloseLabel("Save");
   };
@@ -213,10 +199,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     e: { target: { name: any; value: any } },
     id: string
   ) => {
-    
     let { name, value } = e.target;
-    console.log("New input change: " + name);
-    console.log(value);
     switch (name) {
       case "miles":
       case "repeatMiles":
@@ -227,13 +210,10 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     setAlertSet((prevLogs) =>
       prevLogs.map((row) => (row.id === id ? { ...row, [name]: value } : row))
     );
-    console.log(name);
-    console.log(value);
     setCloseLabel("Save");
   };
 
   const dateSort = () => {
-    console.log(" sorting");
     setSortAsc(!sortAsc);
     if (sortAsc)
       setAlertSet((prev) => {
@@ -257,19 +237,11 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       });
   };
 
-  // const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const { name, value } = e.target;
-  //   setNewRow((prevNewRow) => ({ ...prevNewRow, [name]: value }));
-  // };
-
   const handleCommit = (save: boolean) => {
     // User is done editing added row, either save it or scrap it.
-    console.log("wants to save");
-    console.log(JSON.stringify(alertSet));
     setIsEditing(false);
     if (!save) {
       // If not saving, throw it away.
-      console.log("Throw away");
       setAlertSet(alertSet.slice(0, -1));
     } else {
       setCloseLabel("Save");
@@ -323,8 +295,8 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const [dateSliderValue, setDateSliderValue] = useState(0);
 
   const SmallSlider = styled(Slider)({
-    width: "50px", // Adjust the width of the slider
-    height: "4px", // Adjust the height of the slider track
+    width: "50px",
+    height: "4px",
     "& .MuiSlider-thumb": {
       width: "12px", // Adjust the size of the slider thumb
       height: "12px",
@@ -345,7 +317,9 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     } else {
       setDateDisabled(true);
       setMilesDisabled(false);
-      setFromTodayMessage("Create alert based on number of miles from current:");
+      setFromTodayMessage(
+        "Create alert based on number of miles from current:"
+      );
       setFromTodayUnits("miles");
     }
   };
@@ -355,20 +329,26 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   };
 
   const handleFromTodayOK = (value: number) => {
-    console.log("  From Today: " + value);
     if (!dateDisabled) {
-    setAlertSet((prev) =>
+      setAlertSet((prev) =>
         prev.map((row) =>
-          row.id === editRowId ? { ...row, date: dayjs().add(value, "day").toDate(), miles: undefined } : row
+          row.id === editRowId
+            ? {
+                ...row,
+                date: dayjs().add(value, "day").toDate(),
+                miles: undefined,
+              }
+            : row
         )
       );
-    }
-    else {
-        setAlertSet((prev) =>
-            prev.map((row) => 
-              row.id === editRowId ? { ...row, miles: Number(value) + (currentMiles as number)} : row
-            )
-          );
+    } else {
+      setAlertSet((prev) =>
+        prev.map((row) =>
+          row.id === editRowId
+            ? { ...row, miles: Number(value) + (currentMiles as number) }
+            : row
+        )
+      );
     }
     setOpenFromTodayModal(false);
   };
@@ -454,7 +434,13 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                         onClick={() =>
                                           handleFromToday(dateSliderValue)
                                         }
-                                        sx={{ fontSize: 11, margin: 3, height: 40, width: 30, maxWidth: 30 }}
+                                        sx={{
+                                          fontSize: 11,
+                                          margin: 3,
+                                          height: 40,
+                                          width: 30,
+                                          maxWidth: 30,
+                                        }}
                                         size="small"
                                         variant="outlined"
                                       >
@@ -462,21 +448,36 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                         <br />
                                         Today
                                       </Button>
-                                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginLeft: 8 }}>
-                                      <Typography variant="body2" sx={{ paddingBottom: 0, fontSize: 13 }}>Type:</Typography>
-                                      <SmallSlider
-                                        value={dateSliderValue}
-                                        onChange={handleSliderChange}
-                                        aria-labelledby="continuous-slider"
-                                        step={1}
-                                        marks={[
-                                          { value: 0, label: "Date" },
-                                          { value: 1, label: "Miles" },
-                                        ]}
-                                        min={0}
-                                        max={1}
-                                        sx={{padding: 1}}
-                                      />
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          alignItems: "center",
+                                          marginLeft: 8,
+                                        }}
+                                      >
+                                        <Typography
+                                          variant="body2"
+                                          sx={{
+                                            paddingBottom: 0,
+                                            fontSize: 13,
+                                          }}
+                                        >
+                                          Type:
+                                        </Typography>
+                                        <SmallSlider
+                                          value={dateSliderValue}
+                                          onChange={handleSliderChange}
+                                          aria-labelledby="continuous-slider"
+                                          step={1}
+                                          marks={[
+                                            { value: 0, label: "Date" },
+                                            { value: 1, label: "Miles" },
+                                          ]}
+                                          min={0}
+                                          max={1}
+                                          sx={{ padding: 1 }}
+                                        />
                                       </div>
                                     </div>
                                     <LocalizationProvider
@@ -506,7 +507,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                       size="small"
                                       style={{ width: 80, marginTop: 80 }}
                                       disabled={milesDisabled}
-                                      value={row.miles || ''}
+                                      value={row.miles || ""}
                                       onChange={(e) =>
                                         handleInputChange(e, row.id)
                                       }
@@ -563,7 +564,11 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                       label="Description"
                                       name="description"
                                       size="small"
-                                      style={{ width: 190, marginTop: 80, marginLeft: 0 }}
+                                      style={{
+                                        width: 190,
+                                        marginTop: 80,
+                                        marginLeft: 0,
+                                      }}
                                       value={row.description}
                                       onChange={(e) =>
                                         handleInputChange(e, row.id)

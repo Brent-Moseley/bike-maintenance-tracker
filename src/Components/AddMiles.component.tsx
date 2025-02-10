@@ -6,7 +6,6 @@ import {
   Button,
   TextField,
 } from "@mui/material";
-import { styled } from "@mui/material/styles";
 
 interface PopupModalProps {
   miles: number;
@@ -26,7 +25,6 @@ const style = {
 };
 
 const AddMilesPopup: React.FC<PopupModalProps> = ({
-  miles,
   open,
   handleClose,
 }) => {

@@ -73,9 +73,6 @@ const BikeCard: React.FC<BikeProps> = ({ bike, handleOpenAddMiles, handleOpenAdd
             <Typography variant="body2">
               <strong>Current Miles:</strong> {bike.totalMiles}
             </Typography>
-            {/* <Typography variant="body2">
-              <strong>Track By:</strong> {bike.trackBy}
-            </Typography> */}
           </Grid>
         </Grid>
       </CardContent>

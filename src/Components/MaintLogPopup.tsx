@@ -21,7 +21,6 @@ import { DesktopDatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import ConfirmModal from "./Confirm.component";
-import { Description, WidthFull } from "@mui/icons-material";
 
 interface PopupModalProps {
   bikeName: string;
@@ -61,13 +60,6 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
-const headerStyle = {
-  backgroundColor: "#f5f5f5",
-  fontWeight: "bold",
-  border: "1px solid #ccc",
-  padding: "8px",
-  textAlign: "center",
-};
 
 const style = {
   position: "absolute" as "absolute",
@@ -122,7 +114,6 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   }, [logs]);
 
   useEffect(() => {
-    //console.log("Just opened Maint log " + open)
     if (open) {
       // Reset form
       setCloseLabel("Close");
@@ -154,7 +145,6 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
       description: "",
     };
     setIsEditing(true);
-    console.log("  Adding new maint log, bike id: " + bikeId);
     setLogs([...logs, rowWithId]);
     setEditRowId(rowWithId.id);
     setCloseLabel("Save");
@@ -188,14 +178,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
       });
   };
 
-  // const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const { name, value } = e.target;
-  //   setNewRow((prevNewRow) => ({ ...prevNewRow, [name]: value }));
-  // };
-
   const handleCommit = (save: boolean) => {
-    console.log("wants to save");
-    console.log(logs);
     setIsEditing(false);
     if (!save) {
       setLogs(logs.slice(0, -1));
@@ -205,7 +188,6 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   };
 
   const handleDateChangeMYPurchased = (newValue: Dayjs | null) => {
-    debugger;
     if (newValue)
       setLogs((prevLogs) =>
         prevLogs.map((row) =>
