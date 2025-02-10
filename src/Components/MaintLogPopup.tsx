@@ -101,6 +101,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   const boxRef = useRef<HTMLDivElement>(null);
   const [sortAsc, setSortAsc] = useState<boolean>(false);
   const [closeLabel, setCloseLabel] = useState<string>("Close");
+  const [isEditing, setIsEditing] = useState<boolean>(false);
   const [newRow, setNewRow] = useState<MaintLog>({
     id: uuidv4(),
     userID: "123e4567-e89b-12d3-a456-426614174000", // set with real user ID
@@ -152,6 +153,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
       miles: currentMiles,
       description: "",
     };
+    setIsEditing(true);
     console.log("  Adding new maint log, bike id: " + bikeId);
     setLogs([...logs, rowWithId]);
     setEditRowId(rowWithId.id);
@@ -194,6 +196,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   const handleCommit = (save: boolean) => {
     console.log("wants to save");
     console.log(logs);
+    setIsEditing(false);
     if (!save) {
       setLogs(logs.slice(0, -1));
       setCloseLabel("Save");
@@ -360,10 +363,11 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
               <span>There are no log entries yet</span>
             )}
           </Typography>
-          <Button onClick={handleAddRow} sx={{ mt: 2 }}>
+          <Button disabled={isEditing} onClick={handleAddRow} sx={{ mt: 2 }}>
             Add Row
           </Button>
           <Button
+            disabled={isEditing}
             onClick={() => {
               handleClose(logs);
             }}

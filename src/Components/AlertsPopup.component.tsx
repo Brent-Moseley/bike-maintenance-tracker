@@ -101,6 +101,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const [openFromTodayModal, setOpenFromTodayModal] = useState(false);
   const [fromTodayMessage, setFromTodayMessage] = useState<string>("Create alert based on number of days from today:");
   const [fromTodayUnits, setFromTodayUnits] = useState<string>("days");
+  const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const today = dayjs();
   const tomorrow = today.add(1, "day");
@@ -198,6 +199,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       repeatDays: undefined,
       description: "",
     };
+    setIsEditing(true);
     console.log("  Adding new alert, bike id: " + bikeId);
     setAlertSet([...alertSet, rowWithId]);
     var aa = [...alertSet, rowWithId];
@@ -264,6 +266,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     // User is done editing added row, either save it or scrap it.
     console.log("wants to save");
     console.log(JSON.stringify(alertSet));
+    setIsEditing(false);
     if (!save) {
       // If not saving, throw it away.
       console.log("Throw away");
@@ -632,10 +635,11 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
               <span>You have no alerts on this bike.</span>
             )}
           </Typography>
-          <Button onClick={handleAddRow} sx={{ mt: 2 }}>
+          <Button disabled={isEditing} onClick={handleAddRow} sx={{ mt: 2 }}>
             Add Alert
           </Button>
           <Button
+            disabled={isEditing}
             onClick={() => {
               handleClose(alertSet);
             }}
