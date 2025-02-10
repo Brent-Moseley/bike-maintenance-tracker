@@ -99,15 +99,15 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const [milesDisabled, setMilesDisabled] = useState(true);
   const [dateDisabled, setDateDisabled] = useState(false);
   const [openFromTodayModal, setOpenFromTodayModal] = useState(false);
-  const [fromTodayMessage, setFromTodayMessage] = useState<string>("");
-  const [fromTodayUnits, setFromTodayUnits] = useState<string>("");
+  const [fromTodayMessage, setFromTodayMessage] = useState<string>("Create alert based on number of days from today:");
+  const [fromTodayUnits, setFromTodayUnits] = useState<string>("days");
 
   const today = dayjs();
   const tomorrow = today.add(1, "day");
 
   console.log("  Alerts Popup, bike id: " + bikeId);
   console.log("  Alerts Popup, bike name: " + bikeName);
-  console.log(" Alert set: " + JSON.stringify(alertSet));
+  //console.log(" Alert set: " + JSON.stringify(alertSet));
   const [newRow, setNewRow] = useState<Alert>({
     id: uuidv4(),
     userID: "123e4567-e89b-12d3-a456-426614174000", // set with real user ID
@@ -193,7 +193,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       bikeID: bikeId,
       bikeName: bikeName,
       date: tomorrow.toDate(),
-      miles: undefined,
+      miles: undefined,     // 0 BCM
       repeatMiles: undefined,
       repeatDays: undefined,
       description: "",
@@ -211,7 +211,10 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     e: { target: { name: any; value: any } },
     id: string
   ) => {
+    
     let { name, value } = e.target;
+    console.log("New input change: " + name);
+    console.log(value);
     switch (name) {
       case "miles":
       case "repeatMiles":
@@ -353,14 +356,14 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     if (!dateDisabled) {
     setAlertSet((prev) =>
         prev.map((row) =>
-          row.id === editRowId ? { ...row, date: dayjs().add(value, "day").toDate() } : row
+          row.id === editRowId ? { ...row, date: dayjs().add(value, "day").toDate(), miles: undefined } : row
         )
       );
     }
     else {
         setAlertSet((prev) =>
-            prev.map((row) =>
-              row.id === editRowId ? { ...row, miles: value + currentMiles} : row
+            prev.map((row) => 
+              row.id === editRowId ? { ...row, miles: Number(value) + (currentMiles as number)} : row
             )
           );
     }
@@ -500,7 +503,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                       size="small"
                                       style={{ width: 80, marginTop: 80 }}
                                       disabled={milesDisabled}
-                                      value={row.miles}
+                                      value={row.miles || ''}
                                       onChange={(e) =>
                                         handleInputChange(e, row.id)
                                       }
@@ -630,7 +633,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
             )}
           </Typography>
           <Button onClick={handleAddRow} sx={{ mt: 2 }}>
-            Add Row
+            Add Alert
           </Button>
           <Button
             onClick={() => {

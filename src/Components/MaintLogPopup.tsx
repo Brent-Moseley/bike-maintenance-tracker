@@ -26,6 +26,7 @@ import { Description, WidthFull } from "@mui/icons-material";
 interface PopupModalProps {
   bikeName: string;
   bikeId: string;
+  currentMiles: number;
   log: MaintLog[];
   open: boolean;
   handleClose: (logs: MaintLog[]) => void;
@@ -88,6 +89,7 @@ const styleContent = {
 const MaintLogPopup: React.FC<PopupModalProps> = ({
   bikeName,
   bikeId,
+  currentMiles,
   log,
   open,
   handleClose,
@@ -104,7 +106,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
     userID: "123e4567-e89b-12d3-a456-426614174000", // set with real user ID
     bikeID: bikeId,
     date: new Date(),
-    miles: 0,
+    miles: currentMiles,
     description: "",
   });
 
@@ -147,7 +149,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
       id: uuidv4(),
       bikeID: bikeId,
       date: new Date(),
-      miles: 0,
+      miles: currentMiles,
       description: "",
     };
     console.log("  Adding new maint log, bike id: " + bikeId);

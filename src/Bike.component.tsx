@@ -618,6 +618,7 @@ const BikeComponent = () => {
           <MaintLogPopup
             bikeName={bikeData[selectedBikeIndex].name}
             bikeId={bikeData[selectedBikeIndex].id}
+            currentMiles={bikeData[selectedBikeIndex].totalMiles}
             log={log}
             open={open}
             handleClose={handleMaintLogClose}
