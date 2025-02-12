@@ -142,8 +142,6 @@ const BikeComponent = () => {
       // Skip alerts that have been cleared by user already.
       if (currentAlertStatus.status === "cleared") continue;
 
-      console.log("   ----- checking this alert for triggering");
-
       // Find the bike referenced by this alert
       var idx = bikes.findIndex((bike) => {
         return bike.id === alert.bikeID;
@@ -270,7 +268,6 @@ const BikeComponent = () => {
 
   function showNotification(title: string, options: Object) {
     if ("Notification" in window && Notification.permission === "granted") {
-      console.log("Showing " + title);
       new Notification(title, options);
     }
   }
@@ -421,7 +418,7 @@ const BikeComponent = () => {
       }
       // If we are editing a bike, and Submit was hit.
       const updatedData = bikeData.map((item, idx) => {
-        if (idx === selectedBikeIndex) return { ...data };
+        if (idx === selectedBikeIndex) return { ...data, totalMiles: Number(data.totalMiles) };
         else return { ...item };
       });
       setBikeData(updatedData);
@@ -447,7 +444,6 @@ const BikeComponent = () => {
         "123e4567-e89b-12d3-a456-426614174000" // user
       );
       setBikeData(bikedata);
-      if (bikedata.length > 0) console.log("ID is: " + bikedata[0].id);
       if (bikedata.length > 0 && bikedata[0].id !== "a13") {
         setRealData(true);
       }

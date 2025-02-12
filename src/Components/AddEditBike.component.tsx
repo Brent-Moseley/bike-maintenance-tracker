@@ -36,18 +36,10 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
   handleClose,
 }) => {
   const newData = structuredClone(data);
-  console.log("New data:");
-  debugger;
-  console.log(newData);
-  console.log(newData.id);
 
   const handleCloseModal = (submit: boolean) => {
-    console.log("Submit: " + submit);
-    console.log("Sending back:");
     const updated = { ...formData };
     if (!submit) updated.id = "";
-    console.log(updated);
-    console.log(updated.id);
 
     handleClose(updated);
   };

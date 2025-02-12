@@ -31,7 +31,6 @@ const AddMilesPopup: React.FC<PopupModalProps> = ({
   const [numberValue, setNumberValue] = React.useState("");
   const handleChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
     setNumberValue(event.target.value);
-    console.log('Updated to: ' + event.target.value);
   };
 
   const handleCloseModal = (submit: boolean) => {

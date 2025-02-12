@@ -48,6 +48,7 @@ export interface Alert {
 // Manual reset:
 // localStorage.setItem("BikeMaintTrackerAlertStatus", '[{"id": "a01", "status": "created"},{"id": "a02", "status": "created"}]');
 // localStorage.setItem("BikeMaintTracker", "");
+// localStorage.setItem("BikeMaintTrackerAlertStatus","");
 // Get data:
 // localStorage.getItem("BikeMaintTracker");
 let bikeData: BikeAll[] = [
@@ -184,7 +185,6 @@ export const BikeService = {
 const attemptLoad = async () => {
   let savedData: BikeAll[] = await BikeService.loadAll();
   if (savedData && savedData.length > 0) bikeData = savedData;
-  console.log(`Loaded data of length: ${savedData.length}`);
 };
 
 attemptLoad();

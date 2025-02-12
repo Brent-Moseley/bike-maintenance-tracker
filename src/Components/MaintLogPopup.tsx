@@ -162,7 +162,6 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   };
 
   const dateSort = () => {
-    console.log(" sorting");
     setSortAsc(!sortAsc);
     if (sortAsc)
       setLogs((prev) => {

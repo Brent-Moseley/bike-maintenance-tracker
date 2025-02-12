@@ -71,6 +71,17 @@ serve -s build
 
 
 
+Demo 2, 4, 5, 6, 10, 11, 9, 7
+
+2, 4, 6, 10, 11, 7
+
+
+Firebase
+https://console.firebase.google.com/project/bike-maintenance-tracker-9b3b9/overview
+
+Project Console: https://console.firebase.google.com/project/bike-maintenance-tracker-9b3b9/overview
+Hosting URL: https://bike-maintenance-tracker-9b3b9.web.app
+
 
 I cannot lose "my job" because it is not my job in the first place. J cannot 
 do me any harm - he cannot take anything away from me.  MY thing is my
