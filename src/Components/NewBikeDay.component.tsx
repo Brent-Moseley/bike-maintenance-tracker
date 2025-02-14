@@ -1,6 +1,12 @@
 import React from 'react';
 import { Modal, Box, Typography, Button } from '@mui/material';
 
+/*
+
+Purpose:  Display a simple popup that confirms the user wants to add a new bike. 
+
+*/
+
 interface NBDModalProps {
   open: boolean;
   handleClose: () => void;

@@ -1,6 +1,12 @@
 import React from 'react';
 import { Modal, Box, Typography, Button } from '@mui/material';
 
+/*
+
+Purpose:  A simple confirmation box, with a custom message.
+
+*/
+
 interface ConfirmModalProps {
   open: boolean;
   message: string;

@@ -1,6 +1,12 @@
 // UserService.ts
 //import axios from 'axios';
 
+/*
+
+Purpose:  Handle all output with data storage outside of the React app.
+
+*/
+
 const API_URL = "https://api.example.com/users";
 export interface Bike {
   userID: string;

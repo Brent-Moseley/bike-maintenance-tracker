@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { Modal, Box, Typography, Button, TextField } from "@mui/material";
 
+/*
+
+Purpose:  Show the 'From Today' aspect of the new alert input so to help user select either a date in
+the future, or a mileage in the future.
+
+*/
+
 interface FromTodayModalProps {
   open: boolean;
   message: string;

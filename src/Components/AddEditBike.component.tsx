@@ -13,6 +13,14 @@ import { DesktopDatePicker } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
 import "./AddEditBike.component.css";
 
+/*
+
+Purpose:  Show a popup, allowing the user to add a new bike to their collection, or edit data for an existing bike.
+
+*/
+
+// Bugs:  modal does not update miles when Add miles is used.
+// Also, it does not run an alert cycle with updated miles (or bike is not updated)
 interface AddEditBikeProps {
   data: Bike;
   open: boolean;
@@ -47,7 +55,8 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
   const [formData, setFormData] = useState(newData);
 
   useEffect(() => {
-    setFormData(newData);
+    console.log("   Add edit bike updated");
+    setFormData(data);
   }, [data]);
 
   const handleInputChange = (e: { target: { name: any; value: any } }) => {

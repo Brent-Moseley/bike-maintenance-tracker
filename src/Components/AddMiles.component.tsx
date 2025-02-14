@@ -7,6 +7,12 @@ import {
   TextField,
 } from "@mui/material";
 
+/*
+
+Purpose:  Show a popup where the user can enter in new miles for a bike (add a ride, adding to the total miles).
+
+*/
+
 interface PopupModalProps {
   miles: number;
   open: boolean;

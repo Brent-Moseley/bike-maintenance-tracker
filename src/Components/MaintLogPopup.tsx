@@ -22,6 +22,13 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import ConfirmModal from "./Confirm.component";
 
+/*
+
+Purpose:  Display a popup that shows a maintenance log in table form, and allows deleting of
+existing entries and the adding of new entries.
+
+*/
+
 interface PopupModalProps {
   bikeName: string;
   bikeId: string;
@@ -61,7 +68,8 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 }));
 
 
-const style = {
+// TODO:  Convert this to the newer 'styled' form
+const styleBox = {
   position: "absolute" as "absolute",
   top: "50%",
   left: "50%",
@@ -94,14 +102,14 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   const [sortAsc, setSortAsc] = useState<boolean>(false);
   const [closeLabel, setCloseLabel] = useState<string>("Close");
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [newRow, setNewRow] = useState<MaintLog>({
+  const newRow: MaintLog = {
     id: uuidv4(),
     userID: "123e4567-e89b-12d3-a456-426614174000", // set with real user ID
     bikeID: bikeId,
     date: new Date(),
     miles: currentMiles,
     description: "",
-  });
+  };
 
   useEffect(() => {
     setLogs(log);
@@ -211,7 +219,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
         aria-labelledby="modal-title"
         aria-describedby="modal-description"
       >
-        <Box sx={style}>
+        <Box sx={styleBox}>
           <Typography id="modal-title" variant="h6" component="h2">
             Maintenance Log for {bikeName}
           </Typography>

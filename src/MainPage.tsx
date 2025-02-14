@@ -6,7 +6,7 @@ import Typography from "@mui/material/Typography";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import IconButton from "@mui/material/IconButton";
 import Box from "@mui/material/Box";
-import BikeComponent from "./Bike.component";
+import BikeComponent from "./Components/Bike.component";
 import { Alert, Bike, BikeService, MaintLog } from "./services/BikeService";
 
 interface User {

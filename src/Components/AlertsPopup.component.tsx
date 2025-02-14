@@ -22,8 +22,15 @@ import { DesktopDatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import ConfirmModal from "./Confirm.component";
-import { AlertStatus } from "../Bike.component";
 import FromTodayModal from "./FromToday.component";
+import { AlertStatus } from "./AlertCenter.component";
+
+/*
+
+Purpose:  Show a popup with a table that displays the list of current alerts for a given bike.
+Handle user input to delete alerts, and to add new ones. 
+
+*/
 
 interface PopupModalProps {
   bikeName: string;
@@ -64,7 +71,8 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
-const style = {
+// TODO use styled utility for these instead of older sx
+const styleBox = {
   position: "absolute" as "absolute",
   top: "50%",
   left: "50%",
@@ -108,7 +116,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const today = dayjs();
   const tomorrow = today.add(1, "day");
 
-  const [newRow, setNewRow] = useState<Alert>({
+  const newRow: Alert = {
     id: uuidv4(),
     userID: "123e4567-e89b-12d3-a456-426614174000", // set with user ID when enabling multi-user
     bikeID: bikeId,
@@ -117,7 +125,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     miles: 0,
     description: "",
     status: "created",
-  });
+  };
 
   const setStatuses = (set: Alert[]) => {
     const statusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
@@ -137,6 +145,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     setAlertSet(setStatuses(alerts));
   }, [alerts]);
 
+  // Always scroll to the bottom of the list when user adds a new row
   useEffect(() => {
     if (boxRef.current) {
       boxRef.current.scrollTop = boxRef.current.scrollHeight;
@@ -213,24 +222,24 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     setCloseLabel("Save");
   };
 
+  // TODO:  Add sorting for other columns to
+  //        Also, refactor to eliminate repeated code.
   const dateSort = () => {
     setSortAsc(!sortAsc);
     if (sortAsc)
       setAlertSet((prev) => {
         return prev.sort((a: Alert, b: Alert) => {
-          return a.description === b.description
-            ? 0
-            : a.description < b.description
-            ? -1
-            : 1;
+          if (!a.date || !b.date) return 0;
+          return a.date === b.date ? 0 : a.date < b.date ? -1 : 1;
         });
       });
     else
       setAlertSet((prev) => {
         return prev.sort((a: Alert, b: Alert) => {
-          return a.description === b.description
+            if (!a.date || !b.date) return 0;
+          return a.date === b.date
             ? 0
-            : a.description < b.description
+            : a.date < b.date
             ? 1
             : -1;
         });
@@ -257,6 +266,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       );
 
       if (milesDisabled) {
+        // If miles input is disabled, then fill in alert set and update miles to 'undefined' on any edit row.
         setAlertSet((prevLogs) =>
           prevLogs.map((row) =>
             row.id === editRowId
@@ -265,6 +275,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
           )
         );
       } else {
+        // Date input is disabled, fill in alert set and update dates to 'undefined' on any edit row.
         setAlertSet((prevLogs) =>
           prevLogs.map((row) =>
             row.id === editRowId
@@ -374,7 +385,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
         aria-labelledby="modal-title"
         aria-describedby="modal-description"
       >
-        <Box sx={style}>
+        <Box sx={styleBox}>
           <Typography id="modal-title" variant="h6" component="h2">
             Alerts for {bikeName}
           </Typography>
@@ -666,13 +677,6 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
 
 export default AlertsPopup;
 
-/*  Research:
-
-https://firebase.google.com/products/data-connect?_gl=1*wf36uy*_up*MQ..&gclid=CjwKCAiA-ty8BhA_EiwAkyoa348tpp1aSYU28bFd-N-zJwFx0uE92L6Veaug4f4MBuAJ2zyK0y5ZmRoCNl0QAvD_BwE&gclsrc=aw.ds
-Copilot:  what is a simple way to deploy a react app to connect to Cloud Firestore?
-
-
-*/
 
 /*
 You have to start from the mindset of believing in the good and believing in the potential

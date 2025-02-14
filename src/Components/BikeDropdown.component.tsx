@@ -2,6 +2,12 @@ import React, { useState } from 'react';
 import { Select, MenuItem, InputLabel, FormControl, SelectChangeEvent } from '@mui/material';
 import { Bike } from '../services/BikeService';
 
+/*
+
+Purpose:  Display a dropdown, allowing the user to select a bike.
+
+*/
+
 interface BikeDropdownProps {
   bikes: Bike[];
   onDataFromChild: Function;

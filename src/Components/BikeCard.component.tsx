@@ -10,6 +10,12 @@ import {
 } from "@mui/material";
 import { Bike } from "../services/BikeService";
 
+/*
+
+Purpose:  Show bike data in a nice format.
+
+*/
+
 interface BikeProps {
   bike: Bike;
   handleOpenAddMiles: () => void;
