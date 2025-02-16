@@ -97,6 +97,10 @@ Ryan
 
 
 
+Bugs:  New bike, default date is 2013
+	From Today button does not always sync up state at beginning / reset
+
+
 I cannot lose "my job" because it is not my job in the first place. J cannot 
 do me any harm - he cannot take anything away from me.  MY thing is my
 career and business contacts, which I am 100% in control of (under God).

@@ -45,6 +45,10 @@ const StyledTableCellHeader = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.body}`]: {
     fontSize: 14,
   },
+  [theme.breakpoints.down('sm')]: {
+    padding: '8px',
+    fontSize: '12px',
+  },
   margin: "0 3px",
   backgroundColor: "#4682B4",
   color: "white",
@@ -57,6 +61,10 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 14,
+  },
+  [theme.breakpoints.down('sm')]: {
+    padding: '8px',
+    fontSize: '12px',
   },
   margin: "0 3px",
 }));

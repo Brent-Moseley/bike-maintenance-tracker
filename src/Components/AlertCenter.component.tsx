@@ -186,6 +186,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, toggle }) => {
       var idx = bikes.findIndex((bike) => {
         return bike.id === alert.bikeID;
       });
+      //if (alert.date?.toLocaleDateString() === '2/17/2025') debugger;
       if (idx > -1) {
         // The bike was found
         let triggered: boolean = currentAlertStatus.status === "triggered";
@@ -219,7 +220,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, toggle }) => {
           ]);
         } else if (
           alert.date &&
-          alert.date.toDateString() <= today.toDateString()
+          alert.date.toLocaleDateString() <= today.toLocaleDateString()
         ) {
           // Trigger on date
           console.log("  ----- trigger on date ----");
@@ -231,7 +232,6 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, toggle }) => {
             isNew = true;
             triggered = true;
           }
-          console.log("      isNew = " + isNew);
 
           setMasterAlerts((prev) => [
             ...prev,
