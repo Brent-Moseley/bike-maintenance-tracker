@@ -116,6 +116,10 @@ const BikeComponent = () => {
     setNBDOpen(true);
   };
 
+  const handleAddFirstBike = () => {
+    handleOpenEditBike(false);
+  };
+
   const emptyBike: Bike = {
     userID: "123e4567-e89b-12d3-a456-426614174000",
     id: "123456",
@@ -240,7 +244,7 @@ const BikeComponent = () => {
         <>
           <Button
             variant="contained"
-            onClick={handleAddBike}
+            onClick={handleAddFirstBike}
             style={{
               backgroundColor: "green",
               color: "white",

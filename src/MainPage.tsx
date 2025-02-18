@@ -16,7 +16,7 @@ interface User {
 }
 
 const MainPage: React.FC = () => {
-  const [userName, setUserName] = useState("BCM");
+  const [userName, setUserName] = useState("");
   const [bikeName, setBikeName] = useState("Santa Cruz Tallboy");
   const [bikeData, setBikeData] = useState<Bike[]>([]);
   const [maintData, setMaintData] = useState<MaintLog[]>([]);
