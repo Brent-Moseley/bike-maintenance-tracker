@@ -33,9 +33,11 @@ const style = {
   left: "50%",
   transform: "translate(-50%, -50%)",
   width: 725,
+  maxHeight: "100vh",
   bgcolor: "background.paper",
   boxShadow: 24,
   p: 4,
+  overflowY: "auto",
 };
 
 const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
@@ -85,7 +87,7 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
         <Typography id="modal-title" variant="h6" component="h2">
           Add / Edit Bike
         </Typography>
-        <Box sx={{ width: "100%", maxWidth: 700, margin: "auto" }}>
+        <Box sx={{ width: "100%", maxWidth: 700, margin: "auto", overflowX: "auto", overflowY: "auto" }}>
           <form noValidate autoComplete="off">
             <div className="form-group-container">
               <div className="left">
@@ -182,10 +184,10 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
             </div>
           </form>
         </Box>
-        <Button onClick={() => handleCloseModal(true)} sx={{ mt: 2 }}>
+        <Button onClick={() => handleCloseModal(true)} sx={{ mt: 0 }}>
           Submit
         </Button>
-        <Button onClick={() => handleCloseModal(false)} sx={{ mt: 2 }}>
+        <Button onClick={() => handleCloseModal(false)} sx={{ mt: 0 }}>
           Cancel
         </Button>
       </Box>

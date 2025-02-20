@@ -266,6 +266,7 @@ const BikeComponent = () => {
             handleOpenAddMiles={handleOpenAddMiles}
             handleOpenAddBike={handleAddBike}
             handleOpenEditBike={handleOpenEditBike}
+            handleOpenMaint={handleMaintLogOpen}
             cycleLeft={handleCycleLeft}
             cycleRight={handleCycleRight}
           ></BikeCard>
@@ -316,3 +317,5 @@ const BikeComponent = () => {
 };
 
 export default BikeComponent;
+
+// Responsive Tables : https://muhimasri.com/blogs/react-responsive-table/
