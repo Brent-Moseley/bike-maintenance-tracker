@@ -19,8 +19,6 @@ Purpose:  Show a popup, allowing the user to add a new bike to their collection,
 
 */
 
-// Bugs:  modal does not update miles when Add miles is used.
-// Also, it does not run an alert cycle with updated miles (or bike is not updated)
 interface AddEditBikeProps {
   data: Bike;
   open: boolean;
