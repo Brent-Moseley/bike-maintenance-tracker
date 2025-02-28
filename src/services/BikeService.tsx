@@ -1,5 +1,5 @@
 // UserService.ts
-//import axios from 'axios';
+import axios from 'axios';
 
 /*
 
@@ -97,13 +97,26 @@ function dateReviver(key: string, value: any) {
 
 export const BikeService = {
   getBikes: async function (user: string): Promise<Bike[]> {
-    const returnData: Bike[] = (
-      bikeData.filter((bike) => {
-        return bike.bike.userID === user;
-      }) ?? []
-    ).map((bike) => bike.bike);
-    return returnData;
+    // const returnData: Bike[] = (
+    //   bikeData.filter((bike) => {
+    //     return bike.bike.userID === user;
+    //   }) ?? []
+    // ).map((bike) => bike.bike);
+    try {
+      const response = await axios.get<Bike[]>('https://localhost:7055/Bike/' + user);
+      for (let bike of response.data) {
+        bike.dateLastServiced = new Date(bike.dateLastServiced);
+        bike.monthYearPurchased= new Date(bike.monthYearPurchased);
+      }
+      console.log(response.data);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+    //return returnData;
   },
+
   getMaintLog: async function (
     user: string,
     bikeId: string

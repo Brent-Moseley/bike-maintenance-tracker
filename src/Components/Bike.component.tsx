@@ -204,7 +204,7 @@ const BikeComponent = () => {
   useEffect(() => {
     const fetchData = async () => {
       const bikedata = await BikeService.getBikes(
-        "123e4567-e89b-12d3-a456-426614174000" // user
+        'user1',//"123e4567-e89b-12d3-a456-426614174000" // user
       );
       setBikeData(bikedata);
       if (bikedata.length > 0 && bikedata[0].id !== "a13") {
