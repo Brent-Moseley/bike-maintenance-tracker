@@ -8,6 +8,8 @@ import IconButton from "@mui/material/IconButton";
 import Box from "@mui/material/Box";
 import BikeComponent from "./Components/Bike.component";
 import { Alert, Bike, BikeService, MaintLog } from "./services/BikeService";
+import { Button, styled } from "@mui/material";
+import UserLoginPopup from "./Components/UserLogin.component";
 
 interface User {
   id: string;
@@ -15,34 +17,65 @@ interface User {
   authToken: string;
 }
 
+const CustomButton = styled(Button)(({ theme }) => ({
+  backgroundColor: 'white', // Set the background color
+  marginRight: 3,
+  color: 'blue', // Set the text color
+  '&:hover': {
+    backgroundColor: 'lightgray', // Change background color on hover
+  },
+}));
+
+
 const MainPage: React.FC = () => {
   const [userName, setUserName] = useState("");
-  const [bikeName, setBikeName] = useState("Santa Cruz Tallboy");
+  //const [bikeName, setBikeName] = useState("Santa Cruz Tallboy");
   const [bikeData, setBikeData] = useState<Bike[]>([]);
   const [maintData, setMaintData] = useState<MaintLog[]>([]);
   const [alertData, setAlertData] = useState<Alert[]>([]);
+  const [openLogin, setOpenLogin] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchData = async () => {
-        const bikedata = await BikeService.getBikes("123e4567-e89b-12d3-a456-426614174000");
-        setBikeData(bikedata);
-        if (bikedata.length === 0) return;
-        const maintdata = await BikeService.getMaintLog("123e4567-e89b-12d3-a456-426614174000", bikedata[0]?.id);
-        setMaintData(maintdata);
-        const alertdata = await BikeService.getAlerts("123e4567-e89b-12d3-a456-426614174000", bikedata[0]?.id);
-        setAlertData(alertdata);
-    };   
+      const bikedata = await BikeService.getBikes("123e4567-e89b-12d3-a456-426614174000");
+      setBikeData(bikedata);
+      if (bikedata.length === 0) return;
+      const maintdata = await BikeService.getMaintLog("123e4567-e89b-12d3-a456-426614174000", bikedata[0]?.id);
+      setMaintData(maintdata);
+      const alertdata = await BikeService.getAlerts("123e4567-e89b-12d3-a456-426614174000", bikedata[0]?.id);
+      setAlertData(alertdata);
+    };
     fetchData();
   }, []);
 
+  const handleLoginModalClose = (entry: string) => {
+    if (entry.length > 0) setUserName(entry);
+    setOpenLogin(false);
+  }
+
+  const handleLoginClick = () => {
+    setOpenLogin(true);
+  }
+
+  const handleLogoutClick = () => {
+
+  }
+
   return (
     <>
+      <UserLoginPopup handleLoginClose={handleLoginModalClose} open={openLogin}></UserLoginPopup>
+
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Bike Maintenance Tracker
           </Typography>
           <Box display="flex" alignItems="center">
+            {userName.length > 0 ? (
+              <CustomButton onClick={handleLogoutClick} variant="contained" size="small">Logout</CustomButton>
+            ) : (
+              <CustomButton onClick={handleLoginClick} variant="contained" size="small">Login</CustomButton>
+            )}
             <Typography
               variant="subtitle1"
               component="div"
@@ -60,7 +93,7 @@ const MainPage: React.FC = () => {
         elevation={3}
         style={{ padding: "20px", width: "80%", margin: "20px auto" }}
       >
-        <BikeComponent></BikeComponent>
+        <BikeComponent userName={userName}></BikeComponent>
       </Paper>
     </>
   );

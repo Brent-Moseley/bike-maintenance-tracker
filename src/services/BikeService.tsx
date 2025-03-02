@@ -106,7 +106,7 @@ export const BikeService = {
       const response = await axios.get<Bike[]>('https://localhost:7055/Bike/' + user);
       for (let bike of response.data) {
         bike.dateLastServiced = new Date(bike.dateLastServiced);
-        bike.monthYearPurchased= new Date(bike.monthYearPurchased);
+        bike.monthYearPurchased = new Date(bike.monthYearPurchased);
       }
       console.log(response.data);
       return response.data;
@@ -180,23 +180,45 @@ export const BikeService = {
     return true;
   },
   saveAll: async function (data: BikeAll[]) {
-    localStorage.setItem("BikeMaintTracker", JSON.stringify(data));
+    //localStorage.setItem("BikeMaintTracker", JSON.stringify(data));
   },
   loadAll: async function (): Promise<BikeAll[]> {
     const data = localStorage.getItem("BikeMaintTracker");
     if (!data || data.length < 4) return [];
     else return JSON.parse(data, dateReviver);
   },
-  saveBike: async function (data: Bike, idx: number) {
-    if (idx === bikeData.length) {
+  saveBike: async function (data: Bike, newBike: boolean, idx: number) {
+    // need better way to determine new bike vs editing last bike
+    if (newBike) {
       // New bike
+      debugger;
       const newData: BikeAll = {
         bike: data,
         alerts: [],
         maintLog: [],
       };
       bikeData.push(newData);
-    } else bikeData[idx].bike = data;
+      await axios.post('https://localhost:7055/Bike', data)
+        .then(response => {
+          console.log('Response:', response.data); // Handle successful response
+        })
+        .catch(error => {
+          console.error('Error:', error); // Handle any errors
+          throw error;
+        });
+    } else {
+      debugger;
+      bikeData[idx].bike = data;
+      await axios.put('https://localhost:7055/Bike', data)
+        .then(response => {
+          console.log('Response:', response.data); // Handle successful response
+        })
+        .catch(error => {
+          console.error('Error:', error); // Handle any errors
+          throw error;
+        });
+
+    }
     this.saveAll(bikeData);
   },
 };
@@ -211,5 +233,5 @@ attemptLoad();
 // I can get this, I can do this, I can handle this!  I can rock this project and rock
 // this career!  I have reached 12 years in this return career, and ballpark of
 // 1.6 million dollars in salary.  Code is gold!  It is worth it!
-// If I had stayed in music and small business website design, I would have made only 
+// If I had stayed in music and small business website design, I would have made only
 // 264k!!  I have made 6x more being a developer! 

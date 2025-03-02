@@ -10,13 +10,18 @@ import NewBikeDayModal from "./NewBikeDay.component";
 import { v4 as uuidv4 } from "uuid";
 import AlertsPopup from "./AlertsPopup.component";
 import AlertCenter from "./AlertCenter.component";
+import UserLoginPopup from "./UserLogin.component";
 
 /*
 
 Purpose:  The main Bike component and parent of all related components.
 
 */
-const BikeComponent = () => {
+interface BikeComponentProps {
+  userName: string;
+}
+
+const BikeComponent: React.FC<BikeComponentProps> = ({userName}) => {
   const [bikeData, setBikeData] = useState<Bike[]>([]);
   const [selectedBikeIndex, setSelectedBikeIndex] = useState(0);
   const [open, setOpen] = useState<boolean>(false);
@@ -25,11 +30,17 @@ const BikeComponent = () => {
   const [addMode, setAddMode] = useState<boolean>(false);
   const [openAddMiles, setOpenAddMiles] = useState<boolean>(false);
   const [openEditBike, setOpenEditBike] = useState<boolean>(false);
+  const [currentUser, setCurrentUser] = useState<string>("");
   const [realData, setRealData] = useState<boolean>(false);
   const [triggerAlertCycle, setTriggerAlertCycle] = useState<boolean>(false);
 
   const [log, setLog] = useState<MaintLog[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
+
+  useEffect (() => {
+    setCurrentUser(userName);
+    console.log("  User is: " + userName);
+  }, [userName]);
 
   function requestNotificationPermission() {
     if ("Notification" in window) {
@@ -121,7 +132,7 @@ const BikeComponent = () => {
   };
 
   const emptyBike: Bike = {
-    userID: "123e4567-e89b-12d3-a456-426614174000",
+    userID: "user1", //123e4567-e89b-12d3-a456-426614174000",
     id: "123456",
     trackBy: "",
     name: "",
@@ -155,12 +166,16 @@ const BikeComponent = () => {
 
   const handleCloseAddMiles = async (add: number) => {
     bikeData[selectedBikeIndex].totalMiles += add;
-    BikeService.saveBike(bikeData[selectedBikeIndex], selectedBikeIndex);
+    BikeService.saveBike(bikeData[selectedBikeIndex], false, selectedBikeIndex);
     setOpenAddMiles(false);
     //await runAlertCycle(bikeData);
     // run the alert cycle, since miles were added.
     setTriggerAlertCycle((prev) => !prev);
   };
+
+  const handleLoginClose = (user: string) => {
+    setCurrentUser(user);
+  } 
 
   const handleModfyBike = async (data: Bike) => {
     setOpenEditBike(false);
@@ -189,6 +204,7 @@ const BikeComponent = () => {
 
       await BikeService.saveBike(
         updatedData[selectedBikeIndex],
+        addMode,
         selectedBikeIndex
       );
     } else {
