@@ -35,18 +35,18 @@ const MainPage: React.FC = () => {
   const [alertData, setAlertData] = useState<Alert[]>([]);
   const [openLogin, setOpenLogin] = useState<boolean>(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const bikedata = await BikeService.getBikes("123e4567-e89b-12d3-a456-426614174000");
-      setBikeData(bikedata);
-      if (bikedata.length === 0) return;
-      const maintdata = await BikeService.getMaintLog("123e4567-e89b-12d3-a456-426614174000", bikedata[0]?.id);
-      setMaintData(maintdata);
-      const alertdata = await BikeService.getAlerts("123e4567-e89b-12d3-a456-426614174000", bikedata[0]?.id);
-      setAlertData(alertdata);
-    };
-    fetchData();
-  }, []);
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     const bikedata = await BikeService.getBikes("123e4567-e89b-12d3-a456-426614174000");
+  //     setBikeData(bikedata);
+  //     if (bikedata.length === 0) return;
+  //     const maintdata = await BikeService.getMaintLog("123e4567-e89b-12d3-a456-426614174000", bikedata[0]?.id);
+  //     setMaintData(maintdata);
+  //     const alertdata = await BikeService.getAlerts("123e4567-e89b-12d3-a456-426614174000", bikedata[0]?.id);
+  //     setAlertData(alertdata);
+  //   };
+  //   fetchData();
+  // }, []);
 
   const handleLoginModalClose = (entry: string) => {
     if (entry.length > 0) setUserName(entry);
@@ -58,7 +58,7 @@ const MainPage: React.FC = () => {
   }
 
   const handleLogoutClick = () => {
-
+    setUserName("");
   }
 
   return (
@@ -100,6 +100,9 @@ const MainPage: React.FC = () => {
 };
 
 export default MainPage;
+
+
+// https://www.nexford.edu/insights/how-will-ai-affect-jobs
 
 /*
     TODO:

@@ -21,8 +21,23 @@ interface BikeComponentProps {
   userName: string;
 }
 
-const BikeComponent: React.FC<BikeComponentProps> = ({userName}) => {
-  const [bikeData, setBikeData] = useState<Bike[]>([]);
+const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
+  let emptyBike: Bike = {
+    userID: "testUser",
+    id: "123456",
+    trackBy: "",
+    name: "",
+    brand: "",
+    model: "",
+    spec: "",
+    notes: "",
+    monthYearPurchased: new Date(),
+    dateLastServiced: new Date(),
+    milesLastServiced: 0,
+    totalMiles: 0,
+  };
+
+  const [bikeData, setBikeData] = useState<Bike[]>([emptyBike]);
   const [selectedBikeIndex, setSelectedBikeIndex] = useState(0);
   const [open, setOpen] = useState<boolean>(false);
   const [openAlerts, setOpenAlerts] = useState<boolean>(false);
@@ -37,10 +52,21 @@ const BikeComponent: React.FC<BikeComponentProps> = ({userName}) => {
   const [log, setLog] = useState<MaintLog[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
 
-  useEffect (() => {
+  useEffect(() => {
     setCurrentUser(userName);
     console.log("  User is: " + userName);
+    if (userName.length > 0)
+      loadBikes (userName);
+    else {
+      // user logged out or no login yet
+      console.log("   Adding empty bike");
+      setRealData(false);
+      emptyBike.userID = "testUser"; // set test user for empty bike
+      setBikeData([emptyBike]);
+      // TODO:  Log out is not fully working.
+    }
   }, [userName]);
+
 
   function requestNotificationPermission() {
     if ("Notification" in window) {
@@ -54,10 +80,24 @@ const BikeComponent: React.FC<BikeComponentProps> = ({userName}) => {
     }
   }
 
+  const loadBikes = async (userName: string) => {
+    var result = await BikeService.getBikes(userName);
+    console.log("  Loaded bikes, size = " + result.length);
+    if (result.length > 0) {
+      setRealData(true);
+      setBikeData(result);
+    }
+    else {
+      // User logged in, but they have no bikes yet.
+      emptyBike.id = uuidv4();
+      emptyBike.userID = currentUser;
+    }
+  }
+
   const handleMaintLogOpen = async () => {
     if (bikeData.length === 0) return;
     const log = await BikeService.getMaintLog(
-      "123e4567-e89b-12d3-a456-426614174000",
+      currentUser,
       bikeData[selectedBikeIndex].id
     );
     setLog(log);
@@ -68,26 +108,28 @@ const BikeComponent: React.FC<BikeComponentProps> = ({userName}) => {
     if (bikeData.length === 0) return;
 
     const ale = await BikeService.getAlerts(
-      "123e4567-e89b-12d3-a456-426614174000",
+      currentUser,
       bikeData[selectedBikeIndex].id
     );
     setAlerts(ale);
     setOpenAlerts(true);
   };
-  const handleMaintLogClose = async (updated: MaintLog[]) => {
+  const handleMaintLogClose = async (added: MaintLog[], deleted: string[]) => {
     // save updated log to the BikeService
-    await BikeService.setMaintLog(
-      "123e4567-e89b-12d3-a456-426614174000",
-      bikeData[selectedBikeIndex].id,
-      updated
-    );
-
+    debugger;
+    // await BikeService.setMaintLog(
+    //   currentUser,
+    //   bikeData[selectedBikeIndex].id,
+    //   updated
+    // );
+    await BikeService.setMaintLog(added, deleted);
+    
     setOpen(false);
   };
 
   const handleCloseAlerts = async (updated: Alert[]) => {
     await BikeService.setAlerts(
-      "123e4567-e89b-12d3-a456-426614174000",
+      currentUser,
       bikeData[selectedBikeIndex].id,
       updated
     );
@@ -129,24 +171,11 @@ const BikeComponent: React.FC<BikeComponentProps> = ({userName}) => {
 
   const handleAddFirstBike = () => {
     handleOpenEditBike(false);
-  };
-
-  const emptyBike: Bike = {
-    userID: "user1", //123e4567-e89b-12d3-a456-426614174000",
-    id: "123456",
-    trackBy: "",
-    name: "",
-    brand: "",
-    model: "",
-    spec: "",
-    notes: "",
-    monthYearPurchased: new Date(),
-    dateLastServiced: new Date(),
-    milesLastServiced: 0,
-    totalMiles: 0,
+    setAddMode(true);
   };
 
   const handleOpenEditBike = (add: boolean) => {
+    debugger;
     const newIdx = bikeData.length;
     if (add) {
       // Add a new bike.
@@ -154,12 +183,19 @@ const BikeComponent: React.FC<BikeComponentProps> = ({userName}) => {
         return { ...item };
       });
       emptyBike.id = uuidv4();
+      emptyBike.userID = currentUser;
       updatedData.push(emptyBike);
       setAddMode(true);
       setBikeData(updatedData);
       setSelectedBikeIndex(newIdx);
     } else {
+      // Editing existing bike
       setAddMode(false);
+      if (newIdx === 1 && bikeData[0].userID === "testUser") {
+        // Editing the test user empty bike, set a real id.
+        bikeData[0].id = uuidv4();
+        bikeData[0].userID = currentUser;  
+      }
     }
     setOpenEditBike(true);
   };
@@ -173,9 +209,9 @@ const BikeComponent: React.FC<BikeComponentProps> = ({userName}) => {
     setTriggerAlertCycle((prev) => !prev);
   };
 
-  const handleLoginClose = (user: string) => {
-    setCurrentUser(user);
-  } 
+  // const handleLoginClose = (user: string) => {
+  //   setCurrentUser(user);
+  // }
 
   const handleModfyBike = async (data: Bike) => {
     setOpenEditBike(false);
@@ -218,22 +254,26 @@ const BikeComponent: React.FC<BikeComponentProps> = ({userName}) => {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      const bikedata = await BikeService.getBikes(
-        'user1',//"123e4567-e89b-12d3-a456-426614174000" // user
-      );
-      setBikeData(bikedata);
-      if (bikedata.length > 0 && bikedata[0].id !== "a13") {
-        // Real bike data has been loaded.
-        setRealData(true);
-      }
-    };
-    fetchData();
+    // const fetchData = async () => {
+    //   const bikedata = await BikeService.getBikes(
+    //     currentUser,
+    //   );
+    //   setBikeData(bikedata);
+    //   if (bikedata.length > 0 && bikedata[0].id !== "a13") {
+    //     // Real bike data has been loaded.
+    //     setRealData(true);
+    //   }
+    // };
+    // fetchData();
     requestNotificationPermission();
   }, []);
 
   useEffect(() => {
-    setTriggerAlertCycle((prev) => !prev);
+    console.log("  New bike data in, checking to run alert cycle");
+    console.log("   current user: " + currentUser);
+    console.log("   Real data: " + realData);
+    console.log("   Bike data: " + bikeData[0].id);
+    if (currentUser.length > 0 && realData) setTriggerAlertCycle((prev) => !prev);
   }, [bikeData]);
 
   const handleDataFromChild = (data: string) => {
@@ -244,7 +284,7 @@ const BikeComponent: React.FC<BikeComponentProps> = ({userName}) => {
 
   return (
     <div>
-      {bikeData.length > 0 && (
+      {bikeData.length > 0 && currentUser.length > 0 && (
         <AddEditBikePopup
           data={bikeData[selectedBikeIndex]}
           open={openEditBike}
@@ -256,7 +296,8 @@ const BikeComponent: React.FC<BikeComponentProps> = ({userName}) => {
         handleOk={handleNBDOK}
         handleClose={handleNBDCancel}
       ></NewBikeDayModal>
-      {bikeData.length > 0 && !realData && (
+      {!realData && currentUser.length > 0 && (
+        // New logged in user, they have not added any bikes yet.
         <>
           <Button
             variant="contained"
@@ -271,7 +312,7 @@ const BikeComponent: React.FC<BikeComponentProps> = ({userName}) => {
           </Button>
         </>
       )}
-      {bikeData.length > 0 && realData ? (
+      {bikeData.length > 0 && realData && currentUser.length > 0 ? (
         <div>
           <BikeDropdown
             bikes={bikeData}
@@ -289,6 +330,7 @@ const BikeComponent: React.FC<BikeComponentProps> = ({userName}) => {
           <MaintLogPopup
             bikeName={bikeData[selectedBikeIndex].name}
             bikeId={bikeData[selectedBikeIndex].id}
+            userId={currentUser}
             currentMiles={bikeData[selectedBikeIndex].totalMiles}
             log={log}
             open={open}
@@ -311,23 +353,27 @@ const BikeComponent: React.FC<BikeComponentProps> = ({userName}) => {
       ) : (
         <span></span>
       )}
-      <AlertCenter bikes={bikeData} toggle={triggerAlertCycle}></AlertCenter>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleMaintLogOpen}
-        sx={{ margin: "3px" }}
-      >
-        Maintenance Log
-      </Button>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleOpenAlerts}
-        sx={{ margin: "3px" }}
-      >
-        Alerts
-      </Button>
+      { currentUser.length == 0 && <span>Please log in to continue.</span> }
+      {currentUser.length > 0 &&
+        <><AlertCenter bikes={bikeData} toggle={triggerAlertCycle}></AlertCenter>
+        <Button
+          variant="contained"
+          color="primary"
+          disabled={!realData}
+          onClick={handleMaintLogOpen}
+          sx={{ margin: "3px" }}
+        >
+          Maintenance Log
+        </Button><Button
+          variant="contained"
+          color="primary"
+          disabled={!realData}
+          onClick={handleOpenAlerts}
+          sx={{ margin: "3px" }}
+        >
+            Alerts
+          </Button></>
+      }
     </div>
   );
 };

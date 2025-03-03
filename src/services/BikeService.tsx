@@ -102,6 +102,7 @@ export const BikeService = {
     //     return bike.bike.userID === user;
     //   }) ?? []
     // ).map((bike) => bike.bike);
+    if (user === "") return [];
     try {
       const response = await axios.get<Bike[]>('https://localhost:7055/Bike/' + user);
       for (let bike of response.data) {
@@ -112,7 +113,8 @@ export const BikeService = {
       return response.data;
     } catch (error) {
       console.error(error);
-      throw error;
+      //throw error;
+      return [];
     }
     //return returnData;
   },
@@ -121,23 +123,55 @@ export const BikeService = {
     user: string,
     bikeId: string
   ): Promise<MaintLog[]> {
-    const bike = bikeData.filter((bike) => {
-      return bike.bike.userID === user && bike.bike.id === bikeId;
-    });
-    if (bike && bike.length > 0) return bike[0].maintLog;
-    else return [];
+    // const bike = bikeData.filter((bike) => {
+    //   return bike.bike.userID === user && bike.bike.id === bikeId;
+    // });
+    // if (bike && bike.length > 0) return bike[0].maintLog;
+    // else return [];
+    //https://localhost:7055/Bike/GetMaintLog?user=user1&bike=bike1
+    if (user === "" || bikeId === "") return [];
+    try {
+      const response = await axios.get<MaintLog[]>('https://localhost:7055/Bike/GetMaintLog?user=' + user + '&bike=' + bikeId);
+      for (let log of response.data) {
+        log.date = new Date(log.date);
+      }
+      console.log(response.data);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      //throw error;
+      return [];
+    }
+
+
   },
   setMaintLog: async function (
-    user: string,
-    bikeId: string,
-    updated: MaintLog[]
+    added: MaintLog[],
+    deleted: string[],
   ): Promise<boolean> {
-    let bike = bikeData.filter((bike) => {
-      return bike.bike.userID === user && bike.bike.id === bikeId;
+    // let bike = bikeData.filter((bike) => {
+    //   return bike.bike.userID === user && bike.bike.id === bikeId;
+    // });
+    // if (bike.length === 0) return false;
+    // bike[0].maintLog = updated;
+    // this.saveAll(bikeData);
+    await axios.post('https://localhost:7055/Bike/AddMaintLog', added)
+    .then(response => {
+      console.log('Response:', response.data); // Handle successful response
+    })
+    .catch(error => {
+      console.error('Error:', error); // Handle any errors
+      throw error;
     });
-    if (bike.length === 0) return false;
-    bike[0].maintLog = updated;
-    this.saveAll(bikeData);
+    await axios.delete('https://localhost:7055/Bike/DeleteMaintLog/' + JSON.stringify(deleted))
+    .then(response => {
+      console.log('Response:', response.data); // Handle successful response
+    })
+    .catch(error => {
+      console.error('Error:', error); // Handle any errors
+      throw error;
+    });
+
     return true;
   },
   getAlerts: async function (user: string, bikeId: string): Promise<Alert[]> {
@@ -182,11 +216,11 @@ export const BikeService = {
   saveAll: async function (data: BikeAll[]) {
     //localStorage.setItem("BikeMaintTracker", JSON.stringify(data));
   },
-  loadAll: async function (): Promise<BikeAll[]> {
-    const data = localStorage.getItem("BikeMaintTracker");
-    if (!data || data.length < 4) return [];
-    else return JSON.parse(data, dateReviver);
-  },
+  // loadAll: async function (): Promise<BikeAll[]> {
+  //   const data = localStorage.getItem("BikeMaintTracker");
+  //   if (!data || data.length < 4) return [];
+  //   else return JSON.parse(data, dateReviver);
+  // },
   saveBike: async function (data: Bike, newBike: boolean, idx: number) {
     // need better way to determine new bike vs editing last bike
     if (newBike) {
@@ -208,7 +242,7 @@ export const BikeService = {
         });
     } else {
       debugger;
-      bikeData[idx].bike = data;
+      //bikeData[idx].bike = data;
       await axios.put('https://localhost:7055/Bike', data)
         .then(response => {
           console.log('Response:', response.data); // Handle successful response
@@ -219,16 +253,16 @@ export const BikeService = {
         });
 
     }
-    this.saveAll(bikeData);
+    //this.saveAll(bikeData);
   },
 };
 
-const attemptLoad = async () => {
-  let savedData: BikeAll[] = await BikeService.loadAll();
-  if (savedData && savedData.length > 0) bikeData = savedData;
-};
+// const attemptLoad = async () => {
+//   let savedData: BikeAll[] = await BikeService.loadAll();
+//   if (savedData && savedData.length > 0) bikeData = savedData;
+// };
 
-attemptLoad();
+// attemptLoad();
 
 // I can get this, I can do this, I can handle this!  I can rock this project and rock
 // this career!  I have reached 12 years in this return career, and ballpark of

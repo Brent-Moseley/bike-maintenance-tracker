@@ -32,10 +32,11 @@ existing entries and the adding of new entries.
 interface PopupModalProps {
   bikeName: string;
   bikeId: string;
+  userId: string;
   currentMiles: number;
   log: MaintLog[];
   open: boolean;
-  handleClose: (logs: MaintLog[]) => void;
+  handleClose: (logs: MaintLog[], deleted: string[]) => void;
 }
 
 const StyledTableCellHeader = styled(TableCell)(({ theme }) => ({
@@ -89,6 +90,7 @@ const styleContent = {
 const MaintLogPopup: React.FC<PopupModalProps> = ({
   bikeName,
   bikeId,
+  userId,
   currentMiles,
   log,
   open,
@@ -104,12 +106,14 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const newRow: MaintLog = {
     id: uuidv4(),
-    userID: "123e4567-e89b-12d3-a456-426614174000", // set with real user ID
+    userID: userId,
     bikeID: bikeId,
     date: new Date(),
     miles: currentMiles,
     description: "",
   };
+  const [newLogs, setNewLogs] = useState<MaintLog[]>([]);
+  const [deleted, setDeleted] = useState<string[]>([]);
 
   useEffect(() => {
     setLogs(log);
@@ -122,17 +126,22 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   }, [logs]);
 
   useEffect(() => {
+    debugger;
     if (open) {
       // Reset form
       setCloseLabel("Close");
       setEditRowId("");
+      setNewLogs([]);
+      setDeleted([]);
     }
   }, [open]);
 
   const handleConfirmOK = () => {
     // Delete a log entry
+    debugger;
     const idx = logs.findIndex((log) => log.id === currentId);
     if (idx > -1) {
+      setDeleted([...deleted, currentId]);
       setLogs([...logs.slice(0, idx), ...logs.slice(idx + 1)]);
       setCloseLabel("Save");
     }
@@ -146,6 +155,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   const handleAddRow = () => {
     const rowWithId = {
       ...newRow,
+      // add user ID
       id: uuidv4(),
       bikeID: bikeId,
       date: new Date(),
@@ -187,9 +197,13 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
 
   const handleCommit = (save: boolean) => {
     setIsEditing(false);
+    debugger;
     if (!save) {
       setLogs(logs.slice(0, -1));
       setCloseLabel("Save");
+    }
+    else {
+      setNewLogs ([...newLogs, logs[logs.length-1]]);
     }
     setEditRowId("");
   };
@@ -214,7 +228,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
       <Modal
         open={open}
         onClose={() => {
-          handleClose(logs);
+          handleClose(newLogs, deleted);
         }}
         aria-labelledby="modal-title"
         aria-describedby="modal-description"
@@ -358,7 +372,8 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
           <Button
             disabled={isEditing}
             onClick={() => {
-              handleClose(logs);
+              debugger;
+              handleClose(newLogs, deleted);
             }}
             sx={{ mt: 2 }}
           >
