@@ -39,6 +39,12 @@ export interface TriggeredAlert {
   isUpcoming: boolean;
 }
 
+// Each alert status is approx 50 chars long, so if a user has 500 alerts (a huge amount),
+// that is only 25k in size.  Whole alert set can be stored in one JSON string, and saved as 
+// one record in the DB.  The Bike Service can hold this table for the UI to read, and only
+// save to DB backend when a status is added, deleted, or modified.  Old alerts that drop off the
+// system, when the user OKs them, can be deleted from the in memory table.  This makes the app more
+// responsive, and works even if the internet connection is spotty.
 export interface AlertStatus {
   id: string;
   status: string;

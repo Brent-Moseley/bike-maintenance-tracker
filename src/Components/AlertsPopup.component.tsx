@@ -9,7 +9,7 @@ import {
   Tooltip,
   Slider,
 } from "@mui/material";
-import { Alert } from "../services/BikeService";
+import { Alert, BikeService } from "../services/BikeService";
 import { styled } from "@mui/material/styles";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -34,11 +34,12 @@ Handle user input to delete alerts, and to add new ones.
 
 interface PopupModalProps {
   bikeName: string;
+  userId: string;
   bikeId: string;
   currentMiles: number;
   alerts: Alert[];
   open: boolean;
-  handleClose: (logs: Alert[]) => void;
+  handleClose: (logs: Alert[], deleted: string[]) => void;
 }
 
 const StyledTableCellHeader = styled(TableCell)(({ theme }) => ({
@@ -99,6 +100,7 @@ const styleContent = {
 
 const AlertsPopup: React.FC<PopupModalProps> = ({
   bikeName,
+  userId,
   bikeId,
   currentMiles,
   alerts,
@@ -120,13 +122,19 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   );
   const [fromTodayUnits, setFromTodayUnits] = useState<string>("days");
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [newAlerts, setNewAlerts] = useState<Alert[]>([]);
+  const [deleted, setDeleted] = useState<string[]>([]);
+  // For each new alert, need to add an alert status of "created".
+  // For each deleted, remove status from alert status table. 
+  // Send these to Bike Service only when user clicks 'Save'
+  // Bike Service will automatically save to the DB.
 
   const today = dayjs();
   const tomorrow = today.add(1, "day");
 
   const newRow: Alert = {
     id: uuidv4(),
-    userID: "123e4567-e89b-12d3-a456-426614174000", // set with user ID when enabling multi-user
+    userID: userId,
     bikeID: bikeId,
     bikeName: bikeName,
     date: tomorrow.toDate(),
@@ -136,14 +144,15 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   };
 
   const setStatuses = (set: Alert[]) => {
-    const statusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
-    let statusList: AlertStatus[] =
-      statusStr.length > 2 ? JSON.parse(statusStr) : [];
+    // const statusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
+    // let statusList: AlertStatus[] =
+    //   statusStr.length > 2 ? JSON.parse(statusStr) : [];
 
     let newset: Alert[] = [];
     for (let al of set) {
-      const status = statusList.find((cl) => cl.id === al.id);
-      al.status = status?.status;
+      debugger;
+      const status = BikeService.getAlertStatus(al.id);
+      al.status = status;
       newset.push(al);
     }
     return newset;
@@ -167,6 +176,8 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       setEditRowId("");
       setMilesDisabled(true);
       setDateDisabled(false);
+      setNewAlerts([]);
+      setDeleted([]);
     }
   }, [open]);
 
@@ -174,10 +185,11 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     // Delete an alert
     const idx = alertSet.findIndex((alert) => alert.id === currentId);
     if (idx > -1) {
+      setDeleted([...deleted, currentId]);
       setAlertSet([...alertSet.slice(0, idx), ...alertSet.slice(idx + 1)]);
       setCloseLabel("Save");
     }
-    const statusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
+    /*const statusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
     let statusList: AlertStatus[] =
       statusStr.length > 2 ? JSON.parse(statusStr) : [];
 
@@ -185,7 +197,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     localStorage.setItem(
       "BikeMaintTrackerAlertStatus",
       JSON.stringify(statusList)
-    );
+    );*/
 
     setConfirmModalOpen(false);
   };
@@ -262,7 +274,10 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       setAlertSet(alertSet.slice(0, -1));
     } else {
       setCloseLabel("Save");
-      const statusStr =
+      //setNewAlerts ([...newAlerts, alertSet[alertSet.length-1]]);
+
+      // BCM todo:
+      /*const statusStr =
         localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
       let statusList: AlertStatus[] =
         statusStr.length > 2 ? JSON.parse(statusStr) : [];
@@ -271,10 +286,14 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       localStorage.setItem(
         "BikeMaintTrackerAlertStatus",
         JSON.stringify(statusList)
-      );
+      );*/
+      
 
+      let addedRow = alertSet.find(row => row.id === editRowId);
       if (milesDisabled) {
         // If miles input is disabled, then fill in alert set and update miles to 'undefined' on any edit row.
+        if (addedRow) setNewAlerts ([...newAlerts, { ...addedRow, miles: undefined, repeatMiles: undefined }]);
+
         setAlertSet((prevLogs) =>
           prevLogs.map((row) =>
             row.id === editRowId
@@ -284,10 +303,12 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
         );
       } else {
         // Date input is disabled, fill in alert set and update dates to 'undefined' on any edit row.
+        if (addedRow) setNewAlerts ([...newAlerts, { ...addedRow, date: undefined, repeatDays: undefined }]);
+
         setAlertSet((prevLogs) =>
           prevLogs.map((row) =>
             row.id === editRowId
-              ? { ...row, date: undefined, repeatDate: undefined }
+              ? { ...row, date: undefined, repeatDays: undefined }
               : row
           )
         );
@@ -388,7 +409,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       <Modal
         open={open}
         onClose={() => {
-          handleClose(alerts);
+          handleClose(newAlerts, deleted);
         }}
         aria-labelledby="modal-title"
         aria-describedby="modal-description"
@@ -665,7 +686,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
           <Button
             disabled={isEditing}
             onClick={() => {
-              handleClose(alertSet);
+              handleClose(newAlerts, deleted);
             }}
             sx={{ mt: 2 }}
           >

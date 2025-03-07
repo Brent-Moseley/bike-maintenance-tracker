@@ -48,6 +48,7 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
   const [currentUser, setCurrentUser] = useState<string>("");
   const [realData, setRealData] = useState<boolean>(false);
   const [triggerAlertCycle, setTriggerAlertCycle] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const [log, setLog] = useState<MaintLog[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -55,8 +56,9 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
   useEffect(() => {
     setCurrentUser(userName);
     console.log("  User is: " + userName);
-    if (userName.length > 0)
+    if (userName.length > 0) {
       loadBikes (userName);
+    }
     else {
       // user logged out or no login yet
       console.log("   Adding empty bike");
@@ -81,8 +83,11 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
   }
 
   const loadBikes = async (userName: string) => {
+    setLoading(true);
     var result = await BikeService.getBikes(userName);
     console.log("  Loaded bikes, size = " + result.length);
+    await BikeService.populateAlertStatuses(userName);
+    setLoading(false);
     if (result.length > 0) {
       setRealData(true);
       setBikeData(result);
@@ -114,6 +119,7 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
     setAlerts(ale);
     setOpenAlerts(true);
   };
+
   const handleMaintLogClose = async (added: MaintLog[], deleted: string[]) => {
     // save updated log to the BikeService
     debugger;
@@ -123,16 +129,21 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
     //   updated
     // );
     await BikeService.setMaintLog(added, deleted);
-    
+
     setOpen(false);
   };
 
-  const handleCloseAlerts = async (updated: Alert[]) => {
+  const handleCloseAlerts = async (updated: Alert[], deleted: string[]) => {
     await BikeService.setAlerts(
-      currentUser,
-      bikeData[selectedBikeIndex].id,
-      updated
+      updated,
+      deleted
     );
+    for (let item of updated) {
+      BikeService.addAlertStatus(currentUser, item.id, "created");
+    }
+    for (let item of deleted) {
+      BikeService.removeAlertStatus(currentUser, item);
+    }
 
     setOpenAlerts(false);
     //await runAlertCycle(bikeData);
@@ -296,7 +307,7 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
         handleOk={handleNBDOK}
         handleClose={handleNBDCancel}
       ></NewBikeDayModal>
-      {!realData && currentUser.length > 0 && (
+      {!realData && currentUser.length > 0 && !loading && (
         // New logged in user, they have not added any bikes yet.
         <>
           <Button
@@ -338,6 +349,7 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
           ></MaintLogPopup>
           <AlertsPopup
             bikeName={bikeData[selectedBikeIndex].name}
+            userId={currentUser}
             bikeId={bikeData[selectedBikeIndex].id}
             currentMiles={bikeData[selectedBikeIndex].totalMiles}
             alerts={alerts}

@@ -155,7 +155,6 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   const handleAddRow = () => {
     const rowWithId = {
       ...newRow,
-      // add user ID
       id: uuidv4(),
       bikeID: bikeId,
       date: new Date(),

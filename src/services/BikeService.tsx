@@ -1,7 +1,5 @@
 // UserService.ts
-import axios from 'axios';
-
-/*
+import axios from 'axios';/*
 
 Purpose:  Handle all output with data storage outside of the React app.
 
@@ -95,6 +93,59 @@ function dateReviver(key: string, value: any) {
   return value;
 }
 
+// Each alert status is approx 50 chars long, so if a user has 500 alerts (a huge amount),
+// that is only 25k in size.  Whole alert set can be stored in one JSON string, and saved as 
+// one record in the DB.  The Bike Service can hold this table for the UI to read, and only
+// save to DB backend when a status is added, deleted, or modified.  Old alerts that drop off the
+// system, when the user OKs them, can be deleted from the in memory table.  This makes the app more
+// responsive, and works even if the internet connection is spotty.
+interface AlertStatus {
+  id: string;
+  status: string;
+}
+
+/*
+[
+{ 
+  "id": "alert1",
+  "status": "created",
+},
+{ 
+  "id": "alert10",
+  "status": "created",
+},  
+{ 
+  "id": "alert11",
+  "status": "created",
+},
+{ 
+  "id": "alert12",
+  "status": "triggered",
+},
+{ 
+  "id": "alert13",
+  "status": "acknowledged",
+},
+]
+
+
+[{"id":"alert1","status":"created"},{"id":"alert10","status":"created"},{"id":"alert11","status":"created"},{"id":"alert12","status":"triggered"},{"id":"alert13","status":"acknowledged"}]
+
+
+INSERT INTO "AlertStatus" (id, "userId", "statusString")
+VALUES ('123456', 'user1', '[{"id":"alert1","status":"created"},{"id":"alert10","status":"created"},{"id":"alert11","status":"created"},{"id":"alert12","status":"triggered"},{"id":"alert13","status":"acknowledged"}]');
+
+
+*/
+
+interface AlertStatusDB {
+  id: string;
+  userId: string;
+  statusString: string;
+}
+
+let alertStatusTable: AlertStatus[] = [];
+
 export const BikeService = {
   getBikes: async function (user: string): Promise<Bike[]> {
     // const returnData: Bike[] = (
@@ -156,61 +207,94 @@ export const BikeService = {
     // bike[0].maintLog = updated;
     // this.saveAll(bikeData);
     await axios.post('https://localhost:7055/Bike/AddMaintLog', added)
-    .then(response => {
-      console.log('Response:', response.data); // Handle successful response
-    })
-    .catch(error => {
-      console.error('Error:', error); // Handle any errors
-      throw error;
-    });
+      .then(response => {
+        console.log('Response:', response.data); // Handle successful response
+      })
+      .catch(error => {
+        console.error('Error:', error); // Handle any errors
+        throw error;
+      });
     await axios.delete('https://localhost:7055/Bike/DeleteMaintLog/' + JSON.stringify(deleted))
-    .then(response => {
-      console.log('Response:', response.data); // Handle successful response
-    })
-    .catch(error => {
-      console.error('Error:', error); // Handle any errors
-      throw error;
-    });
+      .then(response => {
+        console.log('Response:', response.data); // Handle successful response
+      })
+      .catch(error => {
+        console.error('Error:', error); // Handle any errors
+        throw error;
+      });
 
     return true;
   },
   getAlerts: async function (user: string, bikeId: string): Promise<Alert[]> {
-    if (bikeId.length > 0) {
-      const bike = bikeData.filter((bike) => {
-        return bike.bike.userID === user && bike.bike.id === bikeId;
-      });
-      if (bike && bike.length > 0) return bike[0].alerts;
-      else return [];
-    } else {
-      const bike = bikeData.filter((bike) => {
-        return bike.bike.userID == user;
-      });
-      if (bike.length === 0) return [];
-      var allAlerts: Alert[] = [];
-      // Combine alerts from all bikes.
-      for (var value of bike) {
-        allAlerts = allAlerts.concat(value.alerts);
+    // if (bikeId.length > 0) {
+    //   const bike = bikeData.filter((bike) => {
+    //     return bike.bike.userID === user && bike.bike.id === bikeId;
+    //   });
+    //   if (bike && bike.length > 0) return bike[0].alerts;
+    //   else return [];
+    // } else {
+    //   const bike = bikeData.filter((bike) => {
+    //     return bike.bike.userID == user;
+    //   });
+    //   if (bike.length === 0) return [];
+    //   var allAlerts: Alert[] = [];
+    //   // Combine alerts from all bikes.
+    //   for (var value of bike) {
+    //     allAlerts = allAlerts.concat(value.alerts);
+    //   }
+    //   return allAlerts;
+    // }
+    if (user === "") return [];
+    try {
+      const response = await axios.get<Alert[]>('https://localhost:7055/Bike/GetAlerts?user=' + user + '&bike=' + bikeId);
+      for (let alert of response.data) {
+        if (alert.date) alert.date = new Date(alert.date);
       }
-      return allAlerts;
+      console.log(response.data);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      //throw error;
+      return [];
     }
+
   },
   addAlert: async function (alert: Alert): Promise<boolean> {
-    let set = await this.getAlerts(alert.userID, alert.bikeID);
-    set.push(alert);
-    const success = await this.setAlerts(alert.userID, alert.bikeID, set);
-    return success;
+    // let set = await this.getAlerts(alert.userID, alert.bikeID);
+    // set.push(alert);
+    // const success = await this.setAlerts(alert.userID, alert.bikeID, set);
+    await axios.post('https://localhost:7055/Bike/AddAlerts', [alert])
+      .then(response => {
+        console.log('Response:', response.data); // Handle successful response
+      })
+      .catch(error => {
+        console.error('Error:', error); // Handle any errors
+        throw error;
+      });
+
+    return true;
   },
   setAlerts: async function (
-    user: string,
-    bikeId: string,
-    updated: Alert[]
+    added: Alert[],
+    deleted: string[],
   ): Promise<boolean> {
-    let bike = bikeData.filter((bike) => {
-      return bike.bike.userID === user && bike.bike.id === bikeId;
-    });
-    if (bike.length === 0) return false;
-    bike[0].alerts = updated;
-    this.saveAll(bikeData);
+    await axios.post('https://localhost:7055/Bike/AddAlerts', added)
+      .then(response => {
+        console.log('Response:', response.data); // Handle successful response
+      })
+      .catch(error => {
+        console.error('Error:', error); // Handle any errors
+        throw error;
+      });
+    await axios.delete('https://localhost:7055/Bike/DeleteAlerts/' + JSON.stringify(deleted))
+      .then(response => {
+        console.log('Response:', response.data); // Handle successful response
+      })
+      .catch(error => {
+        console.error('Error:', error); // Handle any errors
+        throw error;
+      });
+
     return true;
   },
   saveAll: async function (data: BikeAll[]) {
@@ -255,6 +339,58 @@ export const BikeService = {
     }
     //this.saveAll(bikeData);
   },
+  populateAlertStatuses: async function (user: string) {
+    console.log ("   &&&&& populate alert status");
+    if (user === "") return;
+    try {
+      const response = await axios.get<AlertStatus[]>('https://localhost:7055/Bike/GetAlertStatus/' + user);
+      debugger;
+
+      if (response.data.length > 0) alertStatusTable = response.data;
+      console.log(response.data);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      //throw error;
+      return [];
+    }
+  },
+  saveAlertTable: function (userId: string) {
+    axios.post('https://localhost:7055/Bike/SetAlertStatus', { user: userId, update: JSON.stringify(alertStatusTable) })
+      .then(response => {
+        console.log('Response:', response.data); // Handle successful response
+      })
+      .catch(error => {
+        console.error('Error:', error); // Handle any errors
+        throw error;
+      });
+
+  },
+  getAlertStatus: function (id: string): string | undefined {
+    var result = alertStatusTable.find(al => al.id === id);
+    if (result) return result.status
+    else return undefined;
+  },
+  setAlertStatus: function (user: string, id: string, status: string) {
+    var result = alertStatusTable.find(al => al.id === id);
+    if (result) result.status = status;
+    this.saveAlertTable(user);
+  },
+  addAlertStatus: function (user: string, id: string, status: string) {
+    alertStatusTable.push({id: id, status: status});
+    this.saveAlertTable(user);
+  },
+  removeAlertStatus: function (user: string, id: string) {
+    var idx = alertStatusTable.findIndex(al => al.id === id);
+    if (idx > -1) {
+      const newArray = [
+        ...alertStatusTable.slice(0, idx), // Take elements before the xth element
+        ...alertStatusTable.slice(idx + 1) // Take elements after the xth element
+      ];
+      alertStatusTable = newArray;
+      this.saveAlertTable(user);
+    }
+  }
 };
 
 // const attemptLoad = async () => {
