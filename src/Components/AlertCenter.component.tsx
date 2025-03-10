@@ -39,12 +39,6 @@ export interface TriggeredAlert {
   isUpcoming: boolean;
 }
 
-// Each alert status is approx 50 chars long, so if a user has 500 alerts (a huge amount),
-// that is only 25k in size.  Whole alert set can be stored in one JSON string, and saved as 
-// one record in the DB.  The Bike Service can hold this table for the UI to read, and only
-// save to DB backend when a status is added, deleted, or modified.  Old alerts that drop off the
-// system, when the user OKs them, can be deleted from the in memory table.  This makes the app more
-// responsive, and works even if the internet connection is spotty.
 export interface AlertStatus {
   id: string;
   status: string;
@@ -94,10 +88,11 @@ const fadeInOut = keyframes`
 
 interface AlertCenterProps {
   bikes: Bike[];
+  user: string;
   toggle: boolean;
 }
 
-const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, toggle }) => {
+const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
   const [masterAlerts, setMasterAlerts] = useState<TriggeredAlert[]>([]);
   const savedIncludeUpcoming = localStorage.getItem("includeUpcoming");
   const [includeUpcoming, setIncludeUpcoming] = useState<boolean>(
@@ -106,8 +101,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, toggle }) => {
 
   useEffect(() => {
     // when the parent toggles this, run Alert cycle.
-    console.log("   toggled.");
-    console.log(JSON.stringify(bikes));
+    console.log("  Alert cycle toggled.");
     runAlertCycle(bikes);
   }, [toggle]);
 
@@ -118,19 +112,21 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, toggle }) => {
     runAlertCycle(bikes, !oldState);
   };
 
-  function setAlertStatus(id: string, status: string) {
-    const statusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
-    let statusList: AlertStatus[] =
-      statusStr.length > 2 ? JSON.parse(statusStr) : [];
+  async function setAlertStatus(id: string, status: string) {
+    // const statusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
+    // let statusList: AlertStatus[] =
+    //   statusStr.length > 2 ? JSON.parse(statusStr) : [];
 
-    const alert = statusList.findIndex((item) => item.id === id);
-    if (alert > -1) {
-      statusList[alert].status = status;
-      localStorage.setItem(
-        "BikeMaintTrackerAlertStatus",
-        JSON.stringify(statusList)
-      );
-    }
+    // const alert = statusList.findIndex((item) => item.id === id);
+    // if (alert > -1) {
+    //   statusList[alert].status = status;
+    //   localStorage.setItem(
+    //     "BikeMaintTrackerAlertStatus",
+    //     JSON.stringify(statusList)
+    //   );
+    // }
+    BikeService.setAlertStatus(user, id, status);
+    //await BikeService.saveAlertTable(user);
   }
 
   function showNotification(title: string, options: Object) {
@@ -140,12 +136,12 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, toggle }) => {
   }
 
   const handleAlertOkClick = async (id: string) => {
-    setAlertStatus(id, "cleared");
+    await setAlertStatus(id, "cleared");
     await runAlertCycle(bikes);
   };
 
   const handleNewClick = async (id: string) => {
-    setAlertStatus(id, "acknowledged");
+    await setAlertStatus(id, "acknowledged");
     await runAlertCycle(bikes);
   };
 
@@ -169,16 +165,13 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, toggle }) => {
     // Check for alerts and handle any that are ready for a status update
     if (bikes.length === 0) return;
     // Get all alerts for this user
-    const alerts = await BikeService.getAlerts(
-      "123e4567-e89b-12d3-a456-426614174000",
-      ""
-    );
+    const alerts = await BikeService.getAlerts(user, "");
     //setMasterAlerts([]);
     // Get current list of alert statuses
-    const alertStatusStr =
-      localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
-    let alertStatusSet: AlertStatus[] =
-      alertStatusStr.length > 2 ? JSON.parse(alertStatusStr) : [];
+    // const alertStatusStr =
+    //   localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
+    // let alertStatusSet: AlertStatus[] =
+    //   alertStatusStr.length > 2 ? JSON.parse(alertStatusStr) : [];
     const today: Date = new Date();
 
     let sortedAlerts: TriggeredAlert[] = [];
@@ -196,35 +189,36 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, toggle }) => {
           "  " +
           alert.description
       );
-      const currentAlertStatus = alertStatusSet.find(
-        (alertStat) => alertStat.id === alert.id
-      );
-      console.log("       status: " + currentAlertStatus?.status);
+      let currentAlertStatus = BikeService.getAlertStatus(alert.id);
+      // const currentAlertStatus = alertStatusSet.find(
+      //   (alertStat) => alertStat.id === alert.id
+      // );
+      console.log("       status: " + currentAlertStatus);
 
       if (!currentAlertStatus) {
         continue;
       }
       // Skip alerts that have been cleared by user already.
-      if (currentAlertStatus.status === "cleared") continue;
+      if (currentAlertStatus === "cleared") continue;
 
       // Find the bike referenced by this alert
       var idx = bikes.findIndex((bike) => {
         return bike.id === alert.bikeID;
       });
-      //if (alert.date?.toLocaleDateString() === '2/17/2025') debugger;
       if (idx > -1) {
         // The bike was found
-        let triggered: boolean = currentAlertStatus.status === "triggered";
+        let triggered: boolean = currentAlertStatus === "triggered";
         let acknowledged: boolean =
-          currentAlertStatus.status === "acknowledged";
-        let created: boolean = currentAlertStatus.status === "created";
+          currentAlertStatus === "acknowledged";
+        let created: boolean = currentAlertStatus === "created";
         let isNew: boolean = false; // assume not a new trigger
         let isUpcoming: boolean = false; // assume date is not upcoming
         const todayjs = dayjs();
         const alertDate = dayjs(alert.date);
         const alertNeedsTriggered =
           alert.date &&
-          alert.date.toLocaleDateString() <= today.toLocaleDateString();
+          //alert.date.toLocaleDateString() <= today.toLocaleDateString();
+          (alertDate.isBefore(todayjs) || alertDate.isSame(todayjs));
         const isAlertDateUpcoming =
           alert.date &&
           alertDate.isAfter(todayjs.add(0, "day")) &&
@@ -234,7 +228,8 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, toggle }) => {
         if (alert.miles && bikes[idx].totalMiles >= alert.miles) {
           // Trigger on number of miles
           if (created) {
-            currentAlertStatus.status = "triggered";
+            currentAlertStatus = "triggered";
+            await setAlertStatus(alert.id, currentAlertStatus);
             // save the whole set at the end
             isNew = true;
             triggered = true;
@@ -243,7 +238,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, toggle }) => {
           // Set a master alert for this alert, so that it shows up on main page
           sortedAlerts.push({
             alertID: alert.id,
-            userID: "123e4567-e89b-12d3-a456-426614174000",
+            userID: user,
             bikeID: alert.bikeID,
             bikeName: alert.bikeName,
             reason: "Bike has reached " + alert.miles + " miles",
@@ -257,14 +252,15 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, toggle }) => {
           if (triggered || acknowledged || (created && alertNeedsTriggered)) {
             // Change alert from created status to triggered.
             // update the BikeMaintTrackerAlertStatus JSON
-            currentAlertStatus.status = "triggered";
+            currentAlertStatus = "triggered";
+            await setAlertStatus(alert.id, currentAlertStatus);
             // save the whole set at the end
             isNew = created;
             triggered = true;
             debugger;
             sortedAlerts.push({
               alertID: alert.id,
-              userID: "123e4567-e89b-12d3-a456-426614174000",
+              userID: user,
               bikeID: alert.bikeID,
               bikeName: alert.bikeName,
               reason: "Date is on or after " + alert.date?.toLocaleDateString(),
@@ -277,7 +273,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, toggle }) => {
             debugger;
             sortedAlerts.push({
               alertID: alert.id,
-              userID: "123e4567-e89b-12d3-a456-426614174000",
+              userID: user,
               bikeID: alert.bikeID,
               bikeName: alert.bikeName,
               reason: "Upcoming alert for " + alert.date?.toLocaleDateString(),
@@ -314,15 +310,16 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, toggle }) => {
           if (save) {
             // alert was cloned, find the bike for this and add it to the alerts.  Then save.
             const success = await BikeService.addAlert(cloned);
-            alertStatusSet.push({ id: cloned.id, status: "created" });
+            await BikeService.addAlertStatus(user, cloned.id, "created");
+            //alertStatusSet.push({ id: cloned.id, status: "created" });
           }
         }
       }
     }
-    localStorage.setItem(
-      "BikeMaintTrackerAlertStatus",
-      JSON.stringify(alertStatusSet)
-    );
+    // localStorage.setItem(
+    //   "BikeMaintTrackerAlertStatus",
+    //   JSON.stringify(alertStatusSet)
+    // );
   };
 
   // 15 minute timer:

@@ -367,7 +367,7 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
       )}
       { currentUser.length == 0 && <span>Please log in to continue.</span> }
       {currentUser.length > 0 &&
-        <><AlertCenter bikes={bikeData} toggle={triggerAlertCycle}></AlertCenter>
+        <><AlertCenter bikes={bikeData} user={currentUser} toggle={triggerAlertCycle}></AlertCenter>
         <Button
           variant="contained"
           color="primary"

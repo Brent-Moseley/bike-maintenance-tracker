@@ -344,9 +344,10 @@ export const BikeService = {
     if (user === "") return;
     try {
       const response = await axios.get<AlertStatus[]>('https://localhost:7055/Bike/GetAlertStatus/' + user);
-      debugger;
+      //debugger;
 
       if (response.data.length > 0) alertStatusTable = response.data;
+
       console.log(response.data);
       return response.data;
     } catch (error) {
@@ -356,6 +357,8 @@ export const BikeService = {
     }
   },
   saveAlertTable: function (userId: string) {
+    console.log("   ----- saving alert table:");
+    console.log(JSON.stringify(alertStatusTable));
     axios.post('https://localhost:7055/Bike/SetAlertStatus', { user: userId, update: JSON.stringify(alertStatusTable) })
       .then(response => {
         console.log('Response:', response.data); // Handle successful response
@@ -368,19 +371,23 @@ export const BikeService = {
   },
   getAlertStatus: function (id: string): string | undefined {
     var result = alertStatusTable.find(al => al.id === id);
+    console.log(`     retrieve alert status for ${id}, ${result?.status}`);
     if (result) return result.status
     else return undefined;
   },
   setAlertStatus: function (user: string, id: string, status: string) {
     var result = alertStatusTable.find(al => al.id === id);
+    console.log(`     set alert status for ${id}, ${result?.status}`);
     if (result) result.status = status;
     this.saveAlertTable(user);
   },
   addAlertStatus: function (user: string, id: string, status: string) {
     alertStatusTable.push({id: id, status: status});
+    console.log(`     add alert status for ${id}, ${status}`);
     this.saveAlertTable(user);
   },
   removeAlertStatus: function (user: string, id: string) {
+    console.log(`     remove alert status for ${user}, ${id}`);
     var idx = alertStatusTable.findIndex(al => al.id === id);
     if (idx > -1) {
       const newArray = [
@@ -388,6 +395,7 @@ export const BikeService = {
         ...alertStatusTable.slice(idx + 1) // Take elements after the xth element
       ];
       alertStatusTable = newArray;
+      console.log("     New value: " + JSON.stringify(alertStatusTable));
       this.saveAlertTable(user);
     }
   }
