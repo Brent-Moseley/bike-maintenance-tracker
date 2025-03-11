@@ -323,6 +323,9 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
           </Button>
         </>
       )}
+      {loading && (
+        <span>... bikes loading ... </span>
+      )}
       {bikeData.length > 0 && realData && currentUser.length > 0 ? (
         <div>
           <BikeDropdown
