@@ -3,7 +3,7 @@ import BikeCard from "./BikeCard.component";
 import { Alert, Bike, BikeService, MaintLog } from "../services/BikeService";
 import BikeDropdown from "./BikeDropdown.component";
 import MaintLogPopup from "./MaintLogPopup";
-import { Button } from "@mui/material";
+import { Button, CircularProgress, Typography } from "@mui/material";
 import AddMilesPopup from "./AddMiles.component";
 import AddEditBikePopup from "./AddEditBike.component";
 import NewBikeDayModal from "./NewBikeDay.component";
@@ -324,7 +324,7 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
         </>
       )}
       {loading && (
-        <span>... bikes loading ... </span>
+         <Typography variant="h5" component="div">Bikes Loading <CircularProgress /> </Typography>
       )}
       {bikeData.length > 0 && realData && currentUser.length > 0 ? (
         <div>

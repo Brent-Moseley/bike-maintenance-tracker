@@ -27,6 +27,13 @@ interface BikeAll {
   alerts: Alert[];
 }
 
+export interface User {
+  id: string;
+  passCode: string;
+  name: string;
+  email?: string;
+}
+
 export interface MaintLog {
   id: string;
   userID: string;
@@ -192,6 +199,31 @@ export const BikeService = {
       console.error(error);
       //throw error;
       return [];
+    }
+
+
+  },
+  getUser: async function (
+    user: string,
+    passCode: string
+  ): Promise<User | undefined> {
+    // const bike = bikeData.filter((bike) => {
+    //   return bike.bike.userID === user && bike.bike.id === bikeId;
+    // });
+    // if (bike && bike.length > 0) return bike[0].maintLog;
+    // else return [];
+    //https://localhost:7055/Bike/GetMaintLog?user=user1&bike=bike1
+    if (user === "" || passCode === "") return undefined;
+    try {
+      const response = await axios.get<User>('https://localhost:7055/Bike/GetUser?user=' + user + '&passCode=' + passCode);
+      console.log(response.data);
+      debugger;
+      if (!response.data.id) return undefined;
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      //throw error;
+      return undefined;
     }
 
 

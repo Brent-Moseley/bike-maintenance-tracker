@@ -6,6 +6,7 @@ import {
     Button,
     TextField,
 } from "@mui/material";
+import { BikeService } from "../services/BikeService";
 
 /*
 
@@ -34,6 +35,7 @@ const UserLoginPopup: React.FC<PopupModalProps> = ({
     handleLoginClose,
 }) => {
     const [user, setUser] = React.useState("");
+    const [failedLogin, setFailedLogin] = React.useState(false);
     const [passcode, setPasscode] = React.useState("");
 
     const handleChangeUser = (event: { target: { value: React.SetStateAction<string>; }; }) => {
@@ -44,11 +46,14 @@ const UserLoginPopup: React.FC<PopupModalProps> = ({
         setPasscode(event.target.value);
     };
 
-    const handleCloseModal = (submit: boolean) => {
-        submit && user.length > 0 ?
-            handleLoginClose(user)
-            :
-            handleLoginClose("");
+    const handleCloseModal = async (submit: boolean) => {
+        if (!submit) handleLoginClose("");
+        else if (user.length > 0 && passcode.length > 0) {
+            var loadedUser = await BikeService.getUser(user, passcode);
+            //debugger;
+            if (!loadedUser) setFailedLogin(true);
+            else handleLoginClose(loadedUser.id);
+        }
     }
 
     return (
@@ -62,6 +67,9 @@ const UserLoginPopup: React.FC<PopupModalProps> = ({
                 <Typography id="modal-title" variant="h6" component="h2">
                     Login
                 </Typography>
+                {failedLogin && (<Typography id="modal-title" variant="h6" component="h2">
+                    User name or passcode incorrect.
+                </Typography>)}
                 <Typography id="modal-description" sx={{ mt: 2 }}>
                     {
                         <>
@@ -75,7 +83,7 @@ const UserLoginPopup: React.FC<PopupModalProps> = ({
                                     value={user}
                                     onChange={handleChangeUser} />
                             </Box>
-                            {/* <Box sx={{ width: "98%" }}>
+                            <Box sx={{ width: "98%" }}>
                                 <TextField
                                     label="Passcode"
                                     type="password"
@@ -83,7 +91,7 @@ const UserLoginPopup: React.FC<PopupModalProps> = ({
                                     fullWidth
                                     value={passcode}
                                     onChange={handleChangePasscode} />
-                            </Box> */}
+                            </Box>
                         </>
                     }
                 </Typography>
