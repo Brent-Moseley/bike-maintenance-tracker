@@ -5,7 +5,7 @@ Purpose:  Handle all output with data storage outside of the React app.
 
 */
 
-const API_URL = "https://api.example.com/users";
+const API_URL = "https://bike-maint-tracker-hxafcdavbkghcmbw.canadacentral-01.azurewebsites.net/";
 export interface Bike {
   userID: string;
   id: string;
@@ -162,7 +162,7 @@ export const BikeService = {
     // ).map((bike) => bike.bike);
     if (user === "") return [];
     try {
-      const response = await axios.get<Bike[]>('https://localhost:7055/Bike/' + user);
+      const response = await axios.get<Bike[]>(API_URL + '/Bike/' + user);
       for (let bike of response.data) {
         bike.dateLastServiced = new Date(bike.dateLastServiced);
         bike.monthYearPurchased = new Date(bike.monthYearPurchased);
@@ -189,7 +189,7 @@ export const BikeService = {
     //https://localhost:7055/Bike/GetMaintLog?user=user1&bike=bike1
     if (user === "" || bikeId === "") return [];
     try {
-      const response = await axios.get<MaintLog[]>('https://localhost:7055/Bike/GetMaintLog?user=' + user + '&bike=' + bikeId);
+      const response = await axios.get<MaintLog[]>(API_URL + '/Bike/GetMaintLog?user=' + user + '&bike=' + bikeId);
       for (let log of response.data) {
         log.date = new Date(log.date);
       }
@@ -215,7 +215,7 @@ export const BikeService = {
     //https://localhost:7055/Bike/GetMaintLog?user=user1&bike=bike1
     if (user === "" || passCode === "") return undefined;
     try {
-      const response = await axios.get<User>('https://localhost:7055/Bike/GetUser?user=' + user + '&passCode=' + passCode);
+      const response = await axios.get<User>(API_URL + '/Bike/GetUser?user=' + user + '&passCode=' + passCode);
       console.log(response.data);
       debugger;
       if (!response.data.id) return undefined;
@@ -238,7 +238,7 @@ export const BikeService = {
     // if (bike.length === 0) return false;
     // bike[0].maintLog = updated;
     // this.saveAll(bikeData);
-    await axios.post('https://localhost:7055/Bike/AddMaintLog', added)
+    await axios.post(API_URL + '/Bike/AddMaintLog', added)
       .then(response => {
         console.log('Response:', response.data); // Handle successful response
       })
@@ -246,7 +246,7 @@ export const BikeService = {
         console.error('Error:', error); // Handle any errors
         throw error;
       });
-    await axios.delete('https://localhost:7055/Bike/DeleteMaintLog/' + JSON.stringify(deleted))
+    await axios.delete(API_URL + '/Bike/DeleteMaintLog/' + JSON.stringify(deleted))
       .then(response => {
         console.log('Response:', response.data); // Handle successful response
       })
@@ -278,7 +278,7 @@ export const BikeService = {
     // }
     if (user === "") return [];
     try {
-      const response = await axios.get<Alert[]>('https://localhost:7055/Bike/GetAlerts?user=' + user + '&bike=' + bikeId);
+      const response = await axios.get<Alert[]>(API_URL + '/Bike/GetAlerts?user=' + user + '&bike=' + bikeId);
       for (let alert of response.data) {
         if (alert.date) alert.date = new Date(alert.date);
       }
@@ -295,7 +295,7 @@ export const BikeService = {
     // let set = await this.getAlerts(alert.userID, alert.bikeID);
     // set.push(alert);
     // const success = await this.setAlerts(alert.userID, alert.bikeID, set);
-    await axios.post('https://localhost:7055/Bike/AddAlerts', [alert])
+    await axios.post(API_URL + '/Bike/AddAlerts', [alert])
       .then(response => {
         console.log('Response:', response.data); // Handle successful response
       })
@@ -310,7 +310,7 @@ export const BikeService = {
     added: Alert[],
     deleted: string[],
   ): Promise<boolean> {
-    await axios.post('https://localhost:7055/Bike/AddAlerts', added)
+    await axios.post(API_URL + '/Bike/AddAlerts', added)
       .then(response => {
         console.log('Response:', response.data); // Handle successful response
       })
@@ -318,7 +318,7 @@ export const BikeService = {
         console.error('Error:', error); // Handle any errors
         throw error;
       });
-    await axios.delete('https://localhost:7055/Bike/DeleteAlerts/' + JSON.stringify(deleted))
+    await axios.delete(API_URL + '/Bike/DeleteAlerts/' + JSON.stringify(deleted))
       .then(response => {
         console.log('Response:', response.data); // Handle successful response
       })
@@ -348,7 +348,7 @@ export const BikeService = {
         maintLog: [],
       };
       bikeData.push(newData);
-      await axios.post('https://localhost:7055/Bike', data)
+      await axios.post(API_URL + '/Bike', data)
         .then(response => {
           console.log('Response:', response.data); // Handle successful response
         })
@@ -359,7 +359,7 @@ export const BikeService = {
     } else {
       debugger;
       //bikeData[idx].bike = data;
-      await axios.put('https://localhost:7055/Bike', data)
+      await axios.put(API_URL + '/Bike', data)
         .then(response => {
           console.log('Response:', response.data); // Handle successful response
         })
@@ -375,7 +375,7 @@ export const BikeService = {
     console.log ("   &&&&& populate alert status");
     if (user === "") return;
     try {
-      const response = await axios.get<AlertStatus[]>('https://localhost:7055/Bike/GetAlertStatus/' + user);
+      const response = await axios.get<AlertStatus[]>(API_URL + '/Bike/GetAlertStatus/' + user);
       //debugger;
 
       if (response.data.length > 0) alertStatusTable = response.data;
@@ -391,7 +391,7 @@ export const BikeService = {
   saveAlertTable: function (userId: string) {
     console.log("   ----- saving alert table:");
     console.log(JSON.stringify(alertStatusTable));
-    axios.post('https://localhost:7055/Bike/SetAlertStatus', { user: userId, update: JSON.stringify(alertStatusTable) })
+    axios.post(API_URL + '/Bike/SetAlertStatus', { user: userId, update: JSON.stringify(alertStatusTable) })
       .then(response => {
         console.log('Response:', response.data); // Handle successful response
       })
