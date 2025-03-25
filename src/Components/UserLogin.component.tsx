@@ -16,7 +16,7 @@ Purpose:  Show a popup where the user can log in
 
 interface PopupModalProps {
     open: boolean;
-    handleLoginClose: (user: string) => void;
+    handleLoginClose: (user: string, name: string) => void;
 }
 
 const style = {
@@ -47,12 +47,12 @@ const UserLoginPopup: React.FC<PopupModalProps> = ({
     };
 
     const handleCloseModal = async (submit: boolean) => {
-        if (!submit) handleLoginClose("");
+        if (!submit) handleLoginClose("", "");
         else if (user.length > 0 && passcode.length > 0) {
             var loadedUser = await BikeService.getUser(user, passcode);
             //debugger;
             if (!loadedUser) setFailedLogin(true);
-            else handleLoginClose(loadedUser.id);
+            else handleLoginClose(loadedUser.id, loadedUser.name);
         }
     }
 

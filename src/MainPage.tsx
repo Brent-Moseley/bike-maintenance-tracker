@@ -28,6 +28,7 @@ const CustomButton = styled(Button)(({ theme }) => ({
 
 
 const MainPage: React.FC = () => {
+  const [userId, setUserId] = useState("");
   const [userName, setUserName] = useState("");
   //const [bikeName, setBikeName] = useState("Santa Cruz Tallboy");
   const [bikeData, setBikeData] = useState<Bike[]>([]);
@@ -48,8 +49,11 @@ const MainPage: React.FC = () => {
   //   fetchData();
   // }, []);
 
-  const handleLoginModalClose = (entry: string) => {
-    if (entry.length > 0) setUserName(entry);
+  const handleLoginModalClose = (id: string, name: string) => {
+    if (id.length > 0) {
+      setUserId(id);
+      setUserName(name);
+    }
     setOpenLogin(false);
   }
 
@@ -59,6 +63,7 @@ const MainPage: React.FC = () => {
 
   const handleLogoutClick = () => {
     setUserName("");
+    window.location.reload();
   }
 
   return (
@@ -93,7 +98,7 @@ const MainPage: React.FC = () => {
         elevation={3}
         style={{ padding: "20px", width: "80%", margin: "20px auto" }}
       >
-        <BikeComponent userName={userName}></BikeComponent>
+        <BikeComponent userName={userId}></BikeComponent>
       </Paper>
     </>
   );
