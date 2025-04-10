@@ -198,10 +198,16 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
     setIsEditing(false);
     debugger;
     if (!save) {
+      // We are not saving the new row, delete it.
       setLogs(logs.slice(0, -1));
       setCloseLabel("Save");
     }
     else {
+      // Save the new row, rounding the miles value if provided.
+      if (logs[logs.length - 1].miles != undefined) {
+        const mi = logs[logs.length - 1].miles as number;  // help typescript understand that this number is defined
+        logs[logs.length-1].miles = Math.round(mi);
+      }
       setNewLogs ([...newLogs, logs[logs.length-1]]);
     }
     setEditRowId("");

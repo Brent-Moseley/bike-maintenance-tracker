@@ -38,6 +38,11 @@ const style = {
   overflowY: "auto",
 };
 
+function isWholeNumber(value: string) {
+  const wholeNumberRegex = /^\d+$/; // Matches strings containing only digits
+  return wholeNumberRegex.test(value);
+}
+
 const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
   data,
   open,
@@ -53,15 +58,21 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
   };
 
   const [formData, setFormData] = useState(newData);
+  const [decimalErrorLastServ, setDecimalErrorLastServ] = useState<boolean>(false);
+  const [decimalErrorTotal, setDecimalErrorTotal] = useState<boolean>(false);
 
   useEffect(() => {
-    console.log("   Add edit bike updated");
     setFormData(data);
   }, [data]);
 
   const handleInputChange = (e: { target: { name: any; value: any } }) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    if (name === "milesLastServiced") {
+      !isWholeNumber(value) ? setDecimalErrorLastServ(true) : setDecimalErrorLastServ(false);
+    } 
+    if (name === "totalMiles") {
+      !isWholeNumber(value) ? setDecimalErrorTotal(true) : setDecimalErrorTotal(false);
+    }     setFormData({ ...formData, [name]: value });
   };
 
   const handleDateChangeMYPurchased = (newValue: Dayjs | null) => {
@@ -161,6 +172,8 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
                   name="milesLastServiced"
                   variant="outlined"
                   type="number"
+                  error={decimalErrorLastServ}
+                  helperText={decimalErrorLastServ ? 'Only use whole numbers.' : ''}
                   fullWidth
                   value={formData.milesLastServiced}
                   onChange={handleInputChange}
@@ -173,6 +186,8 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
                   name="totalMiles"
                   variant="outlined"
                   type="number"
+                  error={decimalErrorTotal}
+                  helperText={decimalErrorTotal ? 'Only use whole numbers.' : ''}
                   fullWidth
                   value={formData.totalMiles}
                   onChange={handleInputChange}
@@ -182,7 +197,7 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
             </div>
           </form>
         </Box>
-        <Button onClick={() => handleCloseModal(true)} sx={{ mt: 0 }}>
+        <Button onClick={() => handleCloseModal(true)} disabled={decimalErrorLastServ || decimalErrorTotal} sx={{ mt: 0 }}>
           Submit
         </Button>
         <Button onClick={() => handleCloseModal(false)} sx={{ mt: 0 }}>

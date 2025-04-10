@@ -34,9 +34,9 @@ const UserLoginPopup: React.FC<PopupModalProps> = ({
     open,
     handleLoginClose,
 }) => {
-    const [user, setUser] = React.useState("");
+    const [user, setUser] = React.useState("bmoseley");     // ""
     const [failedLogin, setFailedLogin] = React.useState(false);
-    const [passcode, setPasscode] = React.useState("");
+    const [passcode, setPasscode] = React.useState("XaP437");   // ""
 
     const handleChangeUser = (event: { target: { value: React.SetStateAction<string>; }; }) => {
         setUser(event.target.value);

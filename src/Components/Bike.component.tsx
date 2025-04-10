@@ -212,7 +212,8 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
   };
 
   const handleCloseAddMiles = async (add: number) => {
-    bikeData[selectedBikeIndex].totalMiles += add;
+
+    bikeData[selectedBikeIndex].totalMiles += Math.round(add);
     BikeService.saveBike(bikeData[selectedBikeIndex], false, selectedBikeIndex);
     setOpenAddMiles(false);
     //await runAlertCycle(bikeData);

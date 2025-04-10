@@ -292,7 +292,15 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       let addedRow = alertSet.find(row => row.id === editRowId);
       if (milesDisabled) {
         // If miles input is disabled, then fill in alert set and update miles to 'undefined' on any edit row.
-        if (addedRow) setNewAlerts ([...newAlerts, { ...addedRow, miles: undefined, repeatMiles: undefined }]);
+        if (addedRow) {
+          // Round repeat days if provided.
+          if (addedRow.repeatDays != undefined) {
+            const rd = addedRow.repeatDays as number;  // help typescript understand that this number is defined
+            addedRow.repeatDays = Math.round(rd);
+          }
+    
+          setNewAlerts ([...newAlerts, { ...addedRow, miles: undefined, repeatMiles: undefined }]);
+        }
 
         setAlertSet((prevLogs) =>
           prevLogs.map((row) =>
@@ -303,7 +311,21 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
         );
       } else {
         // Date input is disabled, fill in alert set and update dates to 'undefined' on any edit row.
-        if (addedRow) setNewAlerts ([...newAlerts, { ...addedRow, date: undefined, repeatDays: undefined }]);
+        if (addedRow) {
+          // Round repeat miles if provided.
+          if (addedRow.repeatMiles != undefined) {
+            const rm = addedRow.repeatMiles as number;  // help typescript understand that this number is defined
+            addedRow.repeatMiles = Math.round(rm);
+          }
+
+          // Round miles if provided.
+          if (addedRow.miles != undefined) {
+            const mi = addedRow.miles as number;  // help typescript understand that this number is defined
+            addedRow.miles = Math.round(mi);
+          }
+
+          setNewAlerts ([...newAlerts, { ...addedRow, date: undefined, repeatDays: undefined }]);
+        }
 
         setAlertSet((prevLogs) =>
           prevLogs.map((row) =>
