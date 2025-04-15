@@ -103,6 +103,9 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   const boxRef = useRef<HTMLDivElement>(null);
   const [sortAsc, setSortAsc] = useState<boolean>(false);
   const [closeLabel, setCloseLabel] = useState<string>("Close");
+  const [confirmCancelModalOpen, setConfirmCancelModalOpen] = useState<boolean>(false);
+  const [updates, setUpdates] = useState<number>(0);
+  const [cancelLabel, setCancelLabel] = useState<string>("Cancel All");
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const newRow: MaintLog = {
     id: uuidv4(),
@@ -133,24 +136,38 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
       setEditRowId("");
       setNewLogs([]);
       setDeleted([]);
+      setUpdates(0);
+      setCancelLabel("Cancel All");
     }
   }, [open]);
 
   const handleConfirmOK = () => {
+    if (confirmCancelModalOpen) {
+      setConfirmModalOpen(false);
+      setConfirmCancelModalOpen(false);
+      handleClose([], []);
+      return;
+    } 
     // Delete a log entry
-    debugger;
     const idx = logs.findIndex((log) => log.id === currentId);
     if (idx > -1) {
       setDeleted([...deleted, currentId]);
       setLogs([...logs.slice(0, idx), ...logs.slice(idx + 1)]);
-      setCloseLabel("Save");
+      const newCount = updates + 1;
+      setUpdates(prev => prev + 1);
+      setCloseLabel(`Save ${newCount} Changes`);      //setNewAlerts ([...newAlerts, alertSet[alertSet.length-1]]);
     }
     setConfirmModalOpen(false);
   };
 
   const handleConfirmCancel = () => {
     setConfirmModalOpen(false);
+    setConfirmCancelModalOpen(false);
   };
+
+  const confirmCancelButton = () => {
+    setConfirmCancelModalOpen(true);
+  }
 
   const handleAddRow = () => {
     const rowWithId = {
@@ -164,7 +181,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
     setIsEditing(true);
     setLogs([...logs, rowWithId]);
     setEditRowId(rowWithId.id);
-    setCloseLabel("Save");
+    //setCloseLabel("Save Changes");
   };
 
   const handleInputChange = (
@@ -175,7 +192,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
     setLogs((prevLogs) =>
       prevLogs.map((row) => (row.id === id ? { ...row, [name]: value } : row))
     );
-    setCloseLabel("Save");
+    //setCloseLabel("Save Changes");
   };
 
   const dateSort = () => {
@@ -200,27 +217,30 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
     if (!save) {
       // We are not saving the new row, delete it.
       setLogs(logs.slice(0, -1));
-      setCloseLabel("Save");
+      //setCloseLabel("Save Changes");
     }
     else {
       // Save the new row, rounding the miles value if provided.
       if (logs[logs.length - 1].miles != undefined) {
         const mi = logs[logs.length - 1].miles as number;  // help typescript understand that this number is defined
-        logs[logs.length-1].miles = Math.round(mi);
+        logs[logs.length - 1].miles = Math.round(mi);
       }
-      setNewLogs ([...newLogs, logs[logs.length-1]]);
+      setNewLogs([...newLogs, logs[logs.length - 1]]);
+      const newCount = updates + 1;
+      setUpdates(prev => prev + 1);
+      setCloseLabel(`Save ${newCount} Changes`);      //setNewAlerts ([...newAlerts, alertSet[alertSet.length-1]]);
     }
     setEditRowId("");
   };
 
-  const handleDateChangeMYPurchased = (newValue: Dayjs | null) => {
+  const handleDateChangeMYService = (newValue: Dayjs | null) => {
     if (newValue)
       setLogs((prevLogs) =>
         prevLogs.map((row) =>
           row.id === editRowId ? { ...row, date: newValue.toDate() } : row
         )
       );
-    setCloseLabel("Save");
+    // setCloseLabel("Save Changes");
   };
 
   const handleRowDelete = (id: string) => {
@@ -275,11 +295,11 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
                             {row.id === editRowId ? (
                               <LocalizationProvider dateAdapter={AdapterDayjs}>
                                 <DesktopDatePicker
-                                  label="Date Purchased"
-                                  name="monthYearPurchased"
+                                  label="Date of Service"
+                                  name="monthYearService"
                                   value={dayjs(row.date)}
                                   sx={{ maxWidth: "180px;" }}
-                                  onChange={handleDateChangeMYPurchased}
+                                  onChange={handleDateChangeMYService}
                                 />
                               </LocalizationProvider>
                             ) : (
@@ -288,14 +308,16 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
                           </StyledTableCell>
                           <StyledTableCell align="center">
                             {row.id === editRowId ? (
+                              <Tooltip title="Miles when serviced">
                               <TextField
-                                label="Miles"
+                                label="Miles When Serviced"
                                 name="miles"
                                 size="small"
                                 style={{ width: 100 }}
                                 value={row.miles}
                                 onChange={(e) => handleInputChange(e, row.id)}
                               />
+                              </Tooltip>
                             ) : (
                               row.miles
                             )}
@@ -345,7 +367,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
                                 }}
                               >
                                 {row.description}
-                                <Tooltip title="Delete Row">
+                                <Tooltip title="Delete Item">
                                   <Button
                                     style={{
                                       minWidth: "30px",
@@ -372,24 +394,38 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
             )}
           </Typography>
           <Button disabled={isEditing} onClick={handleAddRow} sx={{ mt: 2 }}>
-            Add Row
+            Add New Item
           </Button>
           <Button
             disabled={isEditing}
             onClick={() => {
-              debugger;
               handleClose(newLogs, deleted);
             }}
             sx={{ mt: 2 }}
           >
             {closeLabel}
           </Button>
+          {updates > 0 && <Button
+            onClick={() => {
+              confirmCancelButton();
+            }}
+            sx={{ mt: 2 }}
+          >
+            {cancelLabel}
+          </Button>}
         </Box>
       </Modal>
       <ConfirmModal
         open={confirmModalOpen}
         message="Delete this row?"
         handleOk={handleConfirmOK}
+        handleClose={handleConfirmCancel}
+      ></ConfirmModal>
+      <ConfirmModal
+        open={confirmCancelModalOpen}
+        message="Cancel all changes and exit to main page?"
+        handleOk={handleConfirmOK}
+        cancelText="Go Back"
         handleClose={handleConfirmCancel}
       ></ConfirmModal>
     </>

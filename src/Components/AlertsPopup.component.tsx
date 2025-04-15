@@ -114,6 +114,9 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const boxRef = useRef<HTMLDivElement>(null);
   const [sortAsc, setSortAsc] = useState<boolean>(false);
   const [closeLabel, setCloseLabel] = useState<string>("Close");
+  const [cancelLabel, setCancelLabel] = useState<string>("Cancel All");
+  const [confirmCancelModalOpen, setConfirmCancelModalOpen] = useState<boolean>(false);
+  const [updates, setUpdates] = useState<number>(0);
   const [milesDisabled, setMilesDisabled] = useState(true);
   const [dateDisabled, setDateDisabled] = useState(false);
   const [openFromTodayModal, setOpenFromTodayModal] = useState(false);
@@ -178,16 +181,26 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       setDateDisabled(false);
       setNewAlerts([]);
       setDeleted([]);
+      setUpdates(0);
+      setCancelLabel("Cancel All");
     }
   }, [open]);
 
   const handleConfirmOK = () => {
+    if (confirmCancelModalOpen) {
+      setConfirmModalOpen(false);
+      setConfirmCancelModalOpen(false);
+      handleClose([], []);
+      return;
+    }
     // Delete an alert
     const idx = alertSet.findIndex((alert) => alert.id === currentId);
     if (idx > -1) {
       setDeleted([...deleted, currentId]);
       setAlertSet([...alertSet.slice(0, idx), ...alertSet.slice(idx + 1)]);
-      setCloseLabel("Save");
+      const newCount = updates + 1;
+      setUpdates(prev => prev + 1);
+      setCloseLabel(`Save ${newCount} Changes`);
     }
     /*const statusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
     let statusList: AlertStatus[] =
@@ -204,7 +217,12 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
 
   const handleConfirmCancel = () => {
     setConfirmModalOpen(false);
+    setConfirmCancelModalOpen(false);
   };
+
+  const confirmCancelButton = () => {
+    setConfirmCancelModalOpen(true);
+  }
 
   const handleAddRow = () => {
     let rowWithId = {
@@ -221,7 +239,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     setIsEditing(true);
     setAlertSet([...alertSet, rowWithId]);
     setEditRowId(rowWithId.id);
-    setCloseLabel("Save");
+    //setCloseLabel("Save Changes");
   };
 
   const handleInputChange = (
@@ -239,7 +257,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     setAlertSet((prevLogs) =>
       prevLogs.map((row) => (row.id === id ? { ...row, [name]: value } : row))
     );
-    setCloseLabel("Save");
+    //setCloseLabel("Save Changes");
   };
 
   // TODO:  Add sorting for other columns to
@@ -256,12 +274,12 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     else
       setAlertSet((prev) => {
         return prev.sort((a: Alert, b: Alert) => {
-            if (!a.date || !b.date) return 0;
+          if (!a.date || !b.date) return 0;
           return a.date === b.date
             ? 0
             : a.date < b.date
-            ? 1
-            : -1;
+              ? 1
+              : -1;
         });
       });
   };
@@ -273,8 +291,9 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       // If not saving, throw it away.
       setAlertSet(alertSet.slice(0, -1));
     } else {
-      setCloseLabel("Save");
-      //setNewAlerts ([...newAlerts, alertSet[alertSet.length-1]]);
+      const newCount = updates + 1;
+      setUpdates(prev => prev + 1);
+      setCloseLabel(`Save ${newCount} Changes`);      //setNewAlerts ([...newAlerts, alertSet[alertSet.length-1]]);
 
       // BCM todo:
       /*const statusStr =
@@ -287,7 +306,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
         "BikeMaintTrackerAlertStatus",
         JSON.stringify(statusList)
       );*/
-      
+
 
       let addedRow = alertSet.find(row => row.id === editRowId);
       if (milesDisabled) {
@@ -298,8 +317,8 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
             const rd = addedRow.repeatDays as number;  // help typescript understand that this number is defined
             addedRow.repeatDays = Math.round(rd);
           }
-    
-          setNewAlerts ([...newAlerts, { ...addedRow, miles: undefined, repeatMiles: undefined }]);
+
+          setNewAlerts([...newAlerts, { ...addedRow, miles: undefined, repeatMiles: undefined }]);
         }
 
         setAlertSet((prevLogs) =>
@@ -324,7 +343,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
             addedRow.miles = Math.round(mi);
           }
 
-          setNewAlerts ([...newAlerts, { ...addedRow, date: undefined, repeatDays: undefined }]);
+          setNewAlerts([...newAlerts, { ...addedRow, date: undefined, repeatDays: undefined }]);
         }
 
         setAlertSet((prevLogs) =>
@@ -346,7 +365,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
           row.id === editRowId ? { ...row, date: newValue.toDate() } : row
         )
       );
-    setCloseLabel("Save");
+    //setCloseLabel("Save Changes");
   };
 
   const handleRowDelete = (id: string) => {
@@ -396,10 +415,10 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
         prev.map((row) =>
           row.id === editRowId
             ? {
-                ...row,
-                date: dayjs().add(value, "day").toDate(),
-                miles: undefined,
-              }
+              ...row,
+              date: dayjs().add(value, "day").toDate(),
+              miles: undefined,
+            }
             : row
         )
       );
@@ -527,19 +546,21 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                         >
                                           Type:
                                         </Typography>
-                                        <SmallSlider
-                                          value={dateSliderValue}
-                                          onChange={handleSliderChange}
-                                          aria-labelledby="continuous-slider"
-                                          step={1}
-                                          marks={[
-                                            { value: 0, label: "Date" },
-                                            { value: 1, label: "Miles" },
-                                          ]}
-                                          min={0}
-                                          max={1}
-                                          sx={{ padding: 1 }}
-                                        />
+                                        <Tooltip title="Set alert type">
+                                          <SmallSlider
+                                            value={dateSliderValue}
+                                            onChange={handleSliderChange}
+                                            aria-labelledby="continuous-slider"
+                                            step={1}
+                                            marks={[
+                                              { value: 0, label: "Date" },
+                                              { value: 1, label: "Miles" },
+                                            ]}
+                                            min={0}
+                                            max={1}
+                                            sx={{ padding: 1 }}
+                                          />
+                                        </Tooltip>
                                       </div>
                                     </div>
                                     <LocalizationProvider
@@ -561,7 +582,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                               </StyledTableCell>
                               <StyledTableCell align="center">
                                 {row.id === editRowId ? (
-                                  <Tooltip title="Mile to trigger">
+                                  <Tooltip title="Miles to trigger alert">
                                     <TextField
                                       label="Trigger Miles"
                                       name="miles"
@@ -703,7 +724,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
             )}
           </Typography>
           <Button disabled={isEditing} onClick={handleAddRow} sx={{ mt: 2 }}>
-            Add Alert
+            Add New Alert
           </Button>
           <Button
             disabled={isEditing}
@@ -714,12 +735,27 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
           >
             {closeLabel}
           </Button>
+          {updates > 0 && <Button
+            onClick={() => {
+              confirmCancelButton();
+            }}
+            sx={{ mt: 2 }}
+          >
+            {cancelLabel}
+          </Button>}
         </Box>
       </Modal>
       <ConfirmModal
         open={confirmModalOpen}
         message="Delete this row?"
         handleOk={handleConfirmOK}
+        handleClose={handleConfirmCancel}
+      ></ConfirmModal>
+      <ConfirmModal
+        open={confirmCancelModalOpen}
+        message="Cancel all changes and exit to main page?"
+        handleOk={handleConfirmOK}
+        cancelText="Go Back"
         handleClose={handleConfirmCancel}
       ></ConfirmModal>
     </>

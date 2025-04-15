@@ -63,25 +63,25 @@ const BikeCard: React.FC<BikeProps> = ({ bike, handleOpenAddMiles, handleOpenAdd
         <Grid container spacing={1}>
           <Grid item xs={6}>
             <Typography variant="body2">
-              <strong>Specifications:</strong> {bike.spec}
+              <strong>Specification / Components:</strong> {bike.spec}
             </Typography>
             <Typography variant="body2">
               <strong>Notes:</strong> {bike.notes}
             </Typography>
             <Typography variant="body2">
-              <strong>Purchased:</strong> {bike.monthYearPurchased.toLocaleDateString()}
+              <strong>Date Purchased:</strong> {bike.monthYearPurchased.toLocaleDateString()}
             </Typography>
           </Grid>
           <Grid item xs={6}>
             <Typography variant="body2">
-              <strong>Last Serviced:</strong>
+              <strong>Date of Last Service:</strong>
               {bike.dateLastServiced.toLocaleDateString()}
             </Typography>
             <Typography variant="body2">
-              <strong>Miles Last Serviced:</strong> {bike.milesLastServiced}
+              <strong>Miles When Last Serviced:</strong> {bike.milesLastServiced}
             </Typography>
             <Typography variant="body2">
-              <strong>Current Miles:</strong> {bike.totalMiles}
+              <strong>Total Miles Ridden:</strong> {bike.totalMiles}
             </Typography>
           </Grid>
         </Grid>

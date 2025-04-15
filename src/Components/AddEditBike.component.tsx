@@ -132,7 +132,7 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
               sx={{ mb: 2 }}
             />
             <TextField
-              label="Spec"
+              label="Specification / Components"
               name="spec"
               variant="outlined"
               fullWidth
@@ -151,14 +151,14 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
             />
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DesktopDatePicker
-                label="Date Purchased"
+                label="Date of Bike Purchase"
                 name="monthYearPurchased"
                 value={dayjs(formData.monthYearPurchased)}
                 onChange={handleDateChangeMYPurchased}
                 sx={{ mb: 2 }}
               />
               <DesktopDatePicker
-                label="Date Last Serviced"
+                label="Date of Last Service"
                 name="dateLastServiced"
                 value={dayjs(formData.dateLastServiced)}
                 onChange={handleDateChangeLastServiced}
@@ -168,7 +168,7 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
             <div className="form-group-container">
               <div className="left">
                 <TextField
-                  label="Miles Last Serviced"
+                  label="Miles When Last Serviced"
                   name="milesLastServiced"
                   variant="outlined"
                   type="number"
@@ -182,7 +182,7 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
               </div>
               <div className="right">
                 <TextField
-                  label="Total Miles"
+                  label="Total Miles Ridden"
                   name="totalMiles"
                   variant="outlined"
                   type="number"

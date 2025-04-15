@@ -10,6 +10,7 @@ Purpose:  A simple confirmation box, with a custom message.
 interface ConfirmModalProps {
   open: boolean;
   message: string;
+  cancelText? : string;
   handleClose: () => void;
   handleOk: () => void;
 }
@@ -25,7 +26,7 @@ const style = {
   p: 4,
 };
 
-const ConfirmModal: React.FC<ConfirmModalProps> = ({ open, message, handleClose, handleOk }) => {
+const ConfirmModal: React.FC<ConfirmModalProps> = ({ open, message, cancelText, handleClose, handleOk }) => {
   return (
     <Modal
       open={open}
@@ -45,7 +46,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({ open, message, handleClose,
             OK
           </Button>
           <Button variant="contained" color="secondary" onClick={handleClose}>
-            Cancel
+            {cancelText && cancelText.length > 0 ? cancelText : "Cancel"}
           </Button>
         </Box>
       </Box>
