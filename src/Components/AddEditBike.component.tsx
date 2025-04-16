@@ -5,6 +5,7 @@ import {
   Typography,
   Button,
   TextField,
+  Tooltip,
 } from "@mui/material";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -69,10 +70,10 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
     const { name, value } = e.target;
     if (name === "milesLastServiced") {
       !isWholeNumber(value) ? setDecimalErrorLastServ(true) : setDecimalErrorLastServ(false);
-    } 
+    }
     if (name === "totalMiles") {
       !isWholeNumber(value) ? setDecimalErrorTotal(true) : setDecimalErrorTotal(false);
-    }     setFormData({ ...formData, [name]: value });
+    } setFormData({ ...formData, [name]: value });
   };
 
   const handleDateChangeMYPurchased = (newValue: Dayjs | null) => {
@@ -90,7 +91,7 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
       disableEscapeKeyDown
       aria-labelledby="modal-title"
       aria-describedby="modal-description"
-      BackdropProps={{ onClick: (event) => event.stopPropagation(),}}
+      BackdropProps={{ onClick: (event) => event.stopPropagation(), }}
     >
       <Box sx={style}>
         <Typography id="modal-title" variant="h6" component="h2">
@@ -167,32 +168,36 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
             </LocalizationProvider>
             <div className="form-group-container">
               <div className="left">
-                <TextField
-                  label="Miles When Last Serviced"
-                  name="milesLastServiced"
-                  variant="outlined"
-                  type="number"
-                  error={decimalErrorLastServ}
-                  helperText={decimalErrorLastServ ? 'Only use whole numbers.' : ''}
-                  fullWidth
-                  value={formData.milesLastServiced}
-                  onChange={handleInputChange}
-                  sx={{ mb: 2 }}
-                />
+                <Tooltip title="Helps you keep track of how many miles it has been since the last service on this bike.">
+                  <TextField
+                    label="Miles When Last Serviced"
+                    name="milesLastServiced"
+                    variant="outlined"
+                    type="number"
+                    error={decimalErrorLastServ}
+                    helperText={decimalErrorLastServ ? 'Only use whole numbers.' : ''}
+                    fullWidth
+                    value={formData.milesLastServiced}
+                    onChange={handleInputChange}
+                    sx={{ mb: 2 }}
+                  />
+                </Tooltip>
               </div>
               <div className="right">
-                <TextField
-                  label="Total Miles Ridden"
-                  name="totalMiles"
-                  variant="outlined"
-                  type="number"
-                  error={decimalErrorTotal}
-                  helperText={decimalErrorTotal ? 'Only use whole numbers.' : ''}
-                  fullWidth
-                  value={formData.totalMiles}
-                  onChange={handleInputChange}
-                  sx={{ mb: 2 }}
-                />
+                <Tooltip title="Total miles is one way alerts are triggered, indicating that a bike needs maintenance.">
+                  <TextField
+                    label="Total Miles Ridden"
+                    name="totalMiles"
+                    variant="outlined"
+                    type="number"
+                    error={decimalErrorTotal}
+                    helperText={decimalErrorTotal ? 'Only use whole numbers.' : ''}
+                    fullWidth
+                    value={formData.totalMiles}
+                    onChange={handleInputChange}
+                    sx={{ mb: 2 }}
+                  />
+                </Tooltip>
               </div>
             </div>
           </form>

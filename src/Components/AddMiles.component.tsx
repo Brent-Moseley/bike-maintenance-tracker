@@ -41,10 +41,10 @@ const AddMilesPopup: React.FC<PopupModalProps> = ({
 
   const handleCloseModal = (submit: boolean) => {
     let val = parseFloat(numberValue);
-    submit && val > 0 ? 
-    handleClose(val)
-    : 
-    handleClose(0);
+    submit && val > 0 ?
+      handleClose(val)
+      :
+      handleClose(0);
   }
 
   return (
@@ -61,7 +61,11 @@ const AddMilesPopup: React.FC<PopupModalProps> = ({
         <Typography id="modal-description" sx={{ mt: 2 }}>
           {
             <Box sx={{ width: "98%" }}>
-              How many miles on this ride?
+              How many miles on this ride? < br />
+              <Typography variant="body1" sx={{ fontStyle: "italic", fontSize: "13px", color: "saddlebrown" }}>
+                This will be added to the total miles for the bike.
+                Total miles are one way alerts trigger, indicating the need for maintenance.
+              </Typography>
               <TextField
                 label=""
                 type="number"
