@@ -153,7 +153,6 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
 
     let newset: Alert[] = [];
     for (let al of set) {
-      debugger;
       const status = BikeService.getAlertStatus(al.id);
       al.status = status;
       newset.push(al);
@@ -249,9 +248,11 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     let { name, value } = e.target;
     switch (name) {
       case "miles":
-      case "repeatMiles":
       case "repeatDays":
         value = parseInt(value);
+        break;
+      case "repeatDays":
+        value = parseFloat(value);
         break;
     }
     setAlertSet((prevLogs) =>
@@ -483,10 +484,10 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                           Trigger Miles
                         </StyledTableCellHeader>
                         <StyledTableCellHeader align="center">
-                          Repeat Days
+                          Repeating Months
                         </StyledTableCellHeader>
                         <StyledTableCellHeader align="center">
-                          Repeat Miles
+                          Repeating Miles
                         </StyledTableCellHeader>
                         <StyledTableCellHeader align="left">
                           Description
@@ -602,9 +603,9 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                               </StyledTableCell>
                               <StyledTableCell align="center">
                                 {row.id === editRowId ? (
-                                  <Tooltip title="Repeat every X days">
+                                  <Tooltip title="Repeat every X months (can use decimal)">
                                     <TextField
-                                      label="Next Days"
+                                      label="Repeating Months"
                                       name="repeatDays"
                                       type="number"
                                       size="small"
@@ -617,14 +618,14 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                     />
                                   </Tooltip>
                                 ) : (
-                                  row.repeatDays // BCM if repeat days > 90, show as months rounded 
+                                  row.repeatDays
                                 )}
                               </StyledTableCell>
                               <StyledTableCell align="center">
                                 {row.id === editRowId ? (
                                   <Tooltip title="Repeat every Y miles">
                                     <TextField
-                                      label="Next Miles"
+                                      label="Repeating Miles"
                                       name="repeatMiles"
                                       size="small"
                                       type="number"

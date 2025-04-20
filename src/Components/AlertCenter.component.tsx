@@ -463,7 +463,6 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
       const normal = sortedAlerts.filter((alert) => !alert.isUpcoming);
       const showAll = include !== undefined ? include : includeUpcoming;
       const upcoming = showAll ? sortedAlerts.filter((alert) => alert.isUpcoming) : [];
-      debugger;
       setMasterAlerts([...normal, ...upcoming]);
 
       if (isFirstTriggered) {
@@ -477,7 +476,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
           save = true;
         } else if (alert.date && alert.repeatDays && alert.repeatDays > 0) {
           const current = dayjs(alert.date);
-          cloned.date = current.add(alert.repeatDays, "day").toDate();
+          cloned.date = current.add(Math.round(alert.repeatDays * 30.4), "day").toDate();
           save = true;
         }
         if (save) {
@@ -531,7 +530,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
   }
 
   // BCM Make alert.decription below clickable, then do a lookup to match description, and if match, show popup with long description.
-   
+
 
   return (
     <Card variant="outlined" sx={{ margin: 2 }}>

@@ -281,6 +281,8 @@ export const BikeService = {
       const response = await axios.get<Alert[]>(API_URL + '/Bike/GetAlerts?user=' + user + '&bike=' + bikeId);
       for (let alert of response.data) {
         if (alert.date) alert.date = new Date(alert.date);
+        // Auto convert repeat days to months, with one decimal point precision
+        if (alert.repeatDays) alert.repeatDays = parseFloat((alert.repeatDays / 30.4).toFixed(1));
       }
       console.log(response.data);
       return response.data;
@@ -295,6 +297,9 @@ export const BikeService = {
     // let set = await this.getAlerts(alert.userID, alert.bikeID);
     // set.push(alert);
     // const success = await this.setAlerts(alert.userID, alert.bikeID, set);
+    // Auto convert repeat months back to days, rounded to nearest day
+    if (alert.repeatDays) alert.repeatDays = parseFloat((alert.repeatDays * 30.4).toFixed(0));
+
     await axios.post(API_URL + '/Bike/AddAlerts', [alert])
       .then(response => {
         console.log('Response:', response.data); // Handle successful response
@@ -310,6 +315,11 @@ export const BikeService = {
     added: Alert[],
     deleted: string[],
   ): Promise<boolean> {
+    for (let alert of added) {
+      // Auto convert repeat months back to days, rounded to nearest day
+      if (alert.repeatDays) alert.repeatDays = parseFloat((alert.repeatDays * 30.4).toFixed(0));
+    }
+
     await axios.post(API_URL + '/Bike/AddAlerts', added)
       .then(response => {
         console.log('Response:', response.data); // Handle successful response
@@ -372,7 +382,7 @@ export const BikeService = {
     //this.saveAll(bikeData);
   },
   populateAlertStatuses: async function (user: string) {
-    console.log ("   &&&&& populate alert status");
+    console.log("   &&&&& populate alert status");
     if (user === "") return;
     try {
       const response = await axios.get<AlertStatus[]>(API_URL + '/Bike/GetAlertStatus/' + user);
@@ -414,7 +424,7 @@ export const BikeService = {
     this.saveAlertTable(user);
   },
   addAlertStatus: function (user: string, id: string, status: string) {
-    alertStatusTable.push({id: id, status: status});
+    alertStatusTable.push({ id: id, status: status });
     console.log(`     add alert status for ${id}, ${status}`);
     this.saveAlertTable(user);
   },
