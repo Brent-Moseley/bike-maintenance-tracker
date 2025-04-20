@@ -133,6 +133,7 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
     setOpen(false);
   };
 
+  // BCM  do something like this after adding all auto alerts.  Just need to create the set of updated
   const handleCloseAlerts = async (updated: Alert[], deleted: string[]) => {
     await BikeService.setAlerts(
       updated,

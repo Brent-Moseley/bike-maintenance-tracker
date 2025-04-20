@@ -15,6 +15,7 @@ import {
   Box,
   Checkbox,
   FormControlLabel,
+  ButtonGroup,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { Alert, Bike, BikeService } from "../services/BikeService";
@@ -92,12 +93,172 @@ interface AlertCenterProps {
   toggle: boolean;
 }
 
+/*  Example of finding out if date is on an interval (ie every 90 days):
+
+import dayjs from "dayjs";
+
+const isDateInInterval = (startDate, intervalDays, givenDate) => {
+  const start = dayjs(startDate);
+  const date = dayjs(givenDate);
+
+  // Calculate the difference in days
+  const diffInDays = date.diff(start, "day");
+
+  // Check if the difference is divisible by the interval
+  return diffInDays >= 0 && diffInDays % intervalDays === 0;
+};
+
+// Example usage:
+const startDate = "2025-04-15";
+const intervalDays = 8;
+const givenDate = "2025-04-23";
+
+console.log(isDateInInterval(startDate, intervalDays, givenDate)); // true or false
+
+If user wants to enable this, need to save the start date and start miles.  Alert cycle can then compare
+against current date and miles.
+-- or -- can just add these as regular alerts for the user, repeating.  User can delete any they don't want - more control.
+For suspension service / check X number of hours, 
+
+https://www.justtherightgear.com/service
+
+
+Instead, just use the alert system already created, adding regular alerts based on a chart
+Need an internal chart of miles or months frequency and the text to display.
+
+560 miles, consider a lower leg service (assumes 9mph average all riding).
+1350, do full shock and fork service.
+
+Chart needs:  repeatMiles, repeatDays, description, longDescription.
+Do UI filter where if repeatDays > 90, display as months.
+Also add mouseover helper text for the standard alerts.
+
+*/
+
+const serviceIntervalsMtn = [
+  {
+    repeatMiles: 560,
+    repeatDays: undefined,
+    description: "Consider fork lower leg service",
+    longDescription: "Depending on usage, consider a lower leg service for the fork. This involves cleaning the inside of the lower legs and replacing the bath oil of the fork."
+  },
+  {
+    repeatMiles: 1350,
+    repeatDays: undefined,
+    description: "Consider full shock and fork service",
+    longDescription: "Full fork and shock service, including replacing seals, damper oil, and inspecting internal components. This interval may vary based on the type of riding and conditions."
+  },
+  {
+    repeatMiles: 125,
+    repeatDays: undefined,
+    description: "Check chain life and wear using a chain checker tool.",
+    longDescription: "A well-maintained chain will shift better and extend the life of other drivetrain components."
+  },
+  {
+    repeatMiles: 750,
+    repeatDays: undefined,
+    description: "Check cassette and chainrings for wear.",
+    longDescription: "Look for worn or missing teeth. Poor shifting and a chain that 'skips' are both indicators of a worn cassette."
+  },
+  {
+    repeatMiles: undefined,
+    repeatDays: 365,
+    description: "Check derailleur cables and housing.",
+    longDescription: "Worn cables can lead to imprecise shifting and decreased performance as well as shifting that takes too much physical force."
+  },
+  {
+    repeatMiles: undefined,
+    repeatDays: 274,
+    description: "Check derailleurs for shifting performance.",
+    longDescription: "Check for proper alignment and function. Inspect jockey wheels for wear and replace if needed"
+  },
+  {
+    repeatMiles: undefined,
+    repeatDays: 548,
+    description: "Inspect bottom bracket.",
+    longDescription: "Unusual noises or excessive play may indicate a need for replacement."
+  },
+  {
+    repeatMiles: undefined,
+    repeatDays: 548,
+    description: "Inspect pedals.",
+    longDescription: "Ensure smooth rotation and replace if there is excessive play or grinding noises.  Test that shoes can clip in with the right tension."
+  },
+  {
+    repeatMiles: undefined,
+    repeatDays: 183,
+    description: "Check cable tension and indexing.",
+    longDescription: "Ensure proper tension and smooth, precise, quick gear shifting."
+  },
+  {
+    repeatMiles: 200,
+    repeatDays: undefined,
+    description: "Inspect brake pads and rotors for wear.",
+    longDescription: "Generally, pads should be replaced once they are down to one millimeter or less of material. Pads may need to be removed to adequately inspect. Rotors should be free from grooves and should be above the manufacturer recommended minimum thickness."
+  },
+  {
+    repeatMiles: undefined,
+    repeatDays: 183,
+    description: "Inspect brake cables.",
+    longDescription: "Look for wear, corrosion, or fraying. Replace if there are any signs of damage to ensure responsive braking."
+  },
+  {
+    repeatMiles: undefined,
+    repeatDays: 548,
+    description: "Inspect bottom bracket.",
+    longDescription: "Unusual noises or excessive play may indicate a need for replacement."
+  },
+  {
+    repeatMiles: undefined,
+    repeatDays: 730,
+    description: "Replace brake fluid on hydraulic brakes.",
+    longDescription: "Follow manufacturers recommendations."
+  },
+  {
+    repeatMiles: 200,
+    repeatDays: undefined,
+    description: "Inspect tires.",
+    longDescription: "Look for wear, worn or torn off knobs, cuts in sidewalls, bulging, or other damage. For good traction and safe riding, always replace tires that are worn or damaged."
+  },
+  {
+    repeatMiles: undefined,
+    repeatDays: 90,
+    description: "Check tire sealant, if used.",
+    longDescription: "To avoid any suprises and potential long walks back to the car, make sure both tires have adequate sealant."
+  },
+  {
+    repeatMiles: undefined,
+    repeatDays: 548,
+    description: "Inspect bottom bracket.",
+    longDescription: "Unusual noises or excessive play may indicate a need for replacement."
+  },
+  {
+    repeatMiles: undefined,
+    repeatDays: 183,
+    description: "Check all bolts and fasteners for appropriate tightness.",
+    longDescription: "Look bolts can rapidly become big problems on the trail, and lead to unsafe riding. Use a torque when, especially with carbon frames and components."
+  },
+  {
+    repeatMiles: undefined,
+    repeatDays: 365,
+    description: "Inspect headset, bottom bracket, hubs, and frame linkage bearings.",
+    longDescription: "Replace if there is noticable wear or they do not move freely."
+  },
+];
+
+const serviceIntervalsGravel = [];
+
+const serviceIntervalsRoad = [];
+
+
 const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
   const [masterAlerts, setMasterAlerts] = useState<TriggeredAlert[]>([]);
   const savedIncludeUpcoming = localStorage.getItem("includeUpcoming");
   const [includeUpcoming, setIncludeUpcoming] = useState<boolean>(
     savedIncludeUpcoming && savedIncludeUpcoming === "true" ? true : false
   );
+  const [showAddServiceInt, setShowAddServiceInt] = useState<boolean>(true);   // default to false
+  const [showingButtonsAddServiceInt, setShowingButtonsAddServiceInt] = useState<boolean>(false);
 
   useEffect(() => {
     // when the parent toggles this, run Alert cycle.
@@ -334,134 +495,231 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
       });
     }
 
-  //}
-  // localStorage.setItem(
-  //   "BikeMaintTrackerAlertStatus",
-  //   JSON.stringify(alertStatusSet)
-  // );
-};
+    //}
+    // localStorage.setItem(
+    //   "BikeMaintTrackerAlertStatus",
+    //   JSON.stringify(alertStatusSet)
+    // );
+  };
 
-// 15 minute timer:
-const timer = setInterval(() => {
-  console.log("interval triggered");
-  runAlertCycle(bikes);
-}, 900000);
+  // 15 minute timer:
+  const timer = setInterval(() => {
+    console.log("interval triggered");
+    runAlertCycle(bikes);
+  }, 900000);
 
-return (
-  <Card variant="outlined" sx={{ margin: 2 }}>
-    <CardContent>
-      <>
-        <TableContainer component={Paper}>
-          {/* <Typography variant="h6" component="div" sx={{ padding: 2 }}>
+  const handleAddSuggestedMtn = () => {
+
+  };
+
+  const handleAddSuggestedGravel = () => {
+
+  };
+
+  const handleAddSuggestedRoad = () => {
+
+  };
+
+  const handleAddSuggestedEnable = () => {
+    setShowingButtonsAddServiceInt(true);
+    setShowAddServiceInt(false);
+  }
+
+  const cancelAddSuggested = () => {
+    setShowingButtonsAddServiceInt(false);
+    setShowAddServiceInt(true);
+  }
+
+  // BCM Make alert.decription below clickable, then do a lookup to match description, and if match, show popup with long description.
+   
+
+  return (
+    <Card variant="outlined" sx={{ margin: 2 }}>
+      <CardContent>
+        <>
+          <TableContainer component={Paper}>
+            {/* <Typography variant="h6" component="div" sx={{ padding: 2 }}>
               Alert Center
             </Typography> */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: 2,
-              //border: '1px solid #ccc',
-              //borderRadius: '4px',
-            }}
-          >
-            <Typography variant="h6" component="div" sx={{ padding: 2 }}>
-              Alert Center
-            </Typography>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={includeUpcoming}
-                  onChange={handleCheckboxChangeUpcoming}
-                  name="rightAlignedCheckbox"
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: 2,
+                //border: '1px solid #ccc',
+                //borderRadius: '4px',
+              }}
+            >
+              <Typography variant="h6" component="div" sx={{ padding: 2 }}>
+                Alert Center
+              </Typography>
+              <Box
+                sx={{
+                  position: 'relative',
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2, // Space between button and checkbox
+                  padding: "14px", // Adds inner space
+                  border: "1px solid #e0e0e0", // Very light border
+                  borderRadius: "8px", // Optional: Rounded corners for aesthetics
+                }}
+              >
+
+                {showAddServiceInt && <Button
+                  variant="contained"
+                  size="small"
                   sx={{
-                    transform: "scale(0.8)", // Adjust the scale to make the checkbox smaller
+                    margin: "3px",
+                    minWidth: "58px", // Reduce the minimum width
+                    height: "35px",   // Set a small height
+                    padding: "2px 5px", // Reduce inner spacing
+                    // Make text smaller
+                  }}
+                  onClick={handleAddSuggestedEnable}
+                >
+                  <Typography sx={{ lineHeight: "1.2", fontSize: "11.5px", }}>
+                    Add Recommended<br /> Service Intervals
+                  </Typography>
+                </Button>}
+                {showingButtonsAddServiceInt && <Box
+                  sx={{
+                    position: 'absolute', // Positions it relative to the nearest positioned ancestor
+                    top: 0,
+                    left: -280,
+                    zIndex: 100,
+                    width: 450,
+                    bgcolor: 'white',
+                    border: "3px solid #ccc",
+                    boxShadow: "5px 5px 10px rgba(0, 0, 0, 1)",
+                    padding: "6px",
+                    borderRadius: "8px",
+                    display: "inline-block", // Keeps the box size tight around content
+                    textAlign: "center", // Aligns label and button group
+                  }}
+                >
+                  <Typography variant="subtitle1" sx={{ marginBottom: "8px" }}>
+                    Add Recommended Service Intervals
+                  </Typography>
+                  <ButtonGroup variant="text">
+                    <Button variant="contained" size="small" sx={{ margin: '3px' }} onClick={handleAddSuggestedMtn}>
+                      Mountain Bike
+                    </Button>
+                    <Button variant="contained" size="small" sx={{ margin: '3px' }} onClick={handleAddSuggestedGravel}>
+                      Gravel Bike
+                    </Button>
+                    <Button variant="contained" size="small" sx={{ margin: '3px' }} onClick={handleAddSuggestedRoad}>
+                      Road Bike
+                    </Button>
+                    <Button variant="contained" size="small" sx={{ margin: '3px' }} onClick={cancelAddSuggested}>
+                      Cancel
+                    </Button>
+                  </ButtonGroup>
+                </Box>}
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={includeUpcoming}
+                      onChange={handleCheckboxChangeUpcoming}
+                      name="rightAlignedCheckbox"
+                      sx={{
+                        transform: "scale(0.8)", // Adjust the scale to make the checkbox smaller
+                      }}
+                    />
+                  }
+                  label={
+                    <Typography variant="body2">Include Upcoming</Typography>
+                  }
+                  sx={{
+                    marginRight: 0,
                   }}
                 />
-              }
-              label={
-                <Typography variant="body2">Include Upcoming</Typography>
-              }
-              sx={{
-                marginRight: 0,
-              }}
-            />
-          </Box>
-          {masterAlerts.length > 0 ? (
-            <Table sx={{ minWidth: 650 }} aria-label="alerts table">
-              <TableHead>
-                <TableRow>
-                  <HeaderCell sx={{ width: 140 }}>Bike</HeaderCell>
-                  <HeaderCell sx={{ width: 280 }}>Description</HeaderCell>
-                  <HeaderCell sx={{ width: 220 }}>Reason</HeaderCell>
-                  <HeaderCell align="right">Actions</HeaderCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {masterAlerts.map((alert) => (
-                  <CustomTableRow key={alert.alertID}>
-                    <CustomTableCell
-                      sx={{
-                        fontStyle: alert.isUpcoming ? "italic" : "normal",
-                        color: alert.isUpcoming ? "#E19024" : "black",
-                        fontWeight: alert.isUpcoming ? "bold" : "normal",
-                      }}
-                    >
-                      {alert.bikeName}
-                    </CustomTableCell>
-                    <CustomTableCell
-                      sx={{
-                        fontStyle: alert.isUpcoming ? "italic" : "normal",
-                        color: alert.isUpcoming ? "Cadmium Yellow" : "black",
-                      }}
-                    >
-                      {alert.description}
-                    </CustomTableCell>
-                    <CustomTableCell
-                      sx={{
-                        fontStyle: alert.isUpcoming ? "italic" : "normal",
-                        color: alert.isUpcoming ? "Cadmium Yellow" : "black",
-                      }}
-                    >
-                      {alert.reason}
-                    </CustomTableCell>
-                    <CustomTableCell align="right">
-                      {alert.isNew ? (
-                        <OrangeButton
-                          variant="contained"
-                          size="small" // Make the button small
-                          onClick={() => handleNewClick(alert.alertID)}
-                          sx={{ marginLeft: 1 }} // Add margin to separate buttons
-                        >
-                          New
-                        </OrangeButton>
-                      ) : !alert.isUpcoming ? (
-                        <SmallButton
-                          variant="contained"
-                          color="primary"
-                          size="small" // Make the button small
-                          onClick={() => handleAlertOkClick(alert.alertID)}
-                        >
-                          OK
-                        </SmallButton>
-                      ) : (
-                        <span></span>
-                      )}
-                    </CustomTableCell>
-                  </CustomTableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <Typography variant="body2" sx={{ padding: 1 }}>
-              There are no active alerts.
-            </Typography>
-          )}
-        </TableContainer>
-      </>
-    </CardContent>
-  </Card>
-);
+              </Box>
+            </Box>
+            {masterAlerts.length > 0 ? (
+              <Table sx={{ minWidth: 650 }} aria-label="alerts table">
+                <TableHead>
+                  <TableRow>
+                    <HeaderCell sx={{ width: 140 }}>Bike</HeaderCell>
+                    <HeaderCell sx={{ width: 280 }}>Description</HeaderCell>
+                    <HeaderCell sx={{ width: 220 }}>Reason</HeaderCell>
+                    <HeaderCell align="right">Actions</HeaderCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {masterAlerts.map((alert) => (
+                    <CustomTableRow key={alert.alertID}>
+                      <CustomTableCell
+                        sx={{
+                          fontStyle: alert.isUpcoming ? "italic" : "normal",
+                          color: alert.isUpcoming ? "#E19024" : "black",
+                          fontWeight: alert.isUpcoming ? "bold" : "normal",
+                        }}
+                      >
+                        {alert.bikeName}
+                      </CustomTableCell>
+                      <CustomTableCell
+                        sx={{
+                          fontStyle: alert.isUpcoming ? "italic" : "normal",
+                          color: alert.isUpcoming ? "Cadmium Yellow" : "black",
+                        }}
+                      >
+                        {alert.description}
+                      </CustomTableCell>
+                      <CustomTableCell
+                        sx={{
+                          fontStyle: alert.isUpcoming ? "italic" : "normal",
+                          color: alert.isUpcoming ? "Cadmium Yellow" : "black",
+                        }}
+                      >
+                        {alert.reason}
+                      </CustomTableCell>
+                      <CustomTableCell align="right">
+                        {alert.isNew ? (
+                          <OrangeButton
+                            variant="contained"
+                            size="small" // Make the button small
+                            onClick={() => handleNewClick(alert.alertID)}
+                            sx={{ marginLeft: 1 }} // Add margin to separate buttons
+                          >
+                            New
+                          </OrangeButton>
+                        ) : !alert.isUpcoming ? (
+                          <SmallButton
+                            variant="contained"
+                            color="primary"
+                            size="small" // Make the button small
+                            onClick={() => handleAlertOkClick(alert.alertID)}
+                          >
+                            OK
+                          </SmallButton>
+                        ) : (
+                          <span></span>
+                        )}
+                      </CustomTableCell>
+                    </CustomTableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <Typography variant="body2" sx={{ padding: 1 }}>
+                There are no active alerts.
+              </Typography>
+            )}
+          </TableContainer>
+        </>
+      </CardContent>
+    </Card>
+  );
 };
 
 export default AlertCenter;
+
+
+/*
+
+The counter measure is to build new confidence!!  Build my portfolio app to make it a great app and get a user
+community going on it.  Dress very professionally, be very attractive, and work on all the ways to be attractive
+to a new employer.  Be bold, think bold and remember all I have done!  Remember who I am!  
+
+*/

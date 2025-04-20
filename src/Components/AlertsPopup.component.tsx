@@ -617,7 +617,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                     />
                                   </Tooltip>
                                 ) : (
-                                  row.repeatDays
+                                  row.repeatDays // BCM if repeat days > 90, show as months rounded 
                                 )}
                               </StyledTableCell>
                               <StyledTableCell align="center">
