@@ -318,14 +318,14 @@ export const BikeService = {
   // https://stackoverflow.com/questions/7374731/net-save-datetime-and-completely-ignore-timezone
   // https://www.reddit.com/r/csharp/comments/10jl7tl/date_displays_differently_between_timezones/
   // **  https://softwareengineering.stackexchange.com/questions/209421/best-practice-to-store-datetime-based-on-timezone
-  
+
   setAlerts: async function (
     added: Alert[],
     deleted: string[],
   ): Promise<boolean> {
     for (let alert of added) {
       debugger;
-      //if (alert.date) alert.isoDate = alert.date.toISOString(); 
+      //if (alert.date) alert.date = alert.date.toISOString();
       // Auto convert repeat months back to days, rounded to nearest day
       if (alert.repeatDays) alert.repeatDays = parseFloat((alert.repeatDays * 30.4).toFixed(0));
     }
