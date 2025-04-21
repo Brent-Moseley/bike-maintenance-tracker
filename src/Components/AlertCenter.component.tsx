@@ -265,6 +265,11 @@ const serviceIntervalsMtn = [
   },
 ];
 
+const getLongDescription = (desc: string) => {
+  let text = serviceIntervalsMtn.find((item) => item.description === desc);
+  return text ? text.longDescription : ""; 
+};
+
 const serviceIntervalsGravel = [];
 
 const serviceIntervalsRoad = [];
@@ -792,7 +797,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
   );
 };
 
-export default AlertCenter;
+export { AlertCenter, getLongDescription };
 
 /*
 

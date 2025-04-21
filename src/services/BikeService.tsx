@@ -49,6 +49,7 @@ export interface Alert {
   bikeID: string;
   bikeName: string;
   date?: Date;
+  //isoDate?: string;
   description: string;
   miles?: number;
   repeatMiles?: number;
@@ -298,6 +299,7 @@ export const BikeService = {
     // set.push(alert);
     // const success = await this.setAlerts(alert.userID, alert.bikeID, set);
     // Auto convert repeat months back to days, rounded to nearest day
+    //if (alert.date) alert.isoDate = alert.date.toISOString(); 
     if (alert.repeatDays) alert.repeatDays = parseFloat((alert.repeatDays * 30.4).toFixed(0));
 
     await axios.post(API_URL + '/Bike/AddAlerts', [alert])
@@ -323,6 +325,7 @@ export const BikeService = {
   ): Promise<boolean> {
     for (let alert of added) {
       debugger;
+      //if (alert.date) alert.isoDate = alert.date.toISOString(); 
       // Auto convert repeat months back to days, rounded to nearest day
       if (alert.repeatDays) alert.repeatDays = parseFloat((alert.repeatDays * 30.4).toFixed(0));
     }

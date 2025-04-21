@@ -23,7 +23,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import ConfirmModal from "./Confirm.component";
 import FromTodayModal from "./FromToday.component";
-import { AlertStatus } from "./AlertCenter.component";
+import { AlertCenter, AlertStatus, getLongDescription } from "./AlertCenter.component";
 
 /*
 
@@ -134,6 +134,8 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
 
   const today = dayjs();
   const tomorrow = today.add(1, "day");
+
+  //const longDescriptions: string[] = ["one", "two", "three", "four", "five"];
 
   const newRow: Alert = {
     id: uuidv4(),
@@ -502,7 +504,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {alertSet.map((row) => {
+                      {alertSet.map((row, idx) => {
                         if (row.status === "created") {
                           return (
                             <StyledTableRow key={row.id}>
@@ -701,7 +703,9 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                       alignItems: "center",
                                     }}
                                   >
-                                    {row.description}
+                                    <Tooltip title={<span style={{ fontSize: "0.8rem" }}>{getLongDescription(row.description)}</span>}>
+                                      <span>{row.description}</span>
+                                    </Tooltip>
                                     <Tooltip title="Delete Row">
                                       <Button
                                         style={{

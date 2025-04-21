@@ -9,7 +9,7 @@ import AddEditBikePopup from "./AddEditBike.component";
 import NewBikeDayModal from "./NewBikeDay.component";
 import { v4 as uuidv4 } from "uuid";
 import AlertsPopup from "./AlertsPopup.component";
-import AlertCenter from "./AlertCenter.component";
+import { AlertCenter } from "./AlertCenter.component";
 import UserLoginPopup from "./UserLogin.component";
 
 /*
