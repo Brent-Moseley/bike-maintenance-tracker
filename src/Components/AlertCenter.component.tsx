@@ -89,6 +89,7 @@ const fadeInOut = keyframes`
 
 interface AlertCenterProps {
   bikes: Bike[];
+  currentBikeId: number;
   user: string;
   toggle: boolean;
 }
@@ -140,109 +141,127 @@ const serviceIntervalsMtn = [
     repeatMiles: 560,
     repeatDays: undefined,
     description: "Consider fork lower leg service",
-    longDescription: "Depending on usage, consider a lower leg service for the fork. This involves cleaning the inside of the lower legs and replacing the bath oil of the fork."
+    longDescription:
+      "Depending on usage, consider a lower leg service for the fork. This involves cleaning the inside of the lower legs and replacing the bath oil of the fork.",
   },
   {
     repeatMiles: 1350,
     repeatDays: undefined,
     description: "Consider full shock and fork service",
-    longDescription: "Full fork and shock service, including replacing seals, damper oil, and inspecting internal components. This interval may vary based on the type of riding and conditions."
+    longDescription:
+      "Full fork and shock service, including replacing seals, damper oil, and inspecting internal components. This interval may vary based on the type of riding and conditions.",
   },
   {
     repeatMiles: 125,
     repeatDays: undefined,
     description: "Check chain life and wear using a chain checker tool.",
-    longDescription: "A well-maintained chain will shift better and extend the life of other drivetrain components."
+    longDescription:
+      "A well-maintained chain will shift better and extend the life of other drivetrain components.",
   },
   {
     repeatMiles: 750,
     repeatDays: undefined,
     description: "Check cassette and chainrings for wear.",
-    longDescription: "Look for worn or missing teeth. Poor shifting and a chain that 'skips' are both indicators of a worn cassette."
+    longDescription:
+      "Look for worn or missing teeth. Poor shifting and a chain that 'skips' are both indicators of a worn cassette.",
   },
   {
     repeatMiles: undefined,
     repeatDays: 365,
     description: "Check derailleur cables and housing.",
-    longDescription: "Worn cables can lead to imprecise shifting and decreased performance as well as shifting that takes too much physical force."
+    longDescription:
+      "Worn cables can lead to imprecise shifting and decreased performance as well as shifting that takes too much physical force.",
   },
   {
     repeatMiles: undefined,
     repeatDays: 274,
     description: "Check derailleurs for shifting performance.",
-    longDescription: "Check for proper alignment and function. Inspect jockey wheels for wear and replace if needed"
+    longDescription:
+      "Check for proper alignment and function. Inspect jockey wheels for wear and replace if needed",
   },
   {
     repeatMiles: undefined,
     repeatDays: 548,
     description: "Inspect bottom bracket.",
-    longDescription: "Unusual noises or excessive play may indicate a need for replacement."
+    longDescription:
+      "Unusual noises or excessive play may indicate a need for replacement.",
   },
   {
     repeatMiles: undefined,
     repeatDays: 548,
     description: "Inspect pedals.",
-    longDescription: "Ensure smooth rotation and replace if there is excessive play or grinding noises.  Test that shoes can clip in with the right tension."
+    longDescription:
+      "Ensure smooth rotation and replace if there is excessive play or grinding noises.  Test that shoes can clip in with the right tension.",
   },
   {
     repeatMiles: undefined,
     repeatDays: 183,
     description: "Check cable tension and indexing.",
-    longDescription: "Ensure proper tension and smooth, precise, quick gear shifting."
+    longDescription:
+      "Ensure proper tension and smooth, precise, quick gear shifting.",
   },
   {
     repeatMiles: 200,
     repeatDays: undefined,
     description: "Inspect brake pads and rotors for wear.",
-    longDescription: "Generally, pads should be replaced once they are down to one millimeter or less of material. Pads may need to be removed to adequately inspect. Rotors should be free from grooves and should be above the manufacturer recommended minimum thickness."
+    longDescription:
+      "Generally, pads should be replaced once they are down to one millimeter or less of material. Pads may need to be removed to adequately inspect. Rotors should be free from grooves and should be above the manufacturer recommended minimum thickness.",
   },
   {
     repeatMiles: undefined,
     repeatDays: 183,
     description: "Inspect brake cables.",
-    longDescription: "Look for wear, corrosion, or fraying. Replace if there are any signs of damage to ensure responsive braking."
+    longDescription:
+      "Look for wear, corrosion, or fraying. Replace if there are any signs of damage to ensure responsive braking.",
   },
   {
     repeatMiles: undefined,
     repeatDays: 548,
     description: "Inspect bottom bracket.",
-    longDescription: "Unusual noises or excessive play may indicate a need for replacement."
+    longDescription:
+      "Unusual noises or excessive play may indicate a need for replacement.",
   },
   {
     repeatMiles: undefined,
     repeatDays: 730,
     description: "Replace brake fluid on hydraulic brakes.",
-    longDescription: "Follow manufacturers recommendations."
+    longDescription: "Follow manufacturers recommendations.",
   },
   {
     repeatMiles: 200,
     repeatDays: undefined,
     description: "Inspect tires.",
-    longDescription: "Look for wear, worn or torn off knobs, cuts in sidewalls, bulging, or other damage. For good traction and safe riding, always replace tires that are worn or damaged."
+    longDescription:
+      "Look for wear, worn or torn off knobs, cuts in sidewalls, bulging, or other damage. For good traction and safe riding, always replace tires that are worn or damaged.",
   },
   {
     repeatMiles: undefined,
     repeatDays: 90,
     description: "Check tire sealant, if used.",
-    longDescription: "To avoid any suprises and potential long walks back to the car, make sure both tires have adequate sealant."
+    longDescription:
+      "To avoid any suprises and potential long walks back to the car, make sure both tires have adequate sealant.",
   },
   {
     repeatMiles: undefined,
     repeatDays: 548,
     description: "Inspect bottom bracket.",
-    longDescription: "Unusual noises or excessive play may indicate a need for replacement."
+    longDescription:
+      "Unusual noises or excessive play may indicate a need for replacement.",
   },
   {
     repeatMiles: undefined,
     repeatDays: 183,
     description: "Check all bolts and fasteners for appropriate tightness.",
-    longDescription: "Look bolts can rapidly become big problems on the trail, and lead to unsafe riding. Use a torque when, especially with carbon frames and components."
+    longDescription:
+      "Look bolts can rapidly become big problems on the trail, and lead to unsafe riding. Use a torque when, especially with carbon frames and components.",
   },
   {
     repeatMiles: undefined,
     repeatDays: 365,
-    description: "Inspect headset, bottom bracket, hubs, and frame linkage bearings.",
-    longDescription: "Replace if there is noticable wear or they do not move freely."
+    description:
+      "Inspect headset, bottom bracket, hubs, and frame linkage bearings.",
+    longDescription:
+      "Replace if there is noticable wear or they do not move freely.",
   },
 ];
 
@@ -250,15 +269,20 @@ const serviceIntervalsGravel = [];
 
 const serviceIntervalsRoad = [];
 
-
-const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
+const AlertCenter: React.FC<AlertCenterProps> = ({
+  bikes,
+  currentBikeId,
+  user,
+  toggle,
+}) => {
   const [masterAlerts, setMasterAlerts] = useState<TriggeredAlert[]>([]);
   const savedIncludeUpcoming = localStorage.getItem("includeUpcoming");
   const [includeUpcoming, setIncludeUpcoming] = useState<boolean>(
     savedIncludeUpcoming && savedIncludeUpcoming === "true" ? true : false
   );
-  const [showAddServiceInt, setShowAddServiceInt] = useState<boolean>(true);   // default to false
-  const [showingButtonsAddServiceInt, setShowingButtonsAddServiceInt] = useState<boolean>(false);
+  const [showAddServiceInt, setShowAddServiceInt] = useState<boolean>(true); // default to false
+  const [showingButtonsAddServiceInt, setShowingButtonsAddServiceInt] =
+    useState<boolean>(false);
 
   useEffect(() => {
     // when the parent toggles this, run Alert cycle.
@@ -298,7 +322,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
 
   const handleAlertOkClick = async (id: string) => {
     await setAlertStatus(id, "cleared");
-    await runAlertCycle(bikes);  // ??
+    await runAlertCycle(bikes); // ??
   };
 
   const handleNewClick = async (id: string) => {
@@ -338,18 +362,17 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
 
     let sortedAlerts: TriggeredAlert[] = [];
     let SendBrowserNotification = false;
-    debugger;
 
     // Run through list of current lists for this user, rebuilding the trigger list
     for (let alert of alerts) {
       // Attempt to find status for this alert
       console.log(
         "   Checking alert " +
-        alert.id +
-        " with date " +
-        alert.date?.toLocaleDateString() +
-        "  " +
-        alert.description
+          alert.id +
+          " with date " +
+          alert.date?.toLocaleDateString() +
+          "  " +
+          alert.description
       );
       let currentAlertStatus = BikeService.getAlertStatus(alert.id);
       // const currentAlertStatus = alertStatusSet.find(
@@ -360,7 +383,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
       // Skip alerts that have been cleared by user already.
       if (!currentAlertStatus || currentAlertStatus === "cleared") continue;
 
-      let isFirstTriggered = false;     // Assume not the first time triggered.
+      let isFirstTriggered = false; // Assume not the first time triggered.
       // Find the bike referenced by this alert
       var idx = bikes.findIndex((bike) => {
         return bike.id === alert.bikeID;
@@ -368,8 +391,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
       if (idx > -1) {
         // The bike was found
         let triggered: boolean = currentAlertStatus === "triggered";
-        let acknowledged: boolean =
-          currentAlertStatus === "acknowledged";
+        let acknowledged: boolean = currentAlertStatus === "acknowledged";
         let created: boolean = currentAlertStatus === "created";
         let isNew: boolean = false; // assume not a new trigger
         let isUpcoming: boolean = false; // assume date is not upcoming
@@ -383,7 +405,8 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
           alert.date &&
           alertDate.isAfter(todayjs.add(0, "day")) &&
           alertDate.isBefore(todayjs.add(7, "day"));
-        const alertNeedsTriggeredOnMiles = alert.miles && bikes[idx].totalMiles >= alert.miles;
+        const alertNeedsTriggeredOnMiles =
+          alert.miles && bikes[idx].totalMiles >= alert.miles;
 
         // If not already triggered, check to see if we should trigger this alert based on miles.
         if (alertNeedsTriggeredOnMiles) {
@@ -406,7 +429,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
             bikeName: alert.bikeName,
             reason: "Bike has reached " + alert.miles + " miles",
             description: alert.description,
-            isNew: isNew,   // Show 'New' button
+            isNew: isNew, // Show 'New' button
             isUpcoming: false,
           });
         } else if (alertNeedsTriggeredOnDate) {
@@ -429,11 +452,10 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
             bikeName: alert.bikeName,
             reason: "Date is on or after " + alert.date?.toLocaleDateString(),
             description: alert.description,
-            isNew: isNew,   // Show 'New' button
+            isNew: isNew, // Show 'New' button
             isUpcoming: false,
           });
-        }
-        else if (isAlertDateUpcoming) {
+        } else if (isAlertDateUpcoming) {
           // Alert is upcoming
           sortedAlerts.push({
             alertID: alert.id,
@@ -445,24 +467,26 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
             isNew: false,
             isUpcoming: true,
           });
-        }
-        else if (triggered || acknowledged) {
+        } else if (triggered || acknowledged) {
           sortedAlerts.push({
             alertID: alert.id,
             userID: user,
             bikeID: alert.bikeID,
             bikeName: alert.bikeName,
-            reason: alertNeedsTriggeredOnDate ? "Date is on or after " + alert.date?.toLocaleDateString() :
-              "Bike has reached " + alert.miles + " miles",
+            reason: alertNeedsTriggeredOnDate
+              ? "Date is on or after " + alert.date?.toLocaleDateString()
+              : "Bike has reached " + alert.miles + " miles",
             description: alert.description,
-            isNew: triggered,   // problem
+            isNew: triggered, // problem
             isUpcoming: false,
           });
         }
       }
       const normal = sortedAlerts.filter((alert) => !alert.isUpcoming);
       const showAll = include !== undefined ? include : includeUpcoming;
-      const upcoming = showAll ? sortedAlerts.filter((alert) => alert.isUpcoming) : [];
+      const upcoming = showAll
+        ? sortedAlerts.filter((alert) => alert.isUpcoming)
+        : [];
       setMasterAlerts([...normal, ...upcoming]);
 
       if (isFirstTriggered) {
@@ -476,7 +500,9 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
           save = true;
         } else if (alert.date && alert.repeatDays && alert.repeatDays > 0) {
           const current = dayjs(alert.date);
-          cloned.date = current.add(Math.round(alert.repeatDays * 30.4), "day").toDate();
+          cloned.date = current
+            .add(Math.round(alert.repeatDays * 30.4), "day")
+            .toDate();
           save = true;
         }
         if (save) {
@@ -507,30 +533,57 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
     runAlertCycle(bikes);
   }, 900000);
 
-  const handleAddSuggestedMtn = () => {
-
+  const handleAddSuggestedMtn = async () => {
+    const alerts = await BikeService.getAlerts(user, "");
+    let newAlerts: Alert[] = [];
+    let today = dayjs();
+    for (let suggested of serviceIntervalsMtn) {
+      debugger;
+      if (
+        alerts.findIndex((al) => al.description === suggested.description) ===
+        -1
+      ) {
+        const newRow: Alert = {
+          id: uuidv4(),
+          userID: user,
+          bikeID: bikes[currentBikeId].id,
+          bikeName: bikes[currentBikeId].name,
+          date: suggested.repeatDays
+            ? today.add(suggested.repeatDays, "days").toDate()
+            : undefined,
+          miles: suggested.repeatMiles
+            ? bikes[currentBikeId].totalMiles + suggested.repeatMiles
+            : undefined,
+          description: suggested.description,
+          status: "created",
+        };
+        newAlerts.push(newRow);
+        await BikeService.addAlertStatus(user, newRow.id, "created");
+      }
+    }
+    await BikeService.setAlerts(newAlerts, []);
+    setShowingButtonsAddServiceInt(false);
+    setShowAddServiceInt(true);
   };
 
-  const handleAddSuggestedGravel = () => {
+  // 511af87d-86c2-46f2-ae5f-f5345159f91d
+  // Admin#89
+  
+  const handleAddSuggestedGravel = () => {};
 
-  };
-
-  const handleAddSuggestedRoad = () => {
-
-  };
+  const handleAddSuggestedRoad = () => {};
 
   const handleAddSuggestedEnable = () => {
     setShowingButtonsAddServiceInt(true);
     setShowAddServiceInt(false);
-  }
+  };
 
   const cancelAddSuggested = () => {
     setShowingButtonsAddServiceInt(false);
     setShowAddServiceInt(true);
-  }
+  };
 
   // BCM Make alert.decription below clickable, then do a lookup to match description, and if match, show popup with long description.
-
 
   return (
     <Card variant="outlined" sx={{ margin: 2 }}>
@@ -555,7 +608,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
               </Typography>
               <Box
                 sx={{
-                  position: 'relative',
+                  position: "relative",
                   display: "flex",
                   alignItems: "center",
                   gap: 2, // Space between button and checkbox
@@ -564,57 +617,84 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
                   borderRadius: "8px", // Optional: Rounded corners for aesthetics
                 }}
               >
-
-                {showAddServiceInt && <Button
-                  variant="contained"
-                  size="small"
-                  sx={{
-                    margin: "3px",
-                    minWidth: "58px", // Reduce the minimum width
-                    height: "35px",   // Set a small height
-                    padding: "2px 5px", // Reduce inner spacing
-                    // Make text smaller
-                  }}
-                  onClick={handleAddSuggestedEnable}
-                >
-                  <Typography sx={{ lineHeight: "1.2", fontSize: "11.5px", }}>
-                    Add Recommended<br /> Service Intervals
-                  </Typography>
-                </Button>}
-                {showingButtonsAddServiceInt && <Box
-                  sx={{
-                    position: 'absolute', // Positions it relative to the nearest positioned ancestor
-                    top: 0,
-                    left: -280,
-                    zIndex: 100,
-                    width: 450,
-                    bgcolor: 'white',
-                    border: "3px solid #ccc",
-                    boxShadow: "5px 5px 10px rgba(0, 0, 0, 1)",
-                    padding: "6px",
-                    borderRadius: "8px",
-                    display: "inline-block", // Keeps the box size tight around content
-                    textAlign: "center", // Aligns label and button group
-                  }}
-                >
-                  <Typography variant="subtitle1" sx={{ marginBottom: "8px" }}>
-                    Add Recommended Service Intervals
-                  </Typography>
-                  <ButtonGroup variant="text">
-                    <Button variant="contained" size="small" sx={{ margin: '3px' }} onClick={handleAddSuggestedMtn}>
-                      Mountain Bike
-                    </Button>
-                    <Button variant="contained" size="small" sx={{ margin: '3px' }} onClick={handleAddSuggestedGravel}>
-                      Gravel Bike
-                    </Button>
-                    <Button variant="contained" size="small" sx={{ margin: '3px' }} onClick={handleAddSuggestedRoad}>
-                      Road Bike
-                    </Button>
-                    <Button variant="contained" size="small" sx={{ margin: '3px' }} onClick={cancelAddSuggested}>
-                      Cancel
-                    </Button>
-                  </ButtonGroup>
-                </Box>}
+                {showAddServiceInt && (
+                  <Button
+                    variant="contained"
+                    size="small"
+                    sx={{
+                      margin: "3px",
+                      minWidth: "58px", // Reduce the minimum width
+                      height: "35px", // Set a small height
+                      padding: "2px 5px", // Reduce inner spacing
+                      // Make text smaller
+                    }}
+                    onClick={handleAddSuggestedEnable}
+                  >
+                    <Typography sx={{ lineHeight: "1.2", fontSize: "11.5px" }}>
+                      Add Recommended
+                      <br /> Service Intervals
+                    </Typography>
+                  </Button>
+                )}
+                {showingButtonsAddServiceInt && (
+                  <Box
+                    sx={{
+                      position: "absolute", // Positions it relative to the nearest positioned ancestor
+                      top: 0,
+                      left: -280,
+                      zIndex: 100,
+                      width: 450,
+                      bgcolor: "white",
+                      border: "3px solid #ccc",
+                      boxShadow: "5px 5px 10px rgba(0, 0, 0, 1)",
+                      padding: "6px",
+                      borderRadius: "8px",
+                      display: "inline-block", // Keeps the box size tight around content
+                      textAlign: "center", // Aligns label and button group
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ marginBottom: "8px" }}
+                    >
+                      Add Recommended Service Intervals
+                    </Typography>
+                    <ButtonGroup variant="text">
+                      <Button
+                        variant="contained"
+                        size="small"
+                        sx={{ margin: "3px" }}
+                        onClick={handleAddSuggestedMtn}
+                      >
+                        Mountain Bike
+                      </Button>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        sx={{ margin: "3px" }}
+                        onClick={handleAddSuggestedGravel}
+                      >
+                        Gravel Bike
+                      </Button>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        sx={{ margin: "3px" }}
+                        onClick={handleAddSuggestedRoad}
+                      >
+                        Road Bike
+                      </Button>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        sx={{ margin: "3px" }}
+                        onClick={cancelAddSuggested}
+                      >
+                        Cancel
+                      </Button>
+                    </ButtonGroup>
+                  </Box>
+                )}
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -714,11 +794,11 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ bikes, user, toggle }) => {
 
 export default AlertCenter;
 
-
 /*
 
 The counter measure is to build new confidence!!  Build my portfolio app to make it a great app and get a user
 community going on it.  Dress very professionally, be very attractive, and work on all the ways to be attractive
 to a new employer.  Be bold, think bold and remember all I have done!  Remember who I am!  
 
+Fire, determination, vision, planning, resolve, progress, core passion
 */

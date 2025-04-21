@@ -311,15 +311,24 @@ export const BikeService = {
 
     return true;
   },
+  // https://www.reddit.com/r/dotnet/comments/1alkpiz/a_question_regarding_date_conversion_from/
+  // https://softwareengineering.stackexchange.com/questions/436540/is-the-frontend-or-backend-api-responsible-for-formatting-data-in-a-specific-l
+  // https://stackoverflow.com/questions/7374731/net-save-datetime-and-completely-ignore-timezone
+  // https://www.reddit.com/r/csharp/comments/10jl7tl/date_displays_differently_between_timezones/
+  // **  https://softwareengineering.stackexchange.com/questions/209421/best-practice-to-store-datetime-based-on-timezone
+  
   setAlerts: async function (
     added: Alert[],
     deleted: string[],
   ): Promise<boolean> {
     for (let alert of added) {
+      debugger;
       // Auto convert repeat months back to days, rounded to nearest day
       if (alert.repeatDays) alert.repeatDays = parseFloat((alert.repeatDays * 30.4).toFixed(0));
     }
 
+    console.log("------ Savings alerts:");
+    console.log(added);
     await axios.post(API_URL + '/Bike/AddAlerts', added)
       .then(response => {
         console.log('Response:', response.data); // Handle successful response

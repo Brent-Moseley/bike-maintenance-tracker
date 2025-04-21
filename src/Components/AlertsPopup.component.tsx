@@ -242,17 +242,23 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   };
 
   const handleInputChange = (
-    e: { target: { name: any; value: any } },
+    e: { target: { name: any; value: any; defaultValue: any; } },
     id: string
   ) => {
-    let { name, value } = e.target;
+    let { name, value, defaultValue } = e.target;
     switch (name) {
       case "miles":
-      case "repeatDays":
+      case "repeatMiles":
         value = parseInt(value);
         break;
       case "repeatDays":
-        value = parseFloat(value);
+        // Gets processed as months, user entry as months
+        //value = parseFloat(value);
+        const lastChar = value.slice(-1);
+        const regex = /^[0-9.]$/;
+
+        if (value.length > 0 && !regex.test(lastChar)) value = defaultValue;
+        //console.log(value);
         break;
     }
     setAlertSet((prevLogs) =>
@@ -311,14 +317,15 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
 
       let addedRow = alertSet.find(row => row.id === editRowId);
       if (milesDisabled) {
+        debugger;
         // If miles input is disabled, then fill in alert set and update miles to 'undefined' on any edit row.
         if (addedRow) {
           // Round repeat days if provided.
-          if (addedRow.repeatDays != undefined) {
-            const rd = addedRow.repeatDays as number;  // help typescript understand that this number is defined
-            addedRow.repeatDays = Math.round(rd);
-          }
-
+          // if (addedRow.repeatDays != undefined) {
+          //   const rd = addedRow.repeatDays as number;  // help typescript understand that this number is defined
+          //   addedRow.repeatDays = Math.round(rd);
+          // }
+          if (addedRow.repeatDays) addedRow.repeatDays = parseFloat(Number(addedRow.repeatDays).toFixed(1));
           setNewAlerts([...newAlerts, { ...addedRow, miles: undefined, repeatMiles: undefined }]);
         }
 
@@ -607,7 +614,6 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                     <TextField
                                       label="Repeating Months"
                                       name="repeatDays"
-                                      type="number"
                                       size="small"
                                       style={{ width: 70, marginTop: 80 }}
                                       disabled={dateDisabled}

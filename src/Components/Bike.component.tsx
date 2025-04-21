@@ -135,6 +135,7 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
 
   // BCM  do something like this after adding all auto alerts.  Just need to create the set of updated
   const handleCloseAlerts = async (updated: Alert[], deleted: string[]) => {
+    debugger;
     await BikeService.setAlerts(
       updated,
       deleted
@@ -372,7 +373,7 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
       )}
       { currentUser.length == 0 && <span>Please log in to continue.</span> }
       {currentUser.length > 0 &&
-        <><AlertCenter bikes={bikeData} user={currentUser} toggle={triggerAlertCycle}></AlertCenter>
+        <><AlertCenter bikes={bikeData} currentBikeId={selectedBikeIndex} user={currentUser} toggle={triggerAlertCycle}></AlertCenter>
         <Button
           variant="contained"
           color="primary"
