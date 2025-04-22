@@ -291,6 +291,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
   const [showingButtonsAddServiceInt, setShowingButtonsAddServiceInt] =
     useState<boolean>(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     // when the parent toggles this, run Alert cycle.
@@ -408,7 +409,8 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
         const alertNeedsTriggeredOnDate =
           alert.date &&
           //alert.date.toLocaleDateString() <= today.toLocaleDateString();
-          (alertDate.isBefore(todayjs) || alertDate.isSame(todayjs));
+          (alertDate.startOf('day').isBefore(todayjs.startOf('day')) || 
+          alertDate.startOf('day').isSame(todayjs.startOf('day')));
         const isAlertDateUpcoming =
           alert.date &&
           alertDate.isAfter(todayjs.add(0, "day")) &&
@@ -553,7 +555,9 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
   }
 
   const handleAddSuggestedMtn = async () => {
-    const alerts = await BikeService.getAlerts(user, "");
+    setLoading(true);
+    debugger;
+    const alerts = await BikeService.getAlerts(user, bikes[currentBikeId].id);
     let newAlerts: Alert[] = [];
     let today = dayjs();
     for (let suggested of serviceIntervalsMtn) {
@@ -584,6 +588,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
       }
     }
     await BikeService.setAlerts(newAlerts, []);
+    setLoading(false);
     setShowingButtonsAddServiceInt(false);
     setShowAddServiceInt(true);
   };
@@ -687,6 +692,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
                         size="small"
                         sx={{ margin: "3px" }}
                         onClick={() => {setConfirmModalOpen(true)}}
+                        disabled={loading}
                       >
                         Mountain Bike
                       </Button>
@@ -695,6 +701,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
                         size="small"
                         sx={{ margin: "3px" }}
                         onClick={handleAddSuggestedGravel}
+                        disabled={loading}
                       >
                         Gravel Bike
                       </Button>
@@ -703,6 +710,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
                         size="small"
                         sx={{ margin: "3px" }}
                         onClick={handleAddSuggestedRoad}
+                        disabled={loading}
                       >
                         Road Bike
                       </Button>
@@ -711,6 +719,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
                         size="small"
                         sx={{ margin: "3px" }}
                         onClick={cancelAddSuggested}
+                        disabled={loading}
                       >
                         Cancel
                       </Button>
