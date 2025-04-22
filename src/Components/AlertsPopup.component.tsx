@@ -504,7 +504,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {alertSet.map((row, idx) => {
+                      {alertSet.map((row) => {
                         if (row.status === "created") {
                           return (
                             <StyledTableRow key={row.id}>

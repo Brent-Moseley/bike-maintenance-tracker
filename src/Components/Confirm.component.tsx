@@ -36,7 +36,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({ open, message, cancelText, 
     >
       <Box sx={style}>
         <Typography id="modal-title" variant="h6" component="h2">
-          Just checking here...
+          To confirm:
         </Typography>
         <Typography id="modal-description" sx={{ mt: 2 }}>
           {message}

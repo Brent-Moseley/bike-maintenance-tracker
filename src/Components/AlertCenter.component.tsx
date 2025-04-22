@@ -16,11 +16,13 @@ import {
   Checkbox,
   FormControlLabel,
   ButtonGroup,
+  Tooltip,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { Alert, Bike, BikeService } from "../services/BikeService";
 import dayjs from "dayjs";
 import { v4 as uuidv4 } from "uuid";
+import ConfirmModal from "./Confirm.component";
 
 /*
 
@@ -267,7 +269,7 @@ const serviceIntervalsMtn = [
 
 const getLongDescription = (desc: string) => {
   let text = serviceIntervalsMtn.find((item) => item.description === desc);
-  return text ? text.longDescription : ""; 
+  return text ? text.longDescription : "";
 };
 
 const serviceIntervalsGravel = [];
@@ -288,6 +290,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
   const [showAddServiceInt, setShowAddServiceInt] = useState<boolean>(true); // default to false
   const [showingButtonsAddServiceInt, setShowingButtonsAddServiceInt] =
     useState<boolean>(false);
+  const [confirmModalOpen, setConfirmModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     // when the parent toggles this, run Alert cycle.
@@ -538,12 +541,22 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
     runAlertCycle(bikes);
   }, 900000);
 
+  const handleConfirmOK = async () => {
+    setConfirmModalOpen(false);
+    await handleAddSuggestedMtn();
+  }
+
+  const handleConfirmCancel = () => {
+    setShowingButtonsAddServiceInt(false);
+    setShowAddServiceInt(true);
+    setConfirmModalOpen(false);
+  }
+
   const handleAddSuggestedMtn = async () => {
     const alerts = await BikeService.getAlerts(user, "");
     let newAlerts: Alert[] = [];
     let today = dayjs();
     for (let suggested of serviceIntervalsMtn) {
-      debugger;
       if (
         alerts.findIndex((al) => al.description === suggested.description) ===
         -1
@@ -556,8 +569,12 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
           date: suggested.repeatDays
             ? today.add(suggested.repeatDays, "days").toDate()
             : undefined,
+          repeatDays: suggested.repeatDays ? parseFloat((suggested.repeatDays / 30.4).toFixed(1)) : undefined,
           miles: suggested.repeatMiles
             ? bikes[currentBikeId].totalMiles + suggested.repeatMiles
+            : undefined,
+          repeatMiles: suggested.repeatMiles
+            ? suggested.repeatMiles
             : undefined,
           description: suggested.description,
           status: "created",
@@ -573,7 +590,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
 
   // 511af87d-86c2-46f2-ae5f-f5345159f91d
   // Admin#89
-  
+
   const handleAddSuggestedGravel = () => {};
 
   const handleAddSuggestedRoad = () => {};
@@ -669,7 +686,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
                         variant="contained"
                         size="small"
                         sx={{ margin: "3px" }}
-                        onClick={handleAddSuggestedMtn}
+                        onClick={() => {setConfirmModalOpen(true)}}
                       >
                         Mountain Bike
                       </Button>
@@ -748,7 +765,15 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
                           color: alert.isUpcoming ? "Cadmium Yellow" : "black",
                         }}
                       >
-                        {alert.description}
+                        <Tooltip
+                          title={
+                            <span style={{ fontSize: "0.8rem" }}>
+                              {getLongDescription(alert.description)}
+                            </span>
+                          }
+                        >
+                          <span>{alert.description}</span>
+                        </Tooltip>
                       </CustomTableCell>
                       <CustomTableCell
                         sx={{
@@ -791,6 +816,12 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
               </Typography>
             )}
           </TableContainer>
+          <ConfirmModal
+            open={confirmModalOpen}
+            message="This will add alerts to your current bike based on suggested maintenance intervals. You can later delete any that you do not want.  Proceed?"
+            handleOk={handleConfirmOK}
+            handleClose={handleConfirmCancel}
+          ></ConfirmModal>
         </>
       </CardContent>
     </Card>
