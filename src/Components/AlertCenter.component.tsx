@@ -23,6 +23,7 @@ import { Alert, Bike, BikeService } from "../services/BikeService";
 import dayjs from "dayjs";
 import { v4 as uuidv4 } from "uuid";
 import ConfirmModal from "./Confirm.component";
+import ConfirmAutoAlertsModal from "./AutoAlertsPopup.component";
 
 /*
 
@@ -409,8 +410,8 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
         const alertNeedsTriggeredOnDate =
           alert.date &&
           //alert.date.toLocaleDateString() <= today.toLocaleDateString();
-          (alertDate.startOf('day').isBefore(todayjs.startOf('day')) || 
-          alertDate.startOf('day').isSame(todayjs.startOf('day')));
+          (alertDate.startOf("day").isBefore(todayjs.startOf("day")) ||
+            alertDate.startOf("day").isSame(todayjs.startOf("day")));
         const isAlertDateUpcoming =
           alert.date &&
           alertDate.isAfter(todayjs.add(0, "day")) &&
@@ -543,23 +544,23 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
     runAlertCycle(bikes);
   }, 900000);
 
-  const handleConfirmOK = async () => {
+  const handleConfirmOK = async (start: Date) => {
     setConfirmModalOpen(false);
-    await handleAddSuggestedMtn();
-  }
+    await handleAddSuggestedMtn(start);
+  };
 
   const handleConfirmCancel = () => {
     setShowingButtonsAddServiceInt(false);
     setShowAddServiceInt(true);
     setConfirmModalOpen(false);
-  }
+  };
 
-  const handleAddSuggestedMtn = async () => {
+  const handleAddSuggestedMtn = async (start: Date) => {
     setLoading(true);
     debugger;
     const alerts = await BikeService.getAlerts(user, bikes[currentBikeId].id);
     let newAlerts: Alert[] = [];
-    let today = dayjs();
+    let begin = dayjs(start);
     for (let suggested of serviceIntervalsMtn) {
       if (
         alerts.findIndex((al) => al.description === suggested.description) ===
@@ -571,9 +572,11 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
           bikeID: bikes[currentBikeId].id,
           bikeName: bikes[currentBikeId].name,
           date: suggested.repeatDays
-            ? today.add(suggested.repeatDays, "days").toDate()
+            ? begin.add(suggested.repeatDays, "days").toDate()
             : undefined,
-          repeatDays: suggested.repeatDays ? parseFloat((suggested.repeatDays / 30.4).toFixed(1)) : undefined,
+          repeatDays: suggested.repeatDays
+            ? parseFloat((suggested.repeatDays / 30.4).toFixed(1))
+            : undefined,
           miles: suggested.repeatMiles
             ? bikes[currentBikeId].totalMiles + suggested.repeatMiles
             : undefined,
@@ -691,7 +694,9 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
                         variant="contained"
                         size="small"
                         sx={{ margin: "3px" }}
-                        onClick={() => {setConfirmModalOpen(true)}}
+                        onClick={() => {
+                          setConfirmModalOpen(true);
+                        }}
                         disabled={loading}
                       >
                         Mountain Bike
@@ -825,12 +830,17 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
               </Typography>
             )}
           </TableContainer>
-          <ConfirmModal
+          {/* <ConfirmModal
             open={confirmModalOpen}
             message="This will add alerts to your current bike based on suggested maintenance intervals. You can later delete any that you do not want.  Proceed?"
             handleOk={handleConfirmOK}
             handleClose={handleConfirmCancel}
-          ></ConfirmModal>
+          ></ConfirmModal> */}
+          <ConfirmAutoAlertsModal
+            open={confirmModalOpen}
+            handleOk={handleConfirmOK}
+            handleClose={handleConfirmCancel}
+          ></ConfirmAutoAlertsModal>
         </>
       </CardContent>
     </Card>
