@@ -23,8 +23,13 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import ConfirmModal from "./Confirm.component";
 import FromTodayModal from "./FromToday.component";
-import { AlertCenter, AlertStatus, getLongDescription } from "./AlertCenter.component";
-import EditFieldModal from "./EditField.component";
+import {
+  AlertCenter,
+  AlertStatus,
+  getLongDescription,
+} from "./AlertCenter.component";
+import EditFieldModal from "./EditFieldDate.component";
+import EditFieldStringModal from "./EditFieldString.component";
 
 /*
 
@@ -47,9 +52,9 @@ const StyledTableCellHeader = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.body}`]: {
     fontSize: 14,
   },
-  [theme.breakpoints.down('sm')]: {
-    padding: '8px',
-    fontSize: '12px',
+  [theme.breakpoints.down("sm")]: {
+    padding: "8px",
+    fontSize: "12px",
   },
   margin: "0 3px",
   backgroundColor: "#4682B4",
@@ -64,9 +69,9 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.body}`]: {
     fontSize: 14,
   },
-  [theme.breakpoints.down('sm')]: {
-    padding: '8px',
-    fontSize: '12px',
+  [theme.breakpoints.down("sm")]: {
+    padding: "8px",
+    fontSize: "12px",
   },
   margin: "0 3px",
 }));
@@ -111,14 +116,18 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const [alertSet, setAlertSet] = useState<Alert[]>(alerts);
   const [editRowId, setEditRowId] = useState<string | null>(null);
   const [confirmModalOpen, setConfirmModalOpen] = useState<boolean>(false);
-  const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
-  const [editData, setEditData] = useState<any>("");
+  const [editStringModalOpen, setEditStringModalOpen] =
+    useState<boolean>(false);
+  const [editStringData, setEditStringData] = useState<any>("");
+  const [editFieldRowId, setEditFieldRowId] = useState<string>("");
+  const [editFieldName, setEditFieldName] = useState<string>("");
   const [currentId, setCurrentId] = useState<string>("");
   const boxRef = useRef<HTMLDivElement>(null);
   const [sortAsc, setSortAsc] = useState<boolean>(false);
   const [closeLabel, setCloseLabel] = useState<string>("Close");
   const [cancelLabel, setCancelLabel] = useState<string>("Cancel All");
-  const [confirmCancelModalOpen, setConfirmCancelModalOpen] = useState<boolean>(false);
+  const [confirmCancelModalOpen, setConfirmCancelModalOpen] =
+    useState<boolean>(false);
   const [updates, setUpdates] = useState<number>(0);
   const [milesDisabled, setMilesDisabled] = useState(true);
   const [dateDisabled, setDateDisabled] = useState(false);
@@ -130,10 +139,17 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [newAlerts, setNewAlerts] = useState<Alert[]>([]);
   const [deleted, setDeleted] = useState<string[]>([]);
-  // For each new alert, need to add an alert status of "created".
-  // For each deleted, remove status from alert status table. 
-  // Send these to Bike Service only when user clicks 'Save'
-  // Bike Service will automatically save to the DB.
+  const [edited, setEdited] = useState<string[]>([]);  // List of existing alerts that have
+  // been edited.  When user clicks save, add these to the deleted list, then copy as a 
+  // new alert, if if user had deleted and then recreated.  
+  // If an alert already is new, and they then edit, this will still work because copying from
+  // alertSet.  So only build the newAlerts array at the very end.  Build deleted as 
+  // user progresses.  Back end will need to be smart enough to not try to delete
+  // records that do not exist (it is actually a new record that has been edited)
+  // So if an alert is new, add it to the edited list, and it will get copied from
+  // alertSet to newAlerts.  Change code to not add to newAlerts immediately when created.
+  
+
 
   const today = dayjs();
   const tomorrow = today.add(1, "day");
@@ -203,7 +219,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       setDeleted([...deleted, currentId]);
       setAlertSet([...alertSet.slice(0, idx), ...alertSet.slice(idx + 1)]);
       const newCount = updates + 1;
-      setUpdates(prev => prev + 1);
+      setUpdates((prev) => prev + 1);
       setCloseLabel(`Save ${newCount} Changes`);
     }
     /*const statusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
@@ -226,7 +242,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
 
   const confirmCancelButton = () => {
     setConfirmCancelModalOpen(true);
-  }
+  };
 
   const handleAddRow = () => {
     let rowWithId = {
@@ -247,7 +263,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   };
 
   const handleInputChange = (
-    e: { target: { name: any; value: any; defaultValue: any; } },
+    e: { target: { name: any; value: any; defaultValue: any } },
     id: string
   ) => {
     let { name, value, defaultValue } = e.target;
@@ -274,22 +290,32 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
 
   const handleDoubleClickDescription = (row: Alert, name: string) => {
     debugger;
-    const access: keyof Alert = name;   // typesafe was to do dynamic indexing
-    setEditData(row[access]);
-    setEditModalOpen(true);
+    const access: keyof Alert = name; // typesafe was to do dynamic indexing
+    setEditStringData(row[access]);
+    setEditFieldRowId(row.id); // which row is the field in?
+    setEditFieldName(name);
+    setEditStringModalOpen(true);
     // setAlertSet((prevLogs) =>
     //   prevLogs.map((row) => (row.id === id ? { ...row, [name]: value } : row))
     // );
-  }
+  };
 
-  const handleEditModeOK = (date: Dayjs | null, text: any) => {
+  const handleStringEditModeOK = (text: string, id: string, field: string) => {
     debugger;
-    setEditModalOpen(false);
-  }
+    setAlertSet((prevLogs) =>
+      prevLogs.map((row) => (row.id === id ? { ...row, [field]: text } : row))
+    );
+    // Add this to list of edits  BCM
+    const newCount = updates + 1;
+    setUpdates((prev) => prev + 1);
+    setCloseLabel(`Save ${newCount} Changes`);
+
+    setEditStringModalOpen(false);
+  };
 
   const handleEditModeClose = () => {
-    setEditModalOpen(false);
-  }
+    setEditStringModalOpen(false);
+  };
 
   // TODO:  Add sorting for other columns to
   //        Also, refactor to eliminate repeated code.
@@ -306,11 +332,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       setAlertSet((prev) => {
         return prev.sort((a: Alert, b: Alert) => {
           if (!a.date || !b.date) return 0;
-          return a.date === b.date
-            ? 0
-            : a.date < b.date
-              ? 1
-              : -1;
+          return a.date === b.date ? 0 : a.date < b.date ? 1 : -1;
         });
       });
   };
@@ -323,8 +345,8 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       setAlertSet(alertSet.slice(0, -1));
     } else {
       const newCount = updates + 1;
-      setUpdates(prev => prev + 1);
-      setCloseLabel(`Save ${newCount} Changes`);      //setNewAlerts ([...newAlerts, alertSet[alertSet.length-1]]);
+      setUpdates((prev) => prev + 1);
+      setCloseLabel(`Save ${newCount} Changes`); //setNewAlerts ([...newAlerts, alertSet[alertSet.length-1]]);
 
       // BCM todo:
       /*const statusStr =
@@ -338,8 +360,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
         JSON.stringify(statusList)
       );*/
 
-
-      let addedRow = alertSet.find(row => row.id === editRowId);
+      let addedRow = alertSet.find((row) => row.id === editRowId);
       if (milesDisabled) {
         debugger;
         // If miles input is disabled, then fill in alert set and update miles to 'undefined' on any edit row.
@@ -349,8 +370,14 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
           //   const rd = addedRow.repeatDays as number;  // help typescript understand that this number is defined
           //   addedRow.repeatDays = Math.round(rd);
           // }
-          if (addedRow.repeatDays) addedRow.repeatDays = parseFloat(Number(addedRow.repeatDays).toFixed(1));
-          setNewAlerts([...newAlerts, { ...addedRow, miles: undefined, repeatMiles: undefined }]);
+          if (addedRow.repeatDays)
+            addedRow.repeatDays = parseFloat(
+              Number(addedRow.repeatDays).toFixed(1)
+            );
+          setNewAlerts([
+            ...newAlerts,
+            { ...addedRow, miles: undefined, repeatMiles: undefined },
+          ]);
         }
 
         setAlertSet((prevLogs) =>
@@ -365,17 +392,20 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
         if (addedRow) {
           // Round repeat miles if provided.
           if (addedRow.repeatMiles != undefined) {
-            const rm = addedRow.repeatMiles as number;  // help typescript understand that this number is defined
+            const rm = addedRow.repeatMiles as number; // help typescript understand that this number is defined
             addedRow.repeatMiles = Math.round(rm);
           }
 
           // Round miles if provided.
           if (addedRow.miles != undefined) {
-            const mi = addedRow.miles as number;  // help typescript understand that this number is defined
+            const mi = addedRow.miles as number; // help typescript understand that this number is defined
             addedRow.miles = Math.round(mi);
           }
 
-          setNewAlerts([...newAlerts, { ...addedRow, date: undefined, repeatDays: undefined }]);
+          setNewAlerts([
+            ...newAlerts,
+            { ...addedRow, date: undefined, repeatDays: undefined },
+          ]);
         }
 
         setAlertSet((prevLogs) =>
@@ -447,10 +477,10 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
         prev.map((row) =>
           row.id === editRowId
             ? {
-              ...row,
-              date: dayjs().add(value, "day").toDate(),
-              miles: undefined,
-            }
+                ...row,
+                date: dayjs().add(value, "day").toDate(),
+                miles: undefined,
+              }
             : row
         )
       );
@@ -725,8 +755,23 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                       alignItems: "center",
                                     }}
                                   >
-                                    <Tooltip title={<span style={{ fontSize: "0.8rem" }}>{getLongDescription(row.description)}</span>}>
-                                      <span onDoubleClick={() => {handleDoubleClickDescription(row, "description")}}>{row.description}</span>
+                                    <Tooltip
+                                      title={
+                                        <span style={{ fontSize: "0.8rem" }}>
+                                          {getLongDescription(row.description)}
+                                        </span>
+                                      }
+                                    >
+                                      <span
+                                        onDoubleClick={() => {
+                                          handleDoubleClickDescription(
+                                            row,
+                                            "description"
+                                          );
+                                        }}
+                                      >
+                                        {row.description}
+                                      </span>
                                     </Tooltip>
                                     <Tooltip title="Delete Row">
                                       <Button
@@ -768,14 +813,16 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
           >
             {closeLabel}
           </Button>
-          {updates > 0 && <Button
-            onClick={() => {
-              confirmCancelButton();
-            }}
-            sx={{ mt: 2 }}
-          >
-            {cancelLabel}
-          </Button>}
+          {updates > 0 && (
+            <Button
+              onClick={() => {
+                confirmCancelButton();
+              }}
+              sx={{ mt: 2 }}
+            >
+              {cancelLabel}
+            </Button>
+          )}
         </Box>
       </Modal>
       <ConfirmModal
@@ -791,15 +838,19 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
         cancelText="Go Back"
         handleClose={handleConfirmCancel}
       ></ConfirmModal>
-      <EditFieldModal open={editModalOpen} data={editData} handleClose={handleEditModeClose} handleOk={handleEditModeOK}>
-        
-      </EditFieldModal>
+      <EditFieldStringModal
+        open={editStringModalOpen}
+        data={editStringData}
+        rowId={editFieldRowId}
+        fieldName={editFieldName}
+        handleClose={handleEditModeClose}
+        handleOk={handleStringEditModeOK}
+      ></EditFieldStringModal>
     </>
   );
 };
 
 export default AlertsPopup;
-
 
 /*
 You have to start from the mindset of believing in the good and believing in the potential

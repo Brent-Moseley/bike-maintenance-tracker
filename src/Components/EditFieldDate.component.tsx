@@ -13,9 +13,9 @@ Purpose:  A popup that allows for the editing of one data field
 
 interface EditFieldModalProps {
   open: boolean;
-  data: any;
+  data: Date;
   handleClose: () => void;
-  handleOk: (newDate: Date | null, newInput: any) => void;
+  handleOk: (newDate: Date | null) => void;
 }
 
 const style = {
@@ -29,18 +29,16 @@ const style = {
   p: 4,
 };
 
-const EditFieldModal: React.FC<EditFieldModalProps> = ({
+const EditFieldDateModal: React.FC<EditFieldModalProps> = ({
   open,
   data,
   handleClose,
   handleOk,
 }) => {
   const [newDate, setNewDate] = useState<Date | null>(data);
-  const [newInput, setNewInput] = useState(data);
 
   useEffect(() => {
-    if (typeof data === "object" && data instanceof Date) setNewDate(data);
-    else setNewInput(data);
+    setNewDate(data);
   }, [data]);
 
   return (
@@ -52,7 +50,6 @@ const EditFieldModal: React.FC<EditFieldModalProps> = ({
     >
       <Box sx={style}>
         <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between" }}>
-          {data instanceof Date ? (
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DesktopDatePicker
                 label="Date"
@@ -60,24 +57,11 @@ const EditFieldModal: React.FC<EditFieldModalProps> = ({
                 value={dayjs(data)}
                 sx={{ maxWidth: "170px" }}
                 onChange={(newVal) => {
-                  setNewDate(newVal?.toDate());
+                  setNewDate(newVal ? newVal.toDate() : null);
                 }}
               />
             </LocalizationProvider>
-          ) : (
-            <TextField
-              label="Trigger Miles"
-              name="miles"
-              type="number"
-              size="small"
-              style={{ width: 80, marginTop: 80 }}
-              value={data || ""}
-              onChange={(newVal) => {
-                setNewInput(newVal);
-              }}
-            />
-          )}
-          <Button variant="contained" color="primary" onClick={() => {handleOk(newDate, newInput)}}>
+          <Button variant="contained" color="primary" onClick={() => {handleOk(newDate)}}>
             OK
           </Button>
           <Button variant="contained" color="secondary" onClick={handleClose}>
@@ -89,4 +73,4 @@ const EditFieldModal: React.FC<EditFieldModalProps> = ({
   );
 };
 
-export default EditFieldModal;
+export default EditFieldDateModal;

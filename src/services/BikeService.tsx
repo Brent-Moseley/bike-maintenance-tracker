@@ -333,15 +333,18 @@ export const BikeService = {
 
     console.log("------ Savings alerts:");
     console.log(added);
-    await axios.post(API_URL + '/Bike/AddAlerts', added)
-      .then(response => {
-        console.log('Response:', response.data); // Handle successful response
-      })
-      .catch(error => {
-        console.error('Error:', error); // Handle any errors
-        throw error;
-      });
+    // BCM Add an edit ability, where we have an array of edited alerts.  Put them in
+    // the delete set, and then in the add alerts set.  There should not be a primary
+    // key violation.  
     await axios.delete(API_URL + '/Bike/DeleteAlerts/' + JSON.stringify(deleted))
+    .then(response => {
+      console.log('Response:', response.data); // Handle successful response
+    })
+    .catch(error => {
+      console.error('Error:', error); // Handle any errors
+      throw error;
+    });
+    await axios.post(API_URL + '/Bike/AddAlerts', added)
       .then(response => {
         console.log('Response:', response.data); // Handle successful response
       })
@@ -468,3 +471,10 @@ export const BikeService = {
 // 1.6 million dollars in salary.  Code is gold!  It is worth it!
 // If I had stayed in music and small business website design, I would have made only
 // 264k!!  I have made 6x more being a developer! 
+
+/*
+  I love coding and development, code is gold!  This is leading to a very bright future!
+  Keep practicing skills, creative ideas. 
+
+
+*/
