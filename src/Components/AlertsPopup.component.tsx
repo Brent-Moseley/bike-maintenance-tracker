@@ -24,6 +24,7 @@ import dayjs, { Dayjs } from "dayjs";
 import ConfirmModal from "./Confirm.component";
 import FromTodayModal from "./FromToday.component";
 import { AlertCenter, AlertStatus, getLongDescription } from "./AlertCenter.component";
+import EditFieldModal from "./EditField.component";
 
 /*
 
@@ -110,6 +111,8 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const [alertSet, setAlertSet] = useState<Alert[]>(alerts);
   const [editRowId, setEditRowId] = useState<string | null>(null);
   const [confirmModalOpen, setConfirmModalOpen] = useState<boolean>(false);
+  const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
+  const [editData, setEditData] = useState<any>("");
   const [currentId, setCurrentId] = useState<string>("");
   const boxRef = useRef<HTMLDivElement>(null);
   const [sortAsc, setSortAsc] = useState<boolean>(false);
@@ -268,6 +271,25 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     );
     //setCloseLabel("Save Changes");
   };
+
+  const handleDoubleClickDescription = (row: Alert, name: string) => {
+    debugger;
+    const access: keyof Alert = name;   // typesafe was to do dynamic indexing
+    setEditData(row[access]);
+    setEditModalOpen(true);
+    // setAlertSet((prevLogs) =>
+    //   prevLogs.map((row) => (row.id === id ? { ...row, [name]: value } : row))
+    // );
+  }
+
+  const handleEditModeOK = (date: Dayjs | null, text: any) => {
+    debugger;
+    setEditModalOpen(false);
+  }
+
+  const handleEditModeClose = () => {
+    setEditModalOpen(false);
+  }
 
   // TODO:  Add sorting for other columns to
   //        Also, refactor to eliminate repeated code.
@@ -704,7 +726,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                     }}
                                   >
                                     <Tooltip title={<span style={{ fontSize: "0.8rem" }}>{getLongDescription(row.description)}</span>}>
-                                      <span>{row.description}</span>
+                                      <span onDoubleClick={() => {handleDoubleClickDescription(row, "description")}}>{row.description}</span>
                                     </Tooltip>
                                     <Tooltip title="Delete Row">
                                       <Button
@@ -769,6 +791,9 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
         cancelText="Go Back"
         handleClose={handleConfirmCancel}
       ></ConfirmModal>
+      <EditFieldModal open={editModalOpen} data={editData} handleClose={handleEditModeClose} handleOk={handleEditModeOK}>
+        
+      </EditFieldModal>
     </>
   );
 };

@@ -44,6 +44,7 @@ export interface MaintLog {
 }
 
 export interface Alert {
+  [key: string]: any; // Allows indexing with string keys
   id: string;
   userID: string;
   bikeID: string;
