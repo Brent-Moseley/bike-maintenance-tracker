@@ -438,12 +438,12 @@ export const BikeService = {
     if (result) result.status = status;
     this.saveAlertTable(user);
   },
-  addAlertStatus: function (user: string, id: string, status: string) {
+  addAlertStatus: function (user: string, id: string, status: string, save: boolean = true) {
     alertStatusTable.push({ id: id, status: status });
     console.log(`     add alert status for ${id}, ${status}`);
-    this.saveAlertTable(user);
+    if (save) this.saveAlertTable(user);
   },
-  removeAlertStatus: function (user: string, id: string) {
+  removeAlertStatus: function (user: string, id: string, save: boolean = true) {
     console.log(`     remove alert status for ${user}, ${id}`);
     var idx = alertStatusTable.findIndex(al => al.id === id);
     if (idx > -1) {
@@ -453,7 +453,7 @@ export const BikeService = {
       ];
       alertStatusTable = newArray;
       console.log("     New value: " + JSON.stringify(alertStatusTable));
-      this.saveAlertTable(user);
+      if (save) this.saveAlertTable(user);
     }
   }
 };

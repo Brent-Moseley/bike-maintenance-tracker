@@ -140,11 +140,12 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
       deleted
     );
     for (let item of deleted) {
-      BikeService.removeAlertStatus(currentUser, item);
+      BikeService.removeAlertStatus(currentUser, item, false);
     }
     for (let item of updated) {
-      BikeService.addAlertStatus(currentUser, item.id, "created");
+      BikeService.addAlertStatus(currentUser, item.id, "created", false);
     }
+    BikeService.saveAlertTable(currentUser);
 
     setOpenAlerts(false);
     //await runAlertCycle(bikeData);
