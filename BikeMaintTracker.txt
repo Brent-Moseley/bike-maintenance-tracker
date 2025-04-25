@@ -137,3 +137,26 @@ Current Users
  HnK8FpT65 | JcN564       | Gbolton     | 
  R3TqXpL94 | QmT892       | TRetter     | 
  B2KmX7TqN | TxC485       | kbcruzin    | 
+
+
+  const [newAlerts, setNewAlerts] = useState<Alert[]>([]);
+  const [deleted, setDeleted] = useState<string[]>([]);
+  const [edited, setEdited] = useState<string[]>([]);  // List of existing alerts that have
+  // been edited.  When user clicks save, add these to the deleted list, then copy as a 
+  // new alert, as if user had deleted and then recreated.  
+  // If an alert already is new, and they then edit, this will still work because copying from
+  // alertSet.  So only build the newAlerts array at the very end.  Build deleted as 
+  // user progresses.  Back end will need to be smart enough to not try to delete
+  // records that do not exist (it is actually a new record that has been edited)
+  // So if an alert is new, add it to the edited list, and it will get copied from
+  // alertSet to newAlerts.  Change code to not add to newAlerts immediately when created.
+
+
+      setDeleted([...deleted, currentId]);
+    setAlertSet([...alertSet, rowWithId]);
+
+    setAlertSet((prevLogs) =>
+      prevLogs.map((row) => (row.id === id ? { ...row, [name]: value } : row))
+    );
+
+

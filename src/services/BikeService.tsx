@@ -325,12 +325,11 @@ export const BikeService = {
     deleted: string[],
   ): Promise<boolean> {
     for (let alert of added) {
-      debugger;
       //if (alert.date) alert.date = alert.date.toISOString();
       // Auto convert repeat months back to days, rounded to nearest day
       if (alert.repeatDays) alert.repeatDays = parseFloat((alert.repeatDays * 30.4).toFixed(0));
     }
-
+    debugger;
     console.log("------ Savings alerts:");
     console.log(added);
     // BCM Add an edit ability, where we have an array of edited alerts.  Put them in

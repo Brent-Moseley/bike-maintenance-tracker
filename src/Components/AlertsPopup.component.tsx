@@ -141,14 +141,14 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const [deleted, setDeleted] = useState<string[]>([]);
   const [edited, setEdited] = useState<string[]>([]);  // List of existing alerts that have
   // been edited.  When user clicks save, add these to the deleted list, then copy as a 
-  // new alert, if if user had deleted and then recreated.  
+  // new alert, as if user had deleted and then recreated.  
   // If an alert already is new, and they then edit, this will still work because copying from
   // alertSet.  So only build the newAlerts array at the very end.  Build deleted as 
   // user progresses.  Back end will need to be smart enough to not try to delete
   // records that do not exist (it is actually a new record that has been edited)
   // So if an alert is new, add it to the edited list, and it will get copied from
   // alertSet to newAlerts.  Change code to not add to newAlerts immediately when created.
-  
+
 
 
   const today = dayjs();
@@ -207,6 +207,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   }, [open]);
 
   const handleConfirmOK = () => {
+    debugger;
     if (confirmCancelModalOpen) {
       setConfirmModalOpen(false);
       setConfirmCancelModalOpen(false);
@@ -310,6 +311,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     setUpdates((prev) => prev + 1);
     setCloseLabel(`Save ${newCount} Changes`);
 
+    setEdited([...edited, id]);
     setEditStringModalOpen(false);
   };
 
@@ -361,6 +363,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       );*/
 
       let addedRow = alertSet.find((row) => row.id === editRowId);
+      if (addedRow) setEdited([...edited, addedRow.id]);  // This should ALWAYS be found, but TS does not know that.
       if (milesDisabled) {
         debugger;
         // If miles input is disabled, then fill in alert set and update miles to 'undefined' on any edit row.
@@ -374,10 +377,11 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
             addedRow.repeatDays = parseFloat(
               Number(addedRow.repeatDays).toFixed(1)
             );
-          setNewAlerts([
-            ...newAlerts,
-            { ...addedRow, miles: undefined, repeatMiles: undefined },
-          ]);
+          // New logic, only build new alerts at the very end:
+          // setNewAlerts([
+          //   ...newAlerts,
+          //   { ...addedRow, miles: undefined, repeatMiles: undefined },
+          // ]);
         }
 
         setAlertSet((prevLogs) =>
@@ -401,11 +405,11 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
             const mi = addedRow.miles as number; // help typescript understand that this number is defined
             addedRow.miles = Math.round(mi);
           }
-
-          setNewAlerts([
-            ...newAlerts,
-            { ...addedRow, date: undefined, repeatDays: undefined },
-          ]);
+          // New logic, only build new alerts at the very end:
+          // setNewAlerts([
+          //   ...newAlerts,
+          //   { ...addedRow, date: undefined, repeatDays: undefined },
+          // ]);
         }
 
         setAlertSet((prevLogs) =>
@@ -499,6 +503,31 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const handleFromTodayCancel = () => {
     setOpenFromTodayModal(false);
   };
+
+  const finalPreSave = () => {
+    // Perform final edit processing to prepare for save operation.
+    debugger;
+    let finalDeleted: string[] = [...deleted];
+    let finalNewAlerts: Alert[] = [];
+    // For every record in the edited list, add to deleted.  We are going to add it as if new.
+    edited.forEach((item) => {
+      // Add to deleted list
+      //setDeleted((prevDeleted) => [...prevDeleted, item]);
+      finalDeleted.push(item);
+      // Find it in alertSet
+      let copyOver = alertSet.find((al) => al.id === item);
+      // ... and copy to new alerts.
+      if (copyOver) finalNewAlerts.push(copyOver);
+      //if (copyOver) setNewAlerts((prevNewAlerts) => [...prevNewAlerts, copyOver]);  // Should always be found, but have to satisfy TS which does not know
+      // This is how we handle the use case if user adds a new alert, and then edits it.
+      // All records are handled as if they are edited... delete and then add again.
+    });
+    //debugger;
+    console.log("End of edits:");
+    console.log(finalNewAlerts);
+    console.log(finalDeleted);
+    handleClose(finalNewAlerts, finalDeleted);
+  }
 
   return (
     <>
@@ -807,7 +836,8 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
           <Button
             disabled={isEditing}
             onClick={() => {
-              handleClose(newAlerts, deleted);
+              //handleClose(newAlerts, deleted);
+              finalPreSave();
             }}
             sx={{ mt: 2 }}
           >
