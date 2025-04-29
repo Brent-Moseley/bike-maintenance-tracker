@@ -30,6 +30,7 @@ import {
 } from "./AlertCenter.component";
 import EditFieldModal from "./EditFieldDate.component";
 import EditFieldStringModal from "./EditFieldString.component";
+import EditFieldNumberModal from "./EditFieldNumber.component";
 
 /*
 
@@ -118,7 +119,10 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const [confirmModalOpen, setConfirmModalOpen] = useState<boolean>(false);
   const [editStringModalOpen, setEditStringModalOpen] =
     useState<boolean>(false);
-  const [editStringData, setEditStringData] = useState<any>("");
+  const [editNumberModalOpen, setEditNumberModalOpen] =
+    useState<boolean>(false);
+  const [editStringData, setEditStringData] = useState<string>("");
+  const [editNumberData, setEditNumberData] = useState<number>(0);
   const [editFieldRowId, setEditFieldRowId] = useState<string>("");
   const [editFieldName, setEditFieldName] = useState<string>("");
   const [currentId, setCurrentId] = useState<string>("");
@@ -290,16 +294,13 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     //setCloseLabel("Save Changes");
   };
 
-  const handleDoubleClickDescription = (row: Alert, name: string) => {
+  const handleDoubleClickStringField = (row: Alert, name: string) => {
     debugger;
     const access: keyof Alert = name; // typesafe way to do dynamic indexing
     setEditStringData(row[access]);
     setEditFieldRowId(row.id); // which row is the field in?
     setEditFieldName(name);
     setEditStringModalOpen(true);
-    // setAlertSet((prevLogs) =>
-    //   prevLogs.map((row) => (row.id === id ? { ...row, [name]: value } : row))
-    // );
   };
 
   const handleStringEditModeOK = (text: string, id: string, field: string) => {
@@ -307,7 +308,6 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     setAlertSet((prevLogs) =>
       prevLogs.map((row) => (row.id === id ? { ...row, [field]: text } : row))
     );
-    // Add this to list of edits  BCM
     const newCount = updates + 1;
     setUpdates((prev) => prev + 1);
     setCloseLabel(`Save ${newCount} Changes`);
@@ -316,8 +316,31 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     setEditStringModalOpen(false);
   };
 
+  const handleDoubleClickNumberField = (row: Alert, name: string) => {
+    debugger;
+    const access: keyof Alert = name; // typesafe way to do dynamic indexing
+    setEditNumberData(row[access]);
+    setEditFieldRowId(row.id); // which row is the field in?
+    setEditFieldName(name);
+    setEditNumberModalOpen(true);
+  };
+
+  const handleNumberEditModeOK = (text: number, id: string, field: string) => {
+    debugger;
+    setAlertSet((prevLogs) =>
+      prevLogs.map((row) => (row.id === id ? { ...row, [field]: text } : row))
+    );
+    const newCount = updates + 1;
+    setUpdates((prev) => prev + 1);
+    setCloseLabel(`Save ${newCount} Changes`);
+
+    if (!edited.includes(id)) setEdited([...edited, id]);  // Add this, unless we have already noted that this row has edits.
+    setEditNumberModalOpen(false);
+  };
+
   const handleEditModeClose = () => {
     setEditStringModalOpen(false);
+    setEditNumberModalOpen(false);
   };
 
   // TODO:  Add sorting for other columns to
@@ -482,10 +505,10 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
         prev.map((row) =>
           row.id === editRowId
             ? {
-                ...row,
-                date: dayjs().add(value, "day").toDate(),
-                miles: undefined,
-              }
+              ...row,
+              date: dayjs().add(value, "day").toDate(),
+              miles: undefined,
+            }
             : row
         )
       );
@@ -689,7 +712,16 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                     />
                                   </Tooltip>
                                 ) : (
-                                  row.miles?.toLocaleString("en-US")
+                                  <span
+                                    onDoubleClick={() => {
+                                      handleDoubleClickNumberField(
+                                        row,
+                                        "repeatDays"
+                                      );
+                                    }}
+                                  >
+                                    {row.miles?.toLocaleString("en-US")}
+                                  </span>
                                 )}
                               </StyledTableCell>
                               <StyledTableCell align="center">
@@ -708,7 +740,16 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                     />
                                   </Tooltip>
                                 ) : (
-                                  row.repeatDays
+                                  <span
+                                    onDoubleClick={() => {
+                                      handleDoubleClickNumberField(
+                                        row,
+                                        "repeatDays"
+                                      );
+                                    }}
+                                  >
+                                    {row.repeatDays}
+                                  </span>
                                 )}
                               </StyledTableCell>
                               <StyledTableCell align="center">
@@ -728,7 +769,16 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                     />
                                   </Tooltip>
                                 ) : (
-                                  row.repeatMiles
+                                  <span
+                                    onDoubleClick={() => {
+                                      handleDoubleClickNumberField(
+                                        row,
+                                        "repeatMiles"
+                                      );
+                                    }}
+                                  >
+                                    {row.repeatMiles}
+                                  </span>
                                 )}
                               </StyledTableCell>
                               <StyledTableCell align="left">
@@ -794,7 +844,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                     >
                                       <span
                                         onDoubleClick={() => {
-                                          handleDoubleClickDescription(
+                                          handleDoubleClickStringField(
                                             row,
                                             "description"
                                           );
@@ -877,6 +927,14 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
         handleClose={handleEditModeClose}
         handleOk={handleStringEditModeOK}
       ></EditFieldStringModal>
+      <EditFieldNumberModal
+        open={editNumberModalOpen}
+        data={editNumberData}
+        rowId={editFieldRowId}
+        fieldName={editFieldName}
+        handleClose={handleEditModeClose}
+        handleOk={handleNumberEditModeOK}
+      ></EditFieldNumberModal>
     </>
   );
 };
@@ -889,5 +947,16 @@ of what you can do.  You have to start with believing in a bright future.
 Otherwise, your strength and energy gets muted right there.
 
 Mindset is huge!  It is hugely important in success and productivity.
+Only listen to the Highest one!
+Take the power away from them!  Only work with internal recruiters now, and networking through people I know.
 
+Amazing camping innovations of the past 10 years:
+- Jetboil
+- Foam camping mats for sleeping
+- Rechareable lights.
+- Sound machine
+- Battery packs for recharging
+- Propane fire pits
+- Packing cubes for organization
+- Blackstone griddle
 */

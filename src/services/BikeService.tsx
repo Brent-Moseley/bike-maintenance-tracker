@@ -6,6 +6,7 @@ Purpose:  Handle all output with data storage outside of the React app.
 */
 
 // Local testing:  "https://localhost:7055";
+// Prod (Azure) testing: "https://bike-maint-tracker-hxafcdavbkghcmbw.canadacentral-01.azurewebsites.net/";
 const API_URL = "https://bike-maint-tracker-hxafcdavbkghcmbw.canadacentral-01.azurewebsites.net/";
 export interface Bike {
   userID: string;
