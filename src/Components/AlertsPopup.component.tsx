@@ -201,6 +201,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       setDateDisabled(false);
       setNewAlerts([]);
       setDeleted([]);
+      setEdited([]);
       setUpdates(0);
       setCancelLabel("Cancel All");
     }
@@ -291,7 +292,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
 
   const handleDoubleClickDescription = (row: Alert, name: string) => {
     debugger;
-    const access: keyof Alert = name; // typesafe was to do dynamic indexing
+    const access: keyof Alert = name; // typesafe way to do dynamic indexing
     setEditStringData(row[access]);
     setEditFieldRowId(row.id); // which row is the field in?
     setEditFieldName(name);
@@ -311,7 +312,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     setUpdates((prev) => prev + 1);
     setCloseLabel(`Save ${newCount} Changes`);
 
-    setEdited([...edited, id]);
+    if (!edited.includes(id)) setEdited([...edited, id]);  // Add this, unless we have already noted that this row has edits.
     setEditStringModalOpen(false);
   };
 

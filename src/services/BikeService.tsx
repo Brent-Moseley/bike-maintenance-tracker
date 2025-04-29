@@ -5,6 +5,7 @@ Purpose:  Handle all output with data storage outside of the React app.
 
 */
 
+// Local testing:  "https://localhost:7055";
 const API_URL = "https://bike-maint-tracker-hxafcdavbkghcmbw.canadacentral-01.azurewebsites.net/";
 export interface Bike {
   userID: string;
@@ -319,6 +320,8 @@ export const BikeService = {
   // https://stackoverflow.com/questions/7374731/net-save-datetime-and-completely-ignore-timezone
   // https://www.reddit.com/r/csharp/comments/10jl7tl/date_displays_differently_between_timezones/
   // **  https://softwareengineering.stackexchange.com/questions/209421/best-practice-to-store-datetime-based-on-timezone
+// https://www.msn.com/en-us/money/careersandeducation/stop-being-too-nice-at-work-says-psychologist-this-is-what-successful-people-do-to-be-more-genuine-trustworthy/ar-AA1DxllG?ocid=winp2fptaskbarhover&cvid=83d8a5a8f05d451594acf0aa49b49cb5&ei=17 
+
 
   setAlerts: async function (
     added: Alert[],
