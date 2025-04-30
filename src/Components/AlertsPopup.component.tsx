@@ -28,9 +28,7 @@ import {
   AlertStatus,
   getLongDescription,
 } from "./AlertCenter.component";
-import EditFieldModal from "./EditFieldDate.component";
 import EditFieldStringModal from "./EditFieldString.component";
-import EditFieldNumberModal from "./EditFieldNumber.component";
 
 /*
 
@@ -119,10 +117,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const [confirmModalOpen, setConfirmModalOpen] = useState<boolean>(false);
   const [editStringModalOpen, setEditStringModalOpen] =
     useState<boolean>(false);
-  const [editNumberModalOpen, setEditNumberModalOpen] =
-    useState<boolean>(false);
-  const [editStringData, setEditStringData] = useState<string>("");
-  const [editNumberData, setEditNumberData] = useState<number>(0);
+  const [editStringData, setEditStringData] = useState<any>("");
   const [editFieldRowId, setEditFieldRowId] = useState<string>("");
   const [editFieldName, setEditFieldName] = useState<string>("");
   const [currentId, setCurrentId] = useState<string>("");
@@ -212,7 +207,6 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   }, [open]);
 
   const handleConfirmOK = () => {
-    debugger;
     if (confirmCancelModalOpen) {
       setConfirmModalOpen(false);
       setConfirmCancelModalOpen(false);
@@ -295,7 +289,6 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   };
 
   const handleDoubleClickStringField = (row: Alert, name: string) => {
-    debugger;
     const access: keyof Alert = name; // typesafe way to do dynamic indexing
     setEditStringData(row[access]);
     setEditFieldRowId(row.id); // which row is the field in?
@@ -316,31 +309,8 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     setEditStringModalOpen(false);
   };
 
-  const handleDoubleClickNumberField = (row: Alert, name: string) => {
-    debugger;
-    const access: keyof Alert = name; // typesafe way to do dynamic indexing
-    setEditNumberData(row[access]);
-    setEditFieldRowId(row.id); // which row is the field in?
-    setEditFieldName(name);
-    setEditNumberModalOpen(true);
-  };
-
-  const handleNumberEditModeOK = (text: number, id: string, field: string) => {
-    debugger;
-    setAlertSet((prevLogs) =>
-      prevLogs.map((row) => (row.id === id ? { ...row, [field]: text } : row))
-    );
-    const newCount = updates + 1;
-    setUpdates((prev) => prev + 1);
-    setCloseLabel(`Save ${newCount} Changes`);
-
-    if (!edited.includes(id)) setEdited([...edited, id]);  // Add this, unless we have already noted that this row has edits.
-    setEditNumberModalOpen(false);
-  };
-
   const handleEditModeClose = () => {
     setEditStringModalOpen(false);
-    setEditNumberModalOpen(false);
   };
 
   // TODO:  Add sorting for other columns to
@@ -505,10 +475,10 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
         prev.map((row) =>
           row.id === editRowId
             ? {
-              ...row,
-              date: dayjs().add(value, "day").toDate(),
-              miles: undefined,
-            }
+                ...row,
+                date: dayjs().add(value, "day").toDate(),
+                miles: undefined,
+              }
             : row
         )
       );
@@ -712,16 +682,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                     />
                                   </Tooltip>
                                 ) : (
-                                  <span
-                                    onDoubleClick={() => {
-                                      handleDoubleClickNumberField(
-                                        row,
-                                        "repeatDays"
-                                      );
-                                    }}
-                                  >
-                                    {row.miles?.toLocaleString("en-US")}
-                                  </span>
+                                  row.miles?.toLocaleString("en-US")
                                 )}
                               </StyledTableCell>
                               <StyledTableCell align="center">
@@ -740,16 +701,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                     />
                                   </Tooltip>
                                 ) : (
-                                  <span
-                                    onDoubleClick={() => {
-                                      handleDoubleClickNumberField(
-                                        row,
-                                        "repeatDays"
-                                      );
-                                    }}
-                                  >
-                                    {row.repeatDays}
-                                  </span>
+                                  row.repeatDays
                                 )}
                               </StyledTableCell>
                               <StyledTableCell align="center">
@@ -769,16 +721,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
                                     />
                                   </Tooltip>
                                 ) : (
-                                  <span
-                                    onDoubleClick={() => {
-                                      handleDoubleClickNumberField(
-                                        row,
-                                        "repeatMiles"
-                                      );
-                                    }}
-                                  >
-                                    {row.repeatMiles}
-                                  </span>
+                                  row.repeatMiles
                                 )}
                               </StyledTableCell>
                               <StyledTableCell align="left">
@@ -927,14 +870,6 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
         handleClose={handleEditModeClose}
         handleOk={handleStringEditModeOK}
       ></EditFieldStringModal>
-      <EditFieldNumberModal
-        open={editNumberModalOpen}
-        data={editNumberData}
-        rowId={editFieldRowId}
-        fieldName={editFieldName}
-        handleClose={handleEditModeClose}
-        handleOk={handleNumberEditModeOK}
-      ></EditFieldNumberModal>
     </>
   );
 };

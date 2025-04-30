@@ -21,6 +21,7 @@ import { DesktopDatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import ConfirmModal from "./Confirm.component";
+import EditFieldStringModal from "./EditFieldString.component";
 
 /*
 
@@ -99,6 +100,11 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   const [logs, setLogs] = useState<MaintLog[]>(log);
   const [editRowId, setEditRowId] = useState<string | null>(null);
   const [confirmModalOpen, setConfirmModalOpen] = useState<boolean>(false);
+  const [editStringModalOpen, setEditStringModalOpen] =
+    useState<boolean>(false);
+  const [editStringData, setEditStringData] = useState<any>("");
+  const [editFieldRowId, setEditFieldRowId] = useState<string>("");
+  const [editFieldName, setEditFieldName] = useState<string>("");
   const [currentId, setCurrentId] = useState<string>("");
   const boxRef = useRef<HTMLDivElement>(null);
   const [sortAsc, setSortAsc] = useState<boolean>(false);
@@ -117,6 +123,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   };
   const [newLogs, setNewLogs] = useState<MaintLog[]>([]);
   const [deleted, setDeleted] = useState<string[]>([]);
+  const [edited, setEdited] = useState<string[]>([]);  // List of existing alerts that have
 
   useEffect(() => {
     setLogs(log);
@@ -136,6 +143,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
       setEditRowId("");
       setNewLogs([]);
       setDeleted([]);
+      setEdited([]);
       setUpdates(0);
       setCancelLabel("Cancel All");
     }
@@ -147,7 +155,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
       setConfirmCancelModalOpen(false);
       handleClose([], []);
       return;
-    } 
+    }
     // Delete a log entry
     const idx = logs.findIndex((log) => log.id === currentId);
     if (idx > -1) {
@@ -248,6 +256,31 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
     setConfirmModalOpen(true);
   };
 
+  const handleDoubleClickStringField = (row: MaintLog, name: string) => {
+    const access: keyof MaintLog = name as keyof MaintLog; // typesafe way to do dynamic indexing
+    setEditStringData(row[access]);
+    setEditFieldRowId(row.id); // which row is the field in?
+    setEditFieldName(name);
+    setEditStringModalOpen(true);
+  };
+
+  const handleStringEditModeOK = (text: string, id: string, field: string) => {
+    debugger;
+    setLogs((prevLogs) =>
+      prevLogs.map((row) => (row.id === id ? { ...row, [field]: text } : row))
+    );
+    const newCount = updates + 1;
+    setUpdates((prev) => prev + 1);
+    setCloseLabel(`Save ${newCount} Changes`);
+
+    if (!edited.includes(id)) setEdited([...edited, id]);  // Add this, unless we have already noted that this row has edits.
+    setEditStringModalOpen(false);
+  };
+
+  const handleEditModeClose = () => {
+    setEditStringModalOpen(false);
+  };
+
   return (
     <>
       <Modal
@@ -309,14 +342,14 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
                           <StyledTableCell align="center">
                             {row.id === editRowId ? (
                               <Tooltip title="Miles when serviced">
-                              <TextField
-                                label="Miles When Serviced"
-                                name="miles"
-                                size="small"
-                                style={{ width: 100 }}
-                                value={row.miles}
-                                onChange={(e) => handleInputChange(e, row.id)}
-                              />
+                                <TextField
+                                  label="Miles When Serviced"
+                                  name="miles"
+                                  size="small"
+                                  style={{ width: 100 }}
+                                  value={row.miles}
+                                  onChange={(e) => handleInputChange(e, row.id)}
+                                />
                               </Tooltip>
                             ) : (
                               row.miles
@@ -366,7 +399,16 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
                                   alignItems: "center",
                                 }}
                               >
-                                {row.description}
+                                <span
+                                  onDoubleClick={() => {
+                                    handleDoubleClickStringField(
+                                      row,
+                                      "description"
+                                    );
+                                  }}
+                                >
+                                  {row.description}
+                                </span>
                                 <Tooltip title="Delete Item">
                                   <Button
                                     style={{
@@ -428,6 +470,14 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
         cancelText="Go Back"
         handleClose={handleConfirmCancel}
       ></ConfirmModal>
+      <EditFieldStringModal
+        open={editStringModalOpen}
+        data={editStringData}
+        rowId={editFieldRowId}
+        fieldName={editFieldName}
+        handleClose={handleEditModeClose}
+        handleOk={handleStringEditModeOK}
+      ></EditFieldStringModal>
     </>
   );
 };
