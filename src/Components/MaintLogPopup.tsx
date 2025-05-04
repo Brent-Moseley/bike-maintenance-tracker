@@ -237,6 +237,9 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
       const newCount = updates + 1;
       setUpdates(prev => prev + 1);
       setCloseLabel(`Save ${newCount} Changes`);      //setNewAlerts ([...newAlerts, alertSet[alertSet.length-1]]);
+      
+      let addedRow = logs.find((row) => row.id === editRowId);
+      if (addedRow) setEdited([...edited, addedRow.id]);  // This should ALWAYS be found, but TS does not know that.
     }
     setEditRowId("");
   };
@@ -281,6 +284,31 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
     setEditStringModalOpen(false);
   };
 
+    const finalPreSave = () => {
+      // Perform final edit processing to prepare for save operation.
+      debugger;
+      let finalDeleted: string[] = [...deleted];
+      let finalNewAlerts: MaintLog[] = [];
+      // For every record in the edited list, add to deleted.  We are going to add it as if new.
+      edited.forEach((item) => {
+        // Add to deleted list
+        //setDeleted((prevDeleted) => [...prevDeleted, item]);
+        finalDeleted.push(item);
+        // Find it in alertSet
+        let copyOver = logs.find((al) => al.id === item);
+        // ... and copy to new alerts.
+        if (copyOver) finalNewAlerts.push(copyOver);
+        //if (copyOver) setNewAlerts((prevNewAlerts) => [...prevNewAlerts, copyOver]);  // Should always be found, but have to satisfy TS which does not know
+        // This is how we handle the use case if user adds a new alert, and then edits it.
+        // All records are handled as if they are edited... delete and then add again.
+      });
+      //debugger;
+      console.log("End of edits:");
+      console.log(finalNewAlerts);
+      console.log(finalDeleted);
+      handleClose(finalNewAlerts, finalDeleted);
+    }
+  
   return (
     <>
       <Modal
@@ -441,7 +469,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
           <Button
             disabled={isEditing}
             onClick={() => {
-              handleClose(newLogs, deleted);
+              finalPreSave();
             }}
             sx={{ mt: 2 }}
           >

@@ -242,15 +242,16 @@ export const BikeService = {
     // if (bike.length === 0) return false;
     // bike[0].maintLog = updated;
     // this.saveAll(bikeData);
-    await axios.post(API_URL + '/Bike/AddMaintLog', added)
-      .then(response => {
-        console.log('Response:', response.data); // Handle successful response
-      })
-      .catch(error => {
-        console.error('Error:', error); // Handle any errors
-        throw error;
-      });
     await axios.delete(API_URL + '/Bike/DeleteMaintLog/' + JSON.stringify(deleted))
+    .then(response => {
+      console.log('Response:', response.data); // Handle successful response
+    })
+    .catch(error => {
+      console.error('Error:', error); // Handle any errors
+      throw error;
+    });
+
+    await axios.post(API_URL + '/Bike/AddMaintLog', added)
       .then(response => {
         console.log('Response:', response.data); // Handle successful response
       })
