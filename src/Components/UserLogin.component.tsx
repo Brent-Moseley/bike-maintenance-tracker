@@ -52,7 +52,6 @@ const UserLoginPopup: React.FC<PopupModalProps> = ({
         if (!submit) handleLoginClose("", "");
         else if (user.length > 0 && passcode.length > 0) {
             var loadedUser = await BikeService.getUser(user, passcode);
-            //debugger;
             if (!loadedUser) setFailedLogin(true);
             else handleLoginClose(loadedUser.id, loadedUser.name);
         }

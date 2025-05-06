@@ -508,12 +508,18 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
         let cloned: Alert = { ...alert, id: uuidv4() }; // clone the alert
         if (alert.miles && alert.repeatMiles && alert.repeatMiles > 0) {
           cloned.miles = alert.miles + alert.repeatMiles;
+          // BCM  Need smarter logic here.  If this would produce a repeating cycle
+          // (ie 2+ past repeating alerts), just keep the first alert and find
+          // the next alert that will be in the future.  Only create the future one.
+          while (cloned.miles <= bikes[idx].totalMiles) cloned.miles += alert.repeatMiles;
           save = true;
         } else if (alert.date && alert.repeatDays && alert.repeatDays > 0) {
-          const current = dayjs(alert.date);
-          cloned.date = current
-            .add(Math.round(alert.repeatDays * 30.4), "day")
-            .toDate();
+          let current = dayjs(alert.date);
+          current = current
+            .add(Math.round(alert.repeatDays * 30.4), "day");
+          while (!current.isAfter(today)) 
+            current = current.add(Math.round(alert.repeatDays * 30.4), "day");
+          cloned.date = current.toDate();
           save = true;
         }
         if (save) {
@@ -557,7 +563,6 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
 
   const handleAddSuggestedMtn = async (start: Date) => {
     setLoading(true);
-    debugger;
     const alerts = await BikeService.getAlerts(user, bikes[currentBikeId].id);
     let newAlerts: Alert[] = [];
     let begin = dayjs(start);

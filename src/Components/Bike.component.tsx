@@ -122,7 +122,6 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
 
   const handleMaintLogClose = async (added: MaintLog[], deleted: string[]) => {
     // save updated log to the BikeService
-    debugger;
     // await BikeService.setMaintLog(
     //   currentUser,
     //   bikeData[selectedBikeIndex].id,
@@ -134,7 +133,6 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
   };
 
   const handleCloseAlerts = async (updated: Alert[], deleted: string[]) => {
-    debugger;
     await BikeService.setAlerts(
       updated,
       deleted
@@ -188,7 +186,6 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
   };
 
   const handleOpenEditBike = (add: boolean) => {
-    debugger;
     const newIdx = bikeData.length;
     if (add) {
       // Add a new bike.

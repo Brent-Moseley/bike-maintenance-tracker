@@ -297,7 +297,6 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   };
 
   const handleStringEditModeOK = (text: string, id: string, field: string) => {
-    debugger;
     setAlertSet((prevLogs) =>
       prevLogs.map((row) => (row.id === id ? { ...row, [field]: text } : row))
     );
@@ -359,7 +358,6 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       let addedRow = alertSet.find((row) => row.id === editRowId);
       if (addedRow) setEdited([...edited, addedRow.id]);  // This should ALWAYS be found, but TS does not know that.
       if (milesDisabled) {
-        debugger;
         // If miles input is disabled, then fill in alert set and update miles to 'undefined' on any edit row.
         if (addedRow) {
           // Round repeat days if provided.
@@ -500,7 +498,6 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
 
   const finalPreSave = () => {
     // Perform final edit processing to prepare for save operation.
-    debugger;
     let finalDeleted: string[] = [...deleted];
     let finalNewAlerts: Alert[] = [];
     // For every record in the edited list, add to deleted.  We are going to add it as if new.
@@ -516,7 +513,6 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       // This is how we handle the use case if user adds a new alert, and then edits it.
       // All records are handled as if they are edited... delete and then add again.
     });
-    //debugger;
     console.log("End of edits:");
     console.log(finalNewAlerts);
     console.log(finalDeleted);

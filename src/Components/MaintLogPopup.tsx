@@ -136,7 +136,6 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   }, [logs]);
 
   useEffect(() => {
-    debugger;
     if (open) {
       // Reset form
       setCloseLabel("Close");
@@ -221,7 +220,6 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
 
   const handleCommit = (save: boolean) => {
     setIsEditing(false);
-    debugger;
     if (!save) {
       // We are not saving the new row, delete it.
       setLogs(logs.slice(0, -1));
@@ -268,7 +266,6 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
   };
 
   const handleStringEditModeOK = (text: string, id: string, field: string) => {
-    debugger;
     setLogs((prevLogs) =>
       prevLogs.map((row) => (row.id === id ? { ...row, [field]: text } : row))
     );
@@ -286,7 +283,6 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
 
     const finalPreSave = () => {
       // Perform final edit processing to prepare for save operation.
-      debugger;
       let finalDeleted: string[] = [...deleted];
       let finalNewAlerts: MaintLog[] = [];
       // For every record in the edited list, add to deleted.  We are going to add it as if new.
@@ -302,7 +298,6 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
         // This is how we handle the use case if user adds a new alert, and then edits it.
         // All records are handled as if they are edited... delete and then add again.
       });
-      //debugger;
       console.log("End of edits:");
       console.log(finalNewAlerts);
       console.log(finalDeleted);

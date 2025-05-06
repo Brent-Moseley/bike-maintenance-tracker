@@ -221,7 +221,6 @@ export const BikeService = {
     try {
       const response = await axios.get<User>(API_URL + '/Bike/GetUser?user=' + user + '&passCode=' + passCode);
       console.log(response.data);
-      debugger;
       if (!response.data.id) return undefined;
       return response.data;
     } catch (error) {
@@ -334,7 +333,6 @@ export const BikeService = {
       // Auto convert repeat months back to days, rounded to nearest day
       if (alert.repeatDays) alert.repeatDays = parseFloat((alert.repeatDays * 30.4).toFixed(0));
     }
-    debugger;
     console.log("------ Savings alerts:");
     console.log(added);
     // BCM Add an edit ability, where we have an array of edited alerts.  Put them in
@@ -371,7 +369,6 @@ export const BikeService = {
     // need better way to determine new bike vs editing last bike
     if (newBike) {
       // New bike
-      debugger;
       const newData: BikeAll = {
         bike: data,
         alerts: [],
@@ -387,7 +384,6 @@ export const BikeService = {
           throw error;
         });
     } else {
-      debugger;
       //bikeData[idx].bike = data;
       await axios.put(API_URL + '/Bike', data)
         .then(response => {
@@ -406,7 +402,6 @@ export const BikeService = {
     if (user === "") return;
     try {
       const response = await axios.get<AlertStatus[]>(API_URL + '/Bike/GetAlertStatus/' + user);
-      //debugger;
 
       if (response.data.length > 0) alertStatusTable = response.data;
 
