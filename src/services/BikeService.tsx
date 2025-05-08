@@ -87,6 +87,8 @@ let bikeData: BikeAll[] = [
   },
 ];
 
+let alertStatusLock = false;
+
 function dateReviver(key: string, value: any) {
   const datePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
   if (typeof value === "string" && datePattern.test(value)) {
@@ -242,13 +244,13 @@ export const BikeService = {
     // bike[0].maintLog = updated;
     // this.saveAll(bikeData);
     await axios.delete(API_URL + '/Bike/DeleteMaintLog/' + JSON.stringify(deleted))
-    .then(response => {
-      console.log('Response:', response.data); // Handle successful response
-    })
-    .catch(error => {
-      console.error('Error:', error); // Handle any errors
-      throw error;
-    });
+      .then(response => {
+        console.log('Response:', response.data); // Handle successful response
+      })
+      .catch(error => {
+        console.error('Error:', error); // Handle any errors
+        throw error;
+      });
 
     await axios.post(API_URL + '/Bike/AddMaintLog', added)
       .then(response => {
@@ -321,7 +323,7 @@ export const BikeService = {
   // https://stackoverflow.com/questions/7374731/net-save-datetime-and-completely-ignore-timezone
   // https://www.reddit.com/r/csharp/comments/10jl7tl/date_displays_differently_between_timezones/
   // **  https://softwareengineering.stackexchange.com/questions/209421/best-practice-to-store-datetime-based-on-timezone
-// https://www.msn.com/en-us/money/careersandeducation/stop-being-too-nice-at-work-says-psychologist-this-is-what-successful-people-do-to-be-more-genuine-trustworthy/ar-AA1DxllG?ocid=winp2fptaskbarhover&cvid=83d8a5a8f05d451594acf0aa49b49cb5&ei=17 
+  // https://www.msn.com/en-us/money/careersandeducation/stop-being-too-nice-at-work-says-psychologist-this-is-what-successful-people-do-to-be-more-genuine-trustworthy/ar-AA1DxllG?ocid=winp2fptaskbarhover&cvid=83d8a5a8f05d451594acf0aa49b49cb5&ei=17 
 
 
   setAlerts: async function (
@@ -339,13 +341,13 @@ export const BikeService = {
     // the delete set, and then in the add alerts set.  There should not be a primary
     // key violation.  
     await axios.delete(API_URL + '/Bike/DeleteAlerts/' + JSON.stringify(deleted))
-    .then(response => {
-      console.log('Response:', response.data); // Handle successful response
-    })
-    .catch(error => {
-      console.error('Error:', error); // Handle any errors
-      throw error;
-    });
+      .then(response => {
+        console.log('Response:', response.data); // Handle successful response
+      })
+      .catch(error => {
+        console.error('Error:', error); // Handle any errors
+        throw error;
+      });
     await axios.post(API_URL + '/Bike/AddAlerts', added)
       .then(response => {
         console.log('Response:', response.data); // Handle successful response
@@ -404,6 +406,7 @@ export const BikeService = {
       const response = await axios.get<AlertStatus[]>(API_URL + '/Bike/GetAlertStatus/' + user);
 
       if (response.data.length > 0) alertStatusTable = response.data;
+      alertStatusLock = false;
 
       console.log(response.data);
       return response.data;
@@ -414,17 +417,29 @@ export const BikeService = {
     }
   },
   saveAlertTable: function (userId: string) {
-    console.log("   ----- saving alert table:");
+    console.log("   -------- saving alert table for:" + userId);
     console.log(JSON.stringify(alertStatusTable));
-    axios.post(API_URL + '/Bike/SetAlertStatus', { user: userId, update: JSON.stringify(alertStatusTable) })
-      .then(response => {
-        console.log('Response:', response.data); // Handle successful response
-      })
-      .catch(error => {
-        console.error('Error:', error); // Handle any errors
-        throw error;
-      });
-
+    if (!alertStatusLock) {
+      console.log("  *****  No alert table lock");
+      alertStatusLock = true;
+      axios.post(API_URL + '/Bike/SetAlertStatus', { user: userId, update: JSON.stringify(alertStatusTable) })
+        .then(response => {
+          console.log('Response after saving alert status table:', response.data); // Handle successful response
+          alertStatusLock = false;
+        })
+        .catch(error => {
+          console.error('Error saving alert statuses:', error); // Handle any errors
+          throw error;
+        });
+    }
+    else {
+      // Busy saving other alert statuses, try again in 4 seconds.
+      console.log ("    ****  Saving of alert status locked, setting timer");
+      setTimeout(() => {
+        console.log("     *****  Trying save again.");
+        this.saveAlertTable(userId);
+      }, 4000);
+    }
   },
   getAlertStatus: function (id: string): string | undefined {
     var result = alertStatusTable.find(al => al.id === id);

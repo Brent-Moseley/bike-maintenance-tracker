@@ -376,19 +376,19 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
     // Run through list of current lists for this user, rebuilding the trigger list
     for (let alert of alerts) {
       // Attempt to find status for this alert
-      console.log(
-        "   Checking alert " +
-          alert.id +
-          " with date " +
-          alert.date?.toLocaleDateString() +
-          "  " +
-          alert.description
-      );
+      // console.log(
+      //   "   Checking alert " +
+      //     alert.id +
+      //     " with date " +
+      //     alert.date?.toLocaleDateString() +
+      //     "  " +
+      //     alert.description
+      // );
       let currentAlertStatus = BikeService.getAlertStatus(alert.id);
       // const currentAlertStatus = alertStatusSet.find(
       //   (alertStat) => alertStat.id === alert.id
       // );
-      console.log("       status: " + currentAlertStatus);
+      //console.log("       status: " + currentAlertStatus);
 
       // Skip alerts that have been cleared by user already.
       if (!currentAlertStatus || currentAlertStatus === "cleared") continue;
@@ -517,7 +517,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
           let current = dayjs(alert.date);
           current = current
             .add(Math.round(alert.repeatDays * 30.4), "day");
-          while (!current.isAfter(today)) 
+          while (!current.isAfter(today))
             current = current.add(Math.round(alert.repeatDays * 30.4), "day");
           cloned.date = current.toDate();
           save = true;
@@ -810,7 +810,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
                             onClick={() => handleNewClick(alert.alertID)}
                             sx={{ marginLeft: 1 }} // Add margin to separate buttons
                           >
-                            New
+                            Accept
                           </OrangeButton>
                         ) : !alert.isUpcoming ? (
                           <SmallButton
@@ -819,7 +819,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
                             size="small" // Make the button small
                             onClick={() => handleAlertOkClick(alert.alertID)}
                           >
-                            OK
+                            Clear
                           </SmallButton>
                         ) : (
                           <span></span>
