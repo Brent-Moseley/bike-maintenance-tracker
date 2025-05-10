@@ -132,9 +132,9 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const [dateDisabled, setDateDisabled] = useState(false);
   const [openFromTodayModal, setOpenFromTodayModal] = useState(false);
   const [fromTodayMessage, setFromTodayMessage] = useState<string>(
-    "Create alert based on number of days from today:"
+    "Create alert based on number of months from today:"
   );
-  const [fromTodayUnits, setFromTodayUnits] = useState<string>("days");
+  const [fromTodayUnits, setFromTodayUnits] = useState<string>("months");
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [newAlerts, setNewAlerts] = useState<Alert[]>([]);
   const [deleted, setDeleted] = useState<string[]>([]);
@@ -451,8 +451,8 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     if (value === 0) {
       setDateDisabled(false);
       setMilesDisabled(true);
-      setFromTodayMessage("Create alert based on number of days from today:");
-      setFromTodayUnits("days");
+      setFromTodayMessage("Create alert based on number of months from today:");
+      setFromTodayUnits("months");
     } else {
       setDateDisabled(true);
       setMilesDisabled(false);
@@ -474,7 +474,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
           row.id === editRowId
             ? {
                 ...row,
-                date: dayjs().add(value, "day").toDate(),
+                date: dayjs().add(value * 30.4, "day").toDate(),
                 miles: undefined,
               }
             : row
