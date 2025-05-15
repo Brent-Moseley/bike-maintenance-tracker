@@ -57,7 +57,7 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
     setCurrentUser(userName);
     console.log("  User is: " + userName);
     if (userName.length > 0) {
-      loadBikes (userName);
+      loadBikes(userName);
     }
     else {
       // user logged out or no login yet
@@ -137,13 +137,15 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
       updated,
       deleted
     );
-    for (let item of deleted) {
-      BikeService.removeAlertStatus(currentUser, item, false);
+    if (updated.length > 0 || deleted.length > 0) {
+      for (let item of deleted) {
+        BikeService.removeAlertStatus(currentUser, item, false);
+      }
+      for (let item of updated) {
+        BikeService.addAlertStatus(currentUser, item.id, "created", false);
+      }
+      BikeService.saveAlertTable(currentUser);
     }
-    for (let item of updated) {
-      BikeService.addAlertStatus(currentUser, item.id, "created", false);
-    }
-    BikeService.saveAlertTable(currentUser);
 
     setOpenAlerts(false);
     //await runAlertCycle(bikeData);
@@ -204,7 +206,7 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
       if (newIdx === 1 && bikeData[0].userID === "testUser") {
         // Editing the test user empty bike, set a real id.
         bikeData[0].id = uuidv4();
-        bikeData[0].userID = currentUser;  
+        bikeData[0].userID = currentUser;
       }
     }
     setOpenEditBike(true);
@@ -324,7 +326,7 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
         </>
       )}
       {loading && (
-         <Typography variant="h5" component="div">Bikes Loading <CircularProgress /> </Typography>
+        <Typography variant="h5" component="div">Bikes Loading <CircularProgress /> </Typography>
       )}
       {bikeData.length > 0 && realData && currentUser.length > 0 ? (
         <div>
@@ -368,24 +370,24 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
       ) : (
         <span></span>
       )}
-      { currentUser.length == 0 && <span>Please log in to continue.</span> }
+      {currentUser.length == 0 && <span>Please log in to continue.</span>}
       {currentUser.length > 0 &&
         <><AlertCenter bikes={bikeData} currentBikeId={selectedBikeIndex} user={currentUser} toggle={triggerAlertCycle}></AlertCenter>
-        <Button
-          variant="contained"
-          color="primary"
-          disabled={!realData}
-          onClick={handleMaintLogOpen}
-          sx={{ margin: "3px" }}
-        >
-          Maintenance Log
-        </Button><Button
-          variant="contained"
-          color="primary"
-          disabled={!realData}
-          onClick={handleOpenAlerts}
-          sx={{ margin: "3px" }}
-        >
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={!realData}
+            onClick={handleMaintLogOpen}
+            sx={{ margin: "3px" }}
+          >
+            Maintenance Log
+          </Button><Button
+            variant="contained"
+            color="primary"
+            disabled={!realData}
+            onClick={handleOpenAlerts}
+            sx={{ margin: "3px" }}
+          >
             Alerts
           </Button></>
       }
