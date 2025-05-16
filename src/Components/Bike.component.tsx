@@ -284,7 +284,6 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
   useEffect(() => {
     console.log("  New bike data in, checking to run alert cycle");
     console.log("   current user: " + currentUser);
-    console.log("   Real data: " + realData);
     console.log("   Bike data: " + bikeData[0].id);
     if (currentUser.length > 0 && realData) setTriggerAlertCycle((prev) => !prev);
   }, [bikeData]);
@@ -372,7 +371,7 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
       )}
       {currentUser.length == 0 && <span>Please log in to continue.</span>}
       {currentUser.length > 0 &&
-        <><AlertCenter bikes={bikeData} currentBikeId={selectedBikeIndex} user={currentUser} toggle={triggerAlertCycle}></AlertCenter>
+        <>
           <Button
             variant="contained"
             color="primary"
@@ -389,7 +388,9 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
             sx={{ margin: "3px" }}
           >
             Alerts
-          </Button></>
+          </Button>
+          <AlertCenter bikes={bikeData} currentBikeId={selectedBikeIndex} user={currentUser} toggle={triggerAlertCycle}></AlertCenter>
+        </>
       }
     </div>
   );
