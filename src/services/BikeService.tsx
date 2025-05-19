@@ -34,6 +34,7 @@ export interface User {
   passCode: string;
   name: string;
   email?: string;
+  token: string;
 }
 
 export interface MaintLog {
@@ -158,6 +159,7 @@ interface AlertStatusDB {
 }
 
 let alertStatusTable: AlertStatus[] = [];
+let userToken = "";
 
 export const BikeService = {
   getBikes: async function (user: string): Promise<Bike[]> {
@@ -224,6 +226,8 @@ export const BikeService = {
       const response = await axios.get<User>(API_URL + '/Bike/GetUser?user=' + user + '&passCode=' + passCode);
       console.log(response.data);
       if (!response.data.id) return undefined;
+      userToken = response.data.token;
+      axios.defaults.headers.common["Authorization"] = `Bearer ${userToken}`;
       return response.data;
     } catch (error) {
       console.error(error);
