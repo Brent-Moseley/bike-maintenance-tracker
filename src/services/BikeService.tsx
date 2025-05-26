@@ -7,7 +7,8 @@ Purpose:  Handle all output with data storage outside of the React app.
 
 // Local testing:  "https://localhost:7055";
 // Prod (Azure) testing: "https://bike-maint-tracker-hxafcdavbkghcmbw.canadacentral-01.azurewebsites.net/";
-const API_URL = "https://bike-maint-tracker-hxafcdavbkghcmbw.canadacentral-01.azurewebsites.net/";
+//const API_URL = "https://bike-maint-tracker-hxafcdavbkghcmbw.canadacentral-01.azurewebsites.net/";
+const API_URL = "https://localhost:7055";
 export interface Bike {
   userID: string;
   id: string;
@@ -221,12 +222,18 @@ export const BikeService = {
     // if (bike && bike.length > 0) return bike[0].maintLog;
     // else return [];
     //https://localhost:7055/Bike/GetMaintLog?user=user1&bike=bike1
+    console.log("Get User ---------------------");
     if (user === "" || passCode === "") return undefined;
     try {
       const response = await axios.get<User>(API_URL + '/Bike/GetUser?user=' + user + '&passCode=' + passCode);
       console.log(response.data);
-      if (!response.data.id) return undefined;
+      if (!response.data.id) {
+        console.log('  Login denied');
+
+        return undefined;
+      }
       userToken = response.data.token;
+      console.log('  TOKEN:  ' + userToken);
       axios.defaults.headers.common["Authorization"] = `Bearer ${userToken}`;
       return response.data;
     } catch (error) {
@@ -234,8 +241,6 @@ export const BikeService = {
       //throw error;
       return undefined;
     }
-
-
   },
   setMaintLog: async function (
     added: MaintLog[],
