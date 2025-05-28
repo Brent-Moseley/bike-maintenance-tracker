@@ -414,7 +414,7 @@ export const BikeService = {
     try {
       const response = await axios.get<AlertStatus[]>(API_URL + '/Bike/GetAlertStatus/' + user);
 
-      if (response.data.length > 0) alertStatusTable = response.data;
+      if (response.data.length > 0) alertStatusTable = response.data;   // axios does the JSON parse automatically
       alertStatusLock = false;
 
       console.log(response.data);
@@ -460,11 +460,15 @@ export const BikeService = {
     var result = alertStatusTable.find(al => al.id === id);
     console.log(`     set alert status for ${id}, ${result?.status}`);
     if (result) result.status = status;
+    // ***** Then also save update on back end
     this.saveAlertTable(user);
   },
   addAlertStatus: function (user: string, id: string, status: string, save: boolean = true) {
     alertStatusTable.push({ id: id, status: status });
     console.log(`     add alert status for ${id}, ${status}`);
+    // ***** Then also save update on back end
+    //  This is just looking up the alert record and changing status
+
     if (save) this.saveAlertTable(user);
   },
   removeAlertStatus: function (user: string, id: string, save: boolean = true) {
@@ -478,6 +482,7 @@ export const BikeService = {
       alertStatusTable = newArray;
       console.log("     New value: " + JSON.stringify(alertStatusTable));
       if (save) this.saveAlertTable(user);
+      // **** Then update alert status on backend to "Completed" or whatever the status is
     }
   }
 };
