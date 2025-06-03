@@ -90,6 +90,8 @@ let bikeData: BikeAll[] = [
 ];
 
 let alertStatusLock = false;
+type TimeoutId = ReturnType<typeof setTimeout> | undefined ;
+let currentTimeout: TimeoutId = undefined;
 
 function dateReviver(key: string, value: any) {
   const datePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
@@ -435,6 +437,7 @@ export const BikeService = {
         .then(response => {
           console.log('Response after saving alert status table:', response.data); // Handle successful response
           alertStatusLock = false;
+          currentTimeout = undefined;
         })
         .catch(error => {
           console.error('Error saving alert statuses:', error); // Handle any errors
@@ -444,10 +447,15 @@ export const BikeService = {
     else {
       // Busy saving other alert statuses, try again in 4 seconds.
       console.log ("    ****  Saving of alert status locked, setting timer");
-      setTimeout(() => {
+      if (currentTimeout != undefined ) {
+        // Cancel the last one that is still pending.
+        console.log("    Pending save detected, canceling that one.");
+        clearTimeout(currentTimeout);
+      }
+      currentTimeout = setTimeout(() => {
         console.log("     *****  Trying save again.");
         this.saveAlertTable(userId);
-      }, 4000);
+      }, 3000);
     }
   },
   getAlertStatus: function (id: string): string | undefined {

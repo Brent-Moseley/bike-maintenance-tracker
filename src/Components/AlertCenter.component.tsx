@@ -488,7 +488,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
               ? "Date is on or after " + alert.date?.toLocaleDateString()
               : "Bike has reached " + alert.miles + " miles",
             description: alert.description,
-            isNew: triggered, // problem
+            isNew: triggered,
             isUpcoming: false,
           });
         }
@@ -508,7 +508,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
         let cloned: Alert = { ...alert, id: uuidv4() }; // clone the alert
         if (alert.miles && alert.repeatMiles && alert.repeatMiles > 0) {
           cloned.miles = alert.miles + alert.repeatMiles;
-          // BCM  Need smarter logic here.  If this would produce a repeating cycle
+          // If this would produce a repeating cycle
           // (ie 2+ past repeating alerts), just keep the first alert and find
           // the next alert that will be in the future.  Only create the future one.
           while (cloned.miles <= bikes[idx].totalMiles) cloned.miles += alert.repeatMiles;
@@ -536,12 +536,6 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
         requireInteraction: true,
       });
     }
-
-    //}
-    // localStorage.setItem(
-    //   "BikeMaintTrackerAlertStatus",
-    //   JSON.stringify(alertStatusSet)
-    // );
   };
 
   // 15 minute timer:
