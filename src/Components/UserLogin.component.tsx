@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import {
     Modal,
     Box,
     Typography,
     Button,
     TextField,
+    CircularProgress,
 } from "@mui/material";
 import { BikeService } from "../services/BikeService";
 
@@ -34,11 +35,10 @@ const UserLoginPopup: React.FC<PopupModalProps> = ({
     open,
     handleLoginClose,
 }) => {
-    //const [user, setUser] = React.useState("bmoseley");     // dev build
+    const [loading, setLoading] = useState<boolean>(false);
     const [failedLogin, setFailedLogin] = React.useState(false);
-    //const [passcode, setPasscode] = React.useState("XaP437");   // dev build
-    const [user, setUser] = React.useState(""); 
-    const [passcode, setPasscode] = React.useState(""); 
+    const [user, setUser] = React.useState("");
+    const [passcode, setPasscode] = React.useState("");
 
     const handleChangeUser = (event: { target: { value: React.SetStateAction<string>; }; }) => {
         setUser(event.target.value);
@@ -51,7 +51,9 @@ const UserLoginPopup: React.FC<PopupModalProps> = ({
     const handleCloseModal = async (submit: boolean) => {
         if (!submit) handleLoginClose("", "");
         else if (user.length > 0 && passcode.length > 0) {
+            setLoading(true);
             var loadedUser = await BikeService.getUser(user, passcode);
+            setLoading(false);
             if (!loadedUser) setFailedLogin(true);
             else handleLoginClose(loadedUser.id, loadedUser.name);
         }
@@ -68,6 +70,9 @@ const UserLoginPopup: React.FC<PopupModalProps> = ({
                 <Typography id="modal-title" variant="h6" component="h2">
                     Login
                 </Typography>
+                {loading && (
+                    <Typography variant="h5" component="div"><CircularProgress /> </Typography>
+                )}
                 {failedLogin && (<Typography id="modal-title" variant="h6" component="h2">
                     User name or passcode incorrect.
                 </Typography>)}

@@ -8,6 +8,7 @@ import {
   TextField,
   Tooltip,
   Slider,
+  CircularProgress,
 } from "@mui/material";
 import { Alert, BikeService } from "../services/BikeService";
 import { styled } from "@mui/material/styles";
@@ -147,7 +148,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   // records that do not exist (it is actually a new record that has been edited)
   // So if an alert is new, add it to the edited list, and it will get copied from
   // alertSet to newAlerts.  Change code to not add to newAlerts immediately when created.
-
+  const [loading, setLoading] = useState<boolean>(false);
 
 
   const today = dayjs();
@@ -195,6 +196,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     if (open) {
       // Reset form
       setCloseLabel("Close");
+      setLoading(false);
       setEditRowId("");
       setMilesDisabled(true);
       setDateDisabled(false);
@@ -473,10 +475,10 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
         prev.map((row) =>
           row.id === editRowId
             ? {
-                ...row,
-                date: dayjs().add(value * 30.4, "day").toDate(),
-                miles: undefined,
-              }
+              ...row,
+              date: dayjs().add(value * 30.4, "day").toDate(),
+              miles: undefined,
+            }
             : row
         )
       );
@@ -820,6 +822,9 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
               <span>You have no alerts on this bike.</span>
             )}
           </Typography>
+          {loading && (
+            <Typography variant="h5" component="div"><CircularProgress /> </Typography>
+          )}
           <Button disabled={isEditing} onClick={handleAddRow} sx={{ mt: 2 }}>
             Add New Alert
           </Button>
@@ -827,6 +832,7 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
             disabled={isEditing}
             onClick={() => {
               //handleClose(newAlerts, deleted);
+              setLoading(true);
               finalPreSave();
             }}
             sx={{ mt: 2 }}
