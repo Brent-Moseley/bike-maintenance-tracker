@@ -445,7 +445,7 @@ export const BikeService = {
         });
     }
     else {
-      // Busy saving other alert statuses, try again in 4 seconds.
+      // Busy saving other alert statuses, try again in 3 seconds.
       console.log ("    ****  Saving of alert status locked, setting timer");
       if (currentTimeout != undefined ) {
         // Cancel the last one that is still pending.
@@ -501,16 +501,3 @@ export const BikeService = {
 // };
 
 // attemptLoad();
-
-// I can get this, I can do this, I can handle this!  I can rock this project and rock
-// this career!  I have reached 12 years in this return career, and ballpark of
-// 1.6 million dollars in salary.  Code is gold!  It is worth it!
-// If I had stayed in music and small business website design, I would have made only
-// 264k!!  I have made 6x more being a developer! 
-
-/*
-  I love coding and development, code is gold!  This is leading to a very bright future!
-  Keep practicing skills, creative ideas. 
-
-
-*/

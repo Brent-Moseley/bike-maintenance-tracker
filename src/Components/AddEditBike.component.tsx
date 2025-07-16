@@ -73,7 +73,8 @@ const AddEditBikePopup: React.FC<AddEditBikeProps> = ({
     }
     if (name === "totalMiles") {
       !isWholeNumber(value) ? setDecimalErrorTotal(true) : setDecimalErrorTotal(false);
-    } setFormData({ ...formData, [name]: value });
+    } 
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleDateChangeMYPurchased = (newValue: Dayjs | null) => {
