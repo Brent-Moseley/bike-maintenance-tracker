@@ -22,8 +22,8 @@ import React, { useEffect, useState } from "react";
 import { Alert, Bike, BikeService } from "../services/BikeService";
 import dayjs from "dayjs";
 import { v4 as uuidv4 } from "uuid";
-import ConfirmModal from "./Confirm.component";
 import ConfirmAutoAlertsModal from "./AutoAlertsPopup.component";
+import { serviceIntervalsMtn } from "./serviceIntervalsMtn";
 
 /*
 
@@ -97,177 +97,6 @@ interface AlertCenterProps {
   toggle: boolean;
 }
 
-/*  Example of finding out if date is on an interval (ie every 90 days):
-
-import dayjs from "dayjs";
-
-const isDateInInterval = (startDate, intervalDays, givenDate) => {
-  const start = dayjs(startDate);
-  const date = dayjs(givenDate);
-
-  // Calculate the difference in days
-  const diffInDays = date.diff(start, "day");
-
-  // Check if the difference is divisible by the interval
-  return diffInDays >= 0 && diffInDays % intervalDays === 0;
-};
-
-// Example usage:
-const startDate = "2025-04-15";
-const intervalDays = 8;
-const givenDate = "2025-04-23";
-
-console.log(isDateInInterval(startDate, intervalDays, givenDate)); // true or false
-
-If user wants to enable this, need to save the start date and start miles.  Alert cycle can then compare
-against current date and miles.
--- or -- can just add these as regular alerts for the user, repeating.  User can delete any they don't want - more control.
-For suspension service / check X number of hours, 
-
-https://www.justtherightgear.com/service
-
-
-Instead, just use the alert system already created, adding regular alerts based on a chart
-Need an internal chart of miles or months frequency and the text to display.
-
-560 miles, consider a lower leg service (assumes 9mph average all riding).
-1350, do full shock and fork service.
-
-Chart needs:  repeatMiles, repeatDays, description, longDescription.
-Do UI filter where if repeatDays > 90, display as months.
-Also add mouseover helper text for the standard alerts.
-
-*/
-
-const serviceIntervalsMtn = [
-  {
-    repeatMiles: 560,
-    repeatDays: undefined,
-    description: "Consider fork lower leg service",
-    longDescription:
-      "Depending on usage, consider a lower leg service for the fork. This involves cleaning the inside of the lower legs and replacing the bath oil of the fork.",
-  },
-  {
-    repeatMiles: 1350,
-    repeatDays: undefined,
-    description: "Consider full shock and fork service",
-    longDescription:
-      "Full fork and shock service, including replacing seals, damper oil, and inspecting internal components. This interval may vary based on the type of riding and conditions.",
-  },
-  {
-    repeatMiles: 125,
-    repeatDays: undefined,
-    description: "Check chain life and wear using a chain checker tool.",
-    longDescription:
-      "A well-maintained chain will shift better and extend the life of other drivetrain components.",
-  },
-  {
-    repeatMiles: 750,
-    repeatDays: undefined,
-    description: "Check cassette and chainrings for wear.",
-    longDescription:
-      "Look for worn or missing teeth. Poor shifting and a chain that 'skips' are both indicators of a worn cassette.",
-  },
-  {
-    repeatMiles: undefined,
-    repeatDays: 365,
-    description: "Check derailleur cables and housing.",
-    longDescription:
-      "Worn cables can lead to imprecise shifting and decreased performance as well as shifting that takes too much physical force.",
-  },
-  {
-    repeatMiles: undefined,
-    repeatDays: 274,
-    description: "Check derailleurs for shifting performance.",
-    longDescription:
-      "Check for proper alignment and function. Inspect jockey wheels for wear and replace if needed",
-  },
-  {
-    repeatMiles: undefined,
-    repeatDays: 548,
-    description: "Inspect bottom bracket.",
-    longDescription:
-      "Unusual noises or excessive play may indicate a need for replacement.",
-  },
-  {
-    repeatMiles: undefined,
-    repeatDays: 548,
-    description: "Inspect pedals.",
-    longDescription:
-      "Ensure smooth rotation and replace if there is excessive play or grinding noises.  Test that shoes can clip in with the right tension.",
-  },
-  {
-    repeatMiles: undefined,
-    repeatDays: 183,
-    description: "Check cable tension and indexing.",
-    longDescription:
-      "Ensure proper tension and smooth, precise, quick gear shifting.",
-  },
-  {
-    repeatMiles: 200,
-    repeatDays: undefined,
-    description: "Inspect brake pads and rotors for wear.",
-    longDescription:
-      "Generally, pads should be replaced once they are down to one millimeter or less of material. Pads may need to be removed to adequately inspect. Rotors should be free from grooves and should be above the manufacturer recommended minimum thickness.",
-  },
-  {
-    repeatMiles: undefined,
-    repeatDays: 183,
-    description: "Inspect brake cables.",
-    longDescription:
-      "Look for wear, corrosion, or fraying. Replace if there are any signs of damage to ensure responsive braking.",
-  },
-  {
-    repeatMiles: undefined,
-    repeatDays: 548,
-    description: "Inspect bottom bracket.",
-    longDescription:
-      "Unusual noises or excessive play may indicate a need for replacement.",
-  },
-  {
-    repeatMiles: undefined,
-    repeatDays: 730,
-    description: "Replace brake fluid on hydraulic brakes.",
-    longDescription: "Follow manufacturers recommendations.",
-  },
-  {
-    repeatMiles: 200,
-    repeatDays: undefined,
-    description: "Inspect tires.",
-    longDescription:
-      "Look for wear, worn or torn off knobs, cuts in sidewalls, bulging, or other damage. For good traction and safe riding, always replace tires that are worn or damaged.",
-  },
-  {
-    repeatMiles: undefined,
-    repeatDays: 90,
-    description: "Check tire sealant, if used.",
-    longDescription:
-      "To avoid any suprises and potential long walks back to the car, make sure both tires have adequate sealant.",
-  },
-  {
-    repeatMiles: undefined,
-    repeatDays: 548,
-    description: "Inspect bottom bracket.",
-    longDescription:
-      "Unusual noises or excessive play may indicate a need for replacement.",
-  },
-  {
-    repeatMiles: undefined,
-    repeatDays: 183,
-    description: "Check all bolts and fasteners for appropriate tightness.",
-    longDescription:
-      "Look bolts can rapidly become big problems on the trail, and lead to unsafe riding. Use a torque when, especially with carbon frames and components.",
-  },
-  {
-    repeatMiles: undefined,
-    repeatDays: 365,
-    description:
-      "Inspect headset, bottom bracket, hubs, and frame linkage bearings.",
-    longDescription:
-      "Replace if there is noticable wear or they do not move freely.",
-  },
-];
-
 const getLongDescription = (desc: string) => {
   let text = serviceIntervalsMtn.find((item) => item.description === desc);
   return text ? text.longDescription : "";
@@ -308,20 +137,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
   };
 
   async function setAlertStatus(id: string, status: string) {
-    // const statusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
-    // let statusList: AlertStatus[] =
-    //   statusStr.length > 2 ? JSON.parse(statusStr) : [];
-
-    // const alert = statusList.findIndex((item) => item.id === id);
-    // if (alert > -1) {
-    //   statusList[alert].status = status;
-    //   localStorage.setItem(
-    //     "BikeMaintTrackerAlertStatus",
-    //     JSON.stringify(statusList)
-    //   );
-    // }
     BikeService.setAlertStatus(user, id, status);
-    //await BikeService.saveAlertTable(user);
   }
 
   function showNotification(title: string, options: Object) {
@@ -340,34 +156,11 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
     await runAlertCycle(bikes);
   };
 
-  // Alert state table:
-  //  id
-  //  status    created
-  //            triggered, show on alert list and NOT in alert popup again, add repeat alert if appropriate
-  //                show 'New' button.
-  //            acknowledged (shown), 'New' clicked by user
-  //            cleared by user ('OK' clicked), remove from alerts list
-
-  /*
-    
-      localStorage.setItem("BikeMaintTrackerAlertStatus", '[{"id": "a01", "status": "created"},{"id": "a02", "status": "created"}]');
-    
-    
-      It is very helpful to have a good software design, to guide the development, to have a plan.
-      Even agile, with rapid prototypes and releasable code every few weeks should have a solid
-      plan and software design.  
-      */
   const runAlertCycle = async (bikes: Bike[], include?: boolean) => {
     // Check for alerts and handle any that are ready for a status update
     if (bikes.length === 0) return;
     // Get all alerts for this user
     const alerts = await BikeService.getAlerts(user, "");
-    //setMasterAlerts([]);
-    // Get current list of alert statuses
-    // const alertStatusStr =
-    //   localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
-    // let alertStatusSet: AlertStatus[] =
-    //   alertStatusStr.length > 2 ? JSON.parse(alertStatusStr) : [];
     const today: Date = new Date();
 
     let sortedAlerts: TriggeredAlert[] = [];
@@ -376,19 +169,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
     // Run through list of current lists for this user, rebuilding the trigger list
     for (let alert of alerts) {
       // Attempt to find status for this alert
-      // console.log(
-      //   "   Checking alert " +
-      //     alert.id +
-      //     " with date " +
-      //     alert.date?.toLocaleDateString() +
-      //     "  " +
-      //     alert.description
-      // );
       let currentAlertStatus = BikeService.getAlertStatus(alert.id);
-      // const currentAlertStatus = alertStatusSet.find(
-      //   (alertStat) => alertStat.id === alert.id
-      // );
-      //console.log("       status: " + currentAlertStatus);
 
       // Skip alerts that have been cleared by user already.
       if (!currentAlertStatus || currentAlertStatus === "cleared") continue;
@@ -409,7 +190,6 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
         const alertDate = dayjs(alert.date);
         const alertNeedsTriggeredOnDate =
           alert.date &&
-          //alert.date.toLocaleDateString() <= today.toLocaleDateString();
           (alertDate.startOf("day").isBefore(todayjs.startOf("day")) ||
             alertDate.startOf("day").isSame(todayjs.startOf("day")));
         const isAlertDateUpcoming =
@@ -526,7 +306,6 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
           // alert was cloned, find the bike for this and add it to the alerts.  Then save.
           const success = await BikeService.addAlert(cloned);
           await BikeService.addAlertStatus(user, cloned.id, "created");
-          //alertStatusSet.push({ id: cloned.id, status: "created" });
         }
       }
     }
@@ -595,9 +374,6 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
     setShowAddServiceInt(true);
   };
 
-  // 511af87d-86c2-46f2-ae5f-f5345159f91d
-  // Admin#89
-
   const handleAddSuggestedGravel = () => {};
 
   const handleAddSuggestedRoad = () => {};
@@ -612,16 +388,11 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
     setShowAddServiceInt(true);
   };
 
-  // BCM Make alert.decription below clickable, then do a lookup to match description, and if match, show popup with long description.
-
   return (
     <Card variant="outlined" sx={{ margin: 2 }}>
       <CardContent>
         <>
           <TableContainer component={Paper}>
-            {/* <Typography variant="h6" component="div" sx={{ padding: 2 }}>
-              Alert Center
-            </Typography> */}
             <Box
               sx={{
                 display: "flex",
@@ -641,9 +412,9 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
                   display: "flex",
                   alignItems: "center",
                   gap: 2, // Space between button and checkbox
-                  padding: "14px", // Adds inner space
-                  border: "1px solid #e0e0e0", // Very light border
-                  borderRadius: "8px", // Optional: Rounded corners for aesthetics
+                  padding: "14px",
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "8px",
                 }}
               >
                 {showAddServiceInt && (
@@ -652,10 +423,9 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
                     size="small"
                     sx={{
                       margin: "3px",
-                      minWidth: "58px", // Reduce the minimum width
-                      height: "35px", // Set a small height
-                      padding: "2px 5px", // Reduce inner spacing
-                      // Make text smaller
+                      minWidth: "58px",
+                      height: "35px",
+                      padding: "2px 5px",
                     }}
                     onClick={handleAddSuggestedEnable}
                   >
@@ -668,7 +438,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
                 {showingButtonsAddServiceInt && (
                   <Box
                     sx={{
-                      position: "absolute", // Positions it relative to the nearest positioned ancestor
+                      position: "absolute",
                       top: 0,
                       left: -280,
                       zIndex: 100,
@@ -800,7 +570,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
                         {alert.isNew ? (
                           <OrangeButton
                             variant="contained"
-                            size="small" // Make the button small
+                            size="small"
                             onClick={() => handleNewClick(alert.alertID)}
                             sx={{ marginLeft: 1 }} // Add margin to separate buttons
                           >
@@ -829,12 +599,6 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
               </Typography>
             )}
           </TableContainer>
-          {/* <ConfirmModal
-            open={confirmModalOpen}
-            message="This will add alerts to your current bike based on suggested maintenance intervals. You can later delete any that you do not want.  Proceed?"
-            handleOk={handleConfirmOK}
-            handleClose={handleConfirmCancel}
-          ></ConfirmModal> */}
           <ConfirmAutoAlertsModal
             open={confirmModalOpen}
             handleOk={handleConfirmOK}
@@ -848,11 +612,3 @@ const AlertCenter: React.FC<AlertCenterProps> = ({
 
 export { AlertCenter, getLongDescription };
 
-/*
-
-The counter measure is to build new confidence!!  Build my portfolio app to make it a great app and get a user
-community going on it.  Dress very professionally, be very attractive, and work on all the ways to be attractive
-to a new employer.  Be bold, think bold and remember all I have done!  Remember who I am!  
-
-Fire, determination, vision, planning, resolve, progress, core passion
-*/

@@ -55,17 +55,14 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
 
   useEffect(() => {
     setCurrentUser(userName);
-    console.log("  User is: " + userName);
     if (userName.length > 0) {
       loadBikes(userName);
     }
     else {
       // user logged out or no login yet
-      console.log("   Adding empty bike");
       setRealData(false);
       emptyBike.userID = "testUser"; // set test user for empty bike
       setBikeData([emptyBike]);
-      // TODO:  Log out is not fully working.
     }
   }, [userName]);
 
@@ -85,7 +82,6 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
   const loadBikes = async (userName: string) => {
     setLoading(true);
     var result = await BikeService.getBikes(userName);
-    console.log("  Loaded bikes, size = " + result.length);
     await BikeService.populateAlertStatuses(userName);
     setLoading(false);
     if (result.length > 0) {
@@ -122,11 +118,6 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
 
   const handleMaintLogClose = async (added: MaintLog[], deleted: string[]) => {
     // save updated log to the BikeService
-    // await BikeService.setMaintLog(
-    //   currentUser,
-    //   bikeData[selectedBikeIndex].id,
-    //   updated
-    // );
     await BikeService.setMaintLog(added, deleted);
 
     setOpen(false);
@@ -148,7 +139,6 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
     }
 
     setOpenAlerts(false);
-    //await runAlertCycle(bikeData);
     setTriggerAlertCycle((prev) => !prev);
   };
 
@@ -217,14 +207,9 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
     bikeData[selectedBikeIndex].totalMiles += Math.round(add);
     BikeService.saveBike(bikeData[selectedBikeIndex], false, selectedBikeIndex);
     setOpenAddMiles(false);
-    //await runAlertCycle(bikeData);
     // run the alert cycle, since miles were added.
     setTriggerAlertCycle((prev) => !prev);
   };
-
-  // const handleLoginClose = (user: string) => {
-  //   setCurrentUser(user);
-  // }
 
   const handleModfyBike = async (data: Bike) => {
     setOpenEditBike(false);
@@ -241,15 +226,11 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
           return { ...data, totalMiles: Number(data.totalMiles) };
         else return { ...item };
       });
-      console.log("  Setting updated bike data:");
-      console.log(JSON.stringify(updatedData));
       setBikeData(updatedData);
       setRealData(true);
 
       // Run alert cycle, in case miles were changed.
       setTriggerAlertCycle((prev) => !prev);
-      // for some reason the toggle above has to happen before the await below,
-      // or the state of the toggle value is lost and the Alert Center never sees it.
 
       await BikeService.saveBike(
         updatedData[selectedBikeIndex],
@@ -267,29 +248,14 @@ const BikeComponent: React.FC<BikeComponentProps> = ({ userName }) => {
   };
 
   useEffect(() => {
-    // const fetchData = async () => {
-    //   const bikedata = await BikeService.getBikes(
-    //     currentUser,
-    //   );
-    //   setBikeData(bikedata);
-    //   if (bikedata.length > 0 && bikedata[0].id !== "a13") {
-    //     // Real bike data has been loaded.
-    //     setRealData(true);
-    //   }
-    // };
-    // fetchData();
     requestNotificationPermission();
   }, []);
 
   useEffect(() => {
-    console.log("  New bike data in, checking to run alert cycle");
-    console.log("   current user: " + currentUser);
-    console.log("   Bike data: " + bikeData[0].id);
     if (currentUser.length > 0 && realData) setTriggerAlertCycle((prev) => !prev);
   }, [bikeData]);
 
   const handleDataFromChild = (data: string) => {
-    //setSelectedBike(data);
     const idx = bikeData.findIndex((bike) => bike.id === data);
     setSelectedBikeIndex(idx);
   };

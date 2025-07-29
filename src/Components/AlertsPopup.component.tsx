@@ -25,8 +25,6 @@ import dayjs, { Dayjs } from "dayjs";
 import ConfirmModal from "./Confirm.component";
 import FromTodayModal from "./FromToday.component";
 import {
-  AlertCenter,
-  AlertStatus,
   getLongDescription,
 } from "./AlertCenter.component";
 import EditFieldStringModal from "./EditFieldString.component";
@@ -139,22 +137,11 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [newAlerts, setNewAlerts] = useState<Alert[]>([]);
   const [deleted, setDeleted] = useState<string[]>([]);
-  const [edited, setEdited] = useState<string[]>([]);  // List of existing alerts that have
-  // been edited.  When user clicks save, add these to the deleted list, then copy as a 
-  // new alert, as if user had deleted and then recreated.  
-  // If an alert already is new, and they then edit, this will still work because copying from
-  // alertSet.  So only build the newAlerts array at the very end.  Build deleted as 
-  // user progresses.  Back end will need to be smart enough to not try to delete
-  // records that do not exist (it is actually a new record that has been edited)
-  // So if an alert is new, add it to the edited list, and it will get copied from
-  // alertSet to newAlerts.  Change code to not add to newAlerts immediately when created.
+  const [edited, setEdited] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-
 
   const today = dayjs();
   const tomorrow = today.add(1, "day");
-
-  //const longDescriptions: string[] = ["one", "two", "three", "four", "five"];
 
   const newRow: Alert = {
     id: uuidv4(),
@@ -168,10 +155,6 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   };
 
   const setStatuses = (set: Alert[]) => {
-    // const statusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
-    // let statusList: AlertStatus[] =
-    //   statusStr.length > 2 ? JSON.parse(statusStr) : [];
-
     let newset: Alert[] = [];
     for (let al of set) {
       const status = BikeService.getAlertStatus(al.id);
@@ -224,15 +207,6 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
       setUpdates((prev) => prev + 1);
       setCloseLabel(`Save ${newCount} Changes`);
     }
-    /*const statusStr = localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
-    let statusList: AlertStatus[] =
-      statusStr.length > 2 ? JSON.parse(statusStr) : [];
-
-    statusList = statusList.filter((item) => item.id !== currentId);
-    localStorage.setItem(
-      "BikeMaintTrackerAlertStatus",
-      JSON.stringify(statusList)
-    );*/
 
     setConfirmModalOpen(false);
   };
@@ -276,12 +250,10 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
         break;
       case "repeatDays":
         // Gets processed as months, user entry as months
-        //value = parseFloat(value);
         const lastChar = value.slice(-1);
         const regex = /^[0-9.]$/;
 
         if (value.length > 0 && !regex.test(lastChar)) value = defaultValue;
-        //console.log(value);
         break;
     }
     setAlertSet((prevLogs) =>
@@ -315,7 +287,6 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
   };
 
   // TODO:  Add sorting for other columns to
-  //        Also, refactor to eliminate repeated code.
   const dateSort = () => {
     setSortAsc(!sortAsc);
     if (sortAsc)
@@ -343,39 +314,17 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     } else {
       const newCount = updates + 1;
       setUpdates((prev) => prev + 1);
-      setCloseLabel(`Save ${newCount} Changes`); //setNewAlerts ([...newAlerts, alertSet[alertSet.length-1]]);
-
-      // BCM todo:
-      /*const statusStr =
-        localStorage.getItem("BikeMaintTrackerAlertStatus") ?? "";
-      let statusList: AlertStatus[] =
-        statusStr.length > 2 ? JSON.parse(statusStr) : [];
-
-      statusList.push({ id: editRowId ? editRowId : "na", status: "created" });
-      localStorage.setItem(
-        "BikeMaintTrackerAlertStatus",
-        JSON.stringify(statusList)
-      );*/
+      setCloseLabel(`Save ${newCount} Changes`);
 
       let addedRow = alertSet.find((row) => row.id === editRowId);
       if (addedRow) setEdited([...edited, addedRow.id]);  // This should ALWAYS be found, but TS does not know that.
       if (milesDisabled) {
         // If miles input is disabled, then fill in alert set and update miles to 'undefined' on any edit row.
         if (addedRow) {
-          // Round repeat days if provided.
-          // if (addedRow.repeatDays != undefined) {
-          //   const rd = addedRow.repeatDays as number;  // help typescript understand that this number is defined
-          //   addedRow.repeatDays = Math.round(rd);
-          // }
           if (addedRow.repeatDays)
             addedRow.repeatDays = parseFloat(
               Number(addedRow.repeatDays).toFixed(1)
             );
-          // New logic, only build new alerts at the very end:
-          // setNewAlerts([
-          //   ...newAlerts,
-          //   { ...addedRow, miles: undefined, repeatMiles: undefined },
-          // ]);
         }
 
         setAlertSet((prevLogs) =>
@@ -399,11 +348,6 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
             const mi = addedRow.miles as number; // help typescript understand that this number is defined
             addedRow.miles = Math.round(mi);
           }
-          // New logic, only build new alerts at the very end:
-          // setNewAlerts([
-          //   ...newAlerts,
-          //   { ...addedRow, date: undefined, repeatDays: undefined },
-          // ]);
         }
 
         setAlertSet((prevLogs) =>
@@ -505,19 +449,12 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
     // For every record in the edited list, add to deleted.  We are going to add it as if new.
     edited.forEach((item) => {
       // Add to deleted list
-      //setDeleted((prevDeleted) => [...prevDeleted, item]);
       finalDeleted.push(item);
       // Find it in alertSet
       let copyOver = alertSet.find((al) => al.id === item);
       // ... and copy to new alerts.
       if (copyOver) finalNewAlerts.push(copyOver);
-      //if (copyOver) setNewAlerts((prevNewAlerts) => [...prevNewAlerts, copyOver]);  // Should always be found, but have to satisfy TS which does not know
-      // This is how we handle the use case if user adds a new alert, and then edits it.
-      // All records are handled as if they are edited... delete and then add again.
     });
-    console.log("End of edits:");
-    console.log(finalNewAlerts);
-    console.log(finalDeleted);
     handleClose(finalNewAlerts, finalDeleted);
   }
 
@@ -878,22 +815,3 @@ const AlertsPopup: React.FC<PopupModalProps> = ({
 
 export default AlertsPopup;
 
-/*
-You have to start from the mindset of believing in the good and believing in the potential
-of what you can do.  You have to start with believing in a bright future.
-Otherwise, your strength and energy gets muted right there.
-
-Mindset is huge!  It is hugely important in success and productivity.
-Only listen to the Highest one!
-Take the power away from them!  Only work with internal recruiters now, and networking through people I know.
-
-Amazing camping innovations of the past 10 years:
-- Jetboil
-- Foam camping mats for sleeping
-- Rechareable lights.
-- Sound machine
-- Battery packs for recharging
-- Propane fire pits
-- Packing cubes for organization
-- Blackstone griddle
-*/

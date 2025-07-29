@@ -162,7 +162,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
       setLogs([...logs.slice(0, idx), ...logs.slice(idx + 1)]);
       const newCount = updates + 1;
       setUpdates(prev => prev + 1);
-      setCloseLabel(`Save ${newCount} Changes`);      //setNewAlerts ([...newAlerts, alertSet[alertSet.length-1]]);
+      setCloseLabel(`Save ${newCount} Changes`);
     }
     setConfirmModalOpen(false);
   };
@@ -234,7 +234,7 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
       setNewLogs([...newLogs, logs[logs.length - 1]]);
       const newCount = updates + 1;
       setUpdates(prev => prev + 1);
-      setCloseLabel(`Save ${newCount} Changes`);      //setNewAlerts ([...newAlerts, alertSet[alertSet.length-1]]);
+      setCloseLabel(`Save ${newCount} Changes`);
       
       let addedRow = logs.find((row) => row.id === editRowId);
       if (addedRow) setEdited([...edited, addedRow.id]);  // This should ALWAYS be found, but TS does not know that.
@@ -288,19 +288,12 @@ const MaintLogPopup: React.FC<PopupModalProps> = ({
       // For every record in the edited list, add to deleted.  We are going to add it as if new.
       edited.forEach((item) => {
         // Add to deleted list
-        //setDeleted((prevDeleted) => [...prevDeleted, item]);
         finalDeleted.push(item);
         // Find it in alertSet
         let copyOver = logs.find((al) => al.id === item);
         // ... and copy to new alerts.
         if (copyOver) finalNewAlerts.push(copyOver);
-        //if (copyOver) setNewAlerts((prevNewAlerts) => [...prevNewAlerts, copyOver]);  // Should always be found, but have to satisfy TS which does not know
-        // This is how we handle the use case if user adds a new alert, and then edits it.
-        // All records are handled as if they are edited... delete and then add again.
       });
-      console.log("End of edits:");
-      console.log(finalNewAlerts);
-      console.log(finalDeleted);
       handleClose(finalNewAlerts, finalDeleted);
     }
   
